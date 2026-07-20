@@ -6,8 +6,8 @@ __pycache__/
 .env
 
 # Data (large files, don't belong in git)
-data/raw/
-data/clients/
+backend/data/raw/
+backend/data/clients/
 vector_db/
 
 # OS
