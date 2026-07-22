@@ -16,3 +16,4 @@ def get_attack_stats(db: Session = Depends(get_db)):
     
     # Format as a simple dictionary: {"DDoS": 10, "Benign": 50, ...}
     return {item.attack_type: item.count for item in stats}
+# Analytics and system integration logic
