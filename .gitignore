@@ -1,0 +1,18 @@
+# Python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+.env
+
+# Data (large files, don't belong in git)
+backend/data/raw/
+backend/data/clients/
+vector_db/
+
+# OS
+.DS_Store
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
