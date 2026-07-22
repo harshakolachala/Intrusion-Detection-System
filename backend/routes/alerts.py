@@ -27,3 +27,4 @@ def get_recent_alerts(db: Session = Depends(get_db)):
 def get_alert_history(db: Session = Depends(get_db)):
     """Fetch all historical alerts for the history page."""
     return db.query(models.Alert).order_by(models.Alert.timestamp.desc()).all()
+# API routes for intrusion alerts
