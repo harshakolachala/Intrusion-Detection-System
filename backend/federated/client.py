@@ -1,6 +1,7 @@
 import flwr as fl
 import torch
 
+from federated.config import SERVER_ADDRESS
 from federated.dataset import IDSDataset
 from federated.model import MLPIDS
 from federated.train import train_local_model
@@ -47,7 +48,10 @@ class FlowerClient(fl.client.NumPyClient):
             for k, v in params_dict
         }
 
-        self.model.load_state_dict(state_dict, strict=True)
+        self.model.load_state_dict(
+            state_dict,
+            strict=True
+        )
 
     def fit(self, parameters, config):
 
@@ -60,6 +64,8 @@ class FlowerClient(fl.client.NumPyClient):
             self.client_loaders[self.client_id],
             epochs=1
         )
+
+        print("Training Completed")
 
         return (
             self.get_parameters(config),
@@ -78,6 +84,10 @@ class FlowerClient(fl.client.NumPyClient):
             self.test_loader
         )
 
+        print(
+            f"Accuracy: {metrics['accuracy']:.4f}"
+        )
+
         return (
             float(1 - metrics["accuracy"]),
             len(self.test_loader.dataset),
@@ -94,7 +104,7 @@ def main():
     print("Connecting to Flower Server...")
 
     fl.client.start_numpy_client(
-        server_address="127.0.0.1:8080",
+        server_address=SERVER_ADDRESS,
         client=client,
     )
 
