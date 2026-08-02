@@ -5,10 +5,39 @@ export const api = axios.create({
   timeout: 5000,
 });
 
-// TODO: confirm exact paths with Hasini/Rohith once their routes are live
+// =========================
+// Health
+// =========================
+
 export const getHealth = () => api.get("/health");
+
+// =========================
+// Alerts
+// =========================
+
 export const getDetections = () => api.get("/alerts");
+
+export const getHistory = () => api.get("/alerts/history");
+
+// =========================
+// Chatbot
+// =========================
+
 export const getExplanation = (detectionId: string) =>
   api.get(`/chatbot/explain/${detectionId}`);
-export const getFlStatus = () => api.get("/training/status");
-export const getHistory = () => api.get("/alerts/history");
+
+// =========================
+// Federated Learning
+// =========================
+
+export const getFlStatus = () =>
+  api.get("/training/status");
+
+// =========================
+// Prediction API
+// =========================
+
+export const predictIntrusion = (features: number[]) =>
+  api.post("/predict/", {
+    features,
+  });
