@@ -365,7 +365,7 @@ LLM (Planned)
 
 # Contributors
 
---Sai Rohit Harsha and Hasini--
+--Rohit, Harsha and Hasini--
 
 ---
 
