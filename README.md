@@ -1,79 +1,142 @@
 # Federated Intrusion Detection System (FL-IDS)
 
-A privacy-preserving **Federated Intrusion Detection System (FL-IDS)** built using **PyTorch**, **Flower**, **FastAPI**, and **React**. The system trains an intrusion detection model across multiple clients without sharing raw network traffic. It also integrates **Retrieval-Augmented Generation (RAG)** to provide contextual cybersecurity knowledge and is designed for future **LLM-based attack explanation**.
+A privacy-preserving **Federated Intrusion Detection System (FL-IDS)** built using **Flower, PyTorch, FastAPI, React, Retrieval-Augmented Generation (RAG), and Large Language Models (LLMs)**.
+
+The system enables multiple clients to collaboratively train an intrusion detection model without sharing raw network traffic. It also provides AI-powered explanations for detected attacks using a cybersecurity knowledge base and modern LLMs.
 
 ---
 
-# Overview
+# Project Overview
 
-Traditional Intrusion Detection Systems require centralized collection of network traffic, which raises privacy and security concerns.
+Traditional Intrusion Detection Systems require centralized collection of network traffic, creating privacy and security concerns.
 
-This project addresses these challenges by using **Federated Learning**, where multiple clients train local machine learning models independently. Only model parameters are shared with the central server using the **Flower** framework.
+This project addresses those issues by combining:
 
-To improve explainability, the project incorporates a **Retrieval-Augmented Generation (RAG)** pipeline that retrieves cybersecurity knowledge related to detected attacks. This retrieved context can later be used by a Large Language Model (LLM) to generate detailed attack explanations and mitigation strategies.
+- Federated Learning for decentralized model training
+- Deep Learning for intrusion detection
+- FastAPI backend services
+- React frontend dashboard
+- Retrieval-Augmented Generation (RAG)
+- Groq/Gemini LLM integration for attack explanations
+
+The project is designed to evolve into a deployable enterprise cybersecurity platform.
 
 ---
 
 # Features
 
-- Privacy-preserving Federated Learning
-- Multi-client model training
-- FedAvg aggregation strategy
-- CICIDS2017 dataset preprocessing
-- Feature scaling and label encoding
-- Multi-Layer Perceptron (MLP) intrusion detection model
-- FastAPI backend
-- React frontend
-- Prediction REST API
-- Analytics dashboard
-- Swagger API documentation
-- RAG knowledge base
-- Semantic document retrieval using FAISS
-- Attack explanation pipeline (In Progress)
-- LLM integration (In Progress)
+## Machine Learning
+
+- Intrusion Detection using Multi-Layer Perceptron (MLP)
+- PyTorch implementation
+- Model evaluation
+- Automatic prediction
+
+## Federated Learning
+
+- Flower Framework
+- Multi-client training
+- FedAvg aggregation
+- Automatic global model checkpoint saving
+
+## Backend
+
+- FastAPI REST APIs
+- Prediction API
+- Analytics API
+- Chatbot API
+- SQLAlchemy
+- SQLite
+
+## Frontend
+
+- React
+- TypeScript
+- Tailwind CSS
+- Dashboard
+- Analytics
+- Alerts
+- Prediction Page
+
+## Artificial Intelligence
+
+- Retrieval-Augmented Generation (RAG)
+- FAISS Vector Database
+- Sentence Transformers
+- Cybersecurity Knowledge Base
+- Groq LLM
+- Google Gemini Support
+- AI-powered attack explanations
 
 ---
 
-# Architecture
+# Project Architecture
 
 ```text
-                    +-----------------------+
-                    |   Network Dataset     |
-                    +-----------+-----------+
+                    +------------------------+
+                    |     React Frontend     |
+                    +-----------+------------+
                                 |
-                                v
-                     Data Preprocessing
                                 |
-                                v
-                     Federated Learning
-                     (Flower + PyTorch)
+                    FastAPI Backend APIs
                                 |
-             +------------------+------------------+
-             |                                     |
-      Client 1                               Client N
-             |                                     |
-             +------------------+------------------+
-                                |
-                                v
-                       Global Model (FedAvg)
-                                |
-                                v
-                     FastAPI Prediction API
-                                |
-          +---------------------+---------------------+
-          |                                           |
-          v                                           v
-    React Frontend                           Analytics API
-          |
-          v
-     RAG Knowledge Base
-          |
-          v
-   Semantic Retrieval (FAISS)
-          |
-          v
-     LLM Explanation (Planned)
+        -------------------------------------------------
+        |                |                |              |
+        ▼                ▼                ▼              ▼
+ Prediction API     Analytics API    Chatbot API    Health API
+        |                                |
+        |                                |
+        ▼                                ▼
+ Federated Model                 RAG Pipeline
+        |                                |
+        |                     ------------------------
+        |                     |          |           |
+        ▼                     ▼          ▼           ▼
+ Flower Server           FAISS DB   Retriever   LLM (Groq/Gemini)
+        |
+        ▼
+Federated Clients
+        |
+        ▼
+CICIDS2017 Dataset
 ```
+
+---
+
+# Technology Stack
+
+## Frontend
+
+- React
+- TypeScript
+- Tailwind CSS
+- Axios
+
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- SQLite
+- Pydantic
+
+## Machine Learning
+
+- PyTorch
+- NumPy
+- Pandas
+- Scikit-learn
+
+## Federated Learning
+
+- Flower
+
+## AI & RAG
+
+- Sentence Transformers
+- FAISS
+- Groq API
+- Google Gemini
+- Markdown Knowledge Base
 
 ---
 
@@ -102,6 +165,8 @@ Intrusion-Detection-System/
 │   │   ├── vector_store.py
 │   │   ├── retriever.py
 │   │   ├── rag_pipeline.py
+│   │   ├── context_provider.py
+│   │   ├── knowledge_base.py
 │   │   ├── documents/
 │   │   └── vector_db/
 │   │
@@ -116,59 +181,24 @@ Intrusion-Detection-System/
 │
 ├── .github/
 │
+├── screenshots/
+│
 └── README.md
 ```
 
 ---
 
-# Tech Stack
-
-## Machine Learning
-
-- PyTorch
-- Scikit-learn
-- NumPy
-- Pandas
-
-## Federated Learning
-
-- Flower
-
-## Backend
-
-- FastAPI
-- SQLAlchemy
-- SQLite
-
-## Frontend
-
-- React
-- TypeScript
-- Tailwind CSS
-
-## RAG
-
-- Sentence Transformers
-- FAISS
-- Markdown Knowledge Base
-
-## Future AI
-
-- Large Language Models (LLMs)
-
----
-
 # Dataset
 
-Dataset Used
+Dataset Used:
 
-- CICIDS2017
+**CICIDS2017**
 
-The dataset is not included in this repository because it exceeds GitHub's file size limit.
+Due to GitHub's file size limitations, the dataset is not included in this repository.
 
 Place the processed dataset in:
 
-```text
+```
 backend/datasets/combinenew.csv
 ```
 
@@ -182,7 +212,7 @@ Clone the repository
 git clone https://github.com/harshakolachala/Intrusion-Detection-System.git
 ```
 
-Navigate to the project
+Move into the project
 
 ```bash
 cd Intrusion-Detection-System
@@ -213,6 +243,8 @@ cd backend
 python -m federated.server
 ```
 
+---
+
 ## Start Flower Clients
 
 Open three terminals.
@@ -223,20 +255,26 @@ python -m federated.client
 
 Run the same command in each terminal.
 
-## Start FastAPI Backend
+---
+
+## Start Backend
 
 ```bash
 uvicorn main:app --reload
 ```
 
-## Start React Frontend
+---
+
+## Start Frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-## Swagger Documentation
+---
+
+## Swagger API
 
 ```
 http://127.0.0.1:8000/docs
@@ -244,49 +282,30 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# API Endpoints
-
-| Method | Endpoint | Description |
-|----------|--------------------------|-----------------------------|
-| GET | / | Project Status |
-| GET | /health | Health Check |
-| GET | /analytics/stats | Dashboard Analytics |
-| POST | /predict | Predict Network Traffic |
-| GET | /chatbot/explain/{id} | Explain Detection |
-| POST | /chatbot/explain | Manual Explanation |
-
----
-
 # Machine Learning Pipeline
 
 ```text
 CICIDS2017 Dataset
-        │
-        ▼
+          │
+          ▼
 Data Cleaning
-        │
-        ▼
+          │
+          ▼
 Feature Scaling
-        │
-        ▼
-Train-Test Split
-        │
-        ▼
+          │
+          ▼
 Client Partitioning
-        │
-        ▼
-Local MLP Training
-        │
-        ▼
-Federated Learning
-        │
-        ▼
-FedAvg Aggregation
-        │
-        ▼
+          │
+          ▼
+Local Model Training
+          │
+          ▼
+Flower FedAvg
+          │
+          ▼
 Global Model
-        │
-        ▼
+          │
+          ▼
 Prediction API
 ```
 
@@ -313,11 +332,27 @@ FAISS Vector Database
 Retriever
           │
           ▼
-RAG Pipeline
+Context Provider
           │
           ▼
-LLM (Planned)
+Groq / Gemini LLM
+          │
+          ▼
+AI Attack Explanation
 ```
+
+---
+
+# API Endpoints
+
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/` | Project Status |
+| GET | `/health` | Health Check |
+| POST | `/predict` | Predict Network Traffic |
+| GET | `/analytics/stats` | Dashboard Statistics |
+| GET | `/chatbot/explain/{id}` | Explain Detection |
+| POST | `/chatbot/explain` | Manual Attack Explanation |
 
 ---
 
@@ -326,49 +361,82 @@ LLM (Planned)
 | Module | Status |
 |---------|--------|
 | Dataset Preprocessing | ✅ Completed |
-| Feature Engineering | ✅ Completed |
-| MLP Model | ✅ Completed |
-| Local Training | ✅ Completed |
-| Model Evaluation | ✅ Completed |
-| Flower Integration | ✅ Completed |
 | Federated Learning | ✅ Completed |
-| Prediction Module | ✅ Completed |
+| FedAvg Aggregation | ✅ Completed |
+| Automatic Global Model Saving | ✅ Completed |
+| MLP Model | ✅ Completed |
+| Prediction API | ✅ Completed |
 | FastAPI Backend | ✅ Completed |
-| Prediction REST API | ✅ Completed |
-| Analytics API | ✅ Completed |
 | React Frontend | ✅ Completed |
-| RAG Document Loader | ✅ Completed |
-| Document Chunking | ✅ Completed |
-| Sentence Embeddings | ✅ Completed |
-| FAISS Vector Store | ✅ Completed |
-| Retriever | ✅ Completed |
+| Analytics Dashboard | ✅ Completed |
 | RAG Pipeline | ✅ Completed |
-| LLM Integration | ⏳ In Progress |
-| Global Model Checkpointing | ⏳ In Progress |
-| Final Testing | ⏳ In Progress |
+| FAISS Vector Database | ✅ Completed |
+| AI Chatbot Backend | ✅ Completed |
+| Groq Integration | ✅ Completed |
+| Gemini Integration | ✅ Completed |
 
 ---
 
 # Future Enhancements
 
-- Automatic saving of the trained global federated model
-- LLM-powered attack explanation
-- Real-time network packet capture
-- Explainable AI (XAI)
-- Docker deployment
-- GitHub Actions CI/CD
-- Cloud deployment
-- Multi-class intrusion detection
-- Live network monitoring
+- User Authentication (JWT)
+- Login & Registration
+- Real-time Dashboard
+- Live Network Traffic Monitoring
+- Prediction History
+- AI Chat Interface
+- Role-Based Access Control
+- Docker Support
+- Kubernetes Deployment
+- CI/CD using GitHub Actions
+- PostgreSQL
+- Redis Caching
+- Cloud Deployment (AWS / Azure / GCP)
+- HTTPS & SSL
+- Monitoring with Prometheus & Grafana
+- Multi-class Intrusion Detection
+- Explainable AI (SHAP/LIME)
+
+---
+
+# Deployment Roadmap
+
+The project is being designed for future deployment using:
+
+Frontend
+- Vercel / Netlify
+
+Backend
+- Docker
+- FastAPI
+- Nginx
+
+Database
+- PostgreSQL
+
+Federated Learning
+- Flower SuperLink & SuperNodes
+
+Vector Database
+- FAISS (local) or ChromaDB
+
+LLM
+- Groq Cloud
+- Google Gemini API
+
+Cloud Platforms
+- AWS
+- Azure
+- Google Cloud Platform
 
 ---
 
 # Contributors
 
---Rohit, Harsha and Hasini--
+Rohith, Harsha and Hasini
 
 ---
 
 # License
 
-This project was developed as a **B.Tech Major Project** for educational and research purposes.
+This project is developed as a B.Tech Major Project for educational, research, and cybersecurity learning purposes.
