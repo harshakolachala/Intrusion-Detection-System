@@ -1,34 +1,79 @@
-# Federated Intrusion Detection System using Flower, PyTorch, FastAPI and React
+# Federated Intrusion Detection System (FL-IDS)
 
-## Overview
+A privacy-preserving **Federated Intrusion Detection System (FL-IDS)** built using **PyTorch**, **Flower**, **FastAPI**, and **React**. The system trains an intrusion detection model across multiple clients without sharing raw network traffic. It also integrates **Retrieval-Augmented Generation (RAG)** to provide contextual cybersecurity knowledge and is designed for future **LLM-based attack explanation**.
 
-The **Federated Intrusion Detection System (FL-IDS)** is a privacy-preserving network intrusion detection solution that leverages **Federated Learning (FL)** to train machine learning models across multiple clients without sharing raw network traffic data.
+---
 
-Each client trains a local **Multi-Layer Perceptron (MLP)** model on its own data. The **Flower** framework aggregates the local model parameters using the **Federated Averaging (FedAvg)** algorithm to produce a global intrusion detection model.
+# Overview
 
-The project integrates **FastAPI** for backend services, **React** for the frontend interface, and is designed to support **Retrieval-Augmented Generation (RAG)** and **Large Language Models (LLMs)** for intelligent cybersecurity analysis and attack explanation.
+Traditional Intrusion Detection Systems require centralized collection of network traffic, which raises privacy and security concerns.
+
+This project addresses these challenges by using **Federated Learning**, where multiple clients train local machine learning models independently. Only model parameters are shared with the central server using the **Flower** framework.
+
+To improve explainability, the project incorporates a **Retrieval-Augmented Generation (RAG)** pipeline that retrieves cybersecurity knowledge related to detected attacks. This retrieved context can later be used by a Large Language Model (LLM) to generate detailed attack explanations and mitigation strategies.
 
 ---
 
 # Features
 
 - Privacy-preserving Federated Learning
-- CICIDS2017 Dataset preprocessing
-- Data cleaning and normalization
-- Feature scaling using StandardScaler
-- Label encoding
-- Multi-Layer Perceptron (MLP) based IDS
-- Flower-based Federated Learning
+- Multi-client model training
 - FedAvg aggregation strategy
-- Multi-client federated training
+- CICIDS2017 dataset preprocessing
+- Feature scaling and label encoding
+- Multi-Layer Perceptron (MLP) intrusion detection model
 - FastAPI backend
-- REST Prediction API
-- Swagger API Documentation
-- Analytics Dashboard API
-- React Frontend
-- Real-time Intrusion Prediction
-- RAG Integration (Planned)
-- LLM-based Attack Explanation (Planned)
+- React frontend
+- Prediction REST API
+- Analytics dashboard
+- Swagger API documentation
+- RAG knowledge base
+- Semantic document retrieval using FAISS
+- Attack explanation pipeline (In Progress)
+- LLM integration (In Progress)
+
+---
+
+# Architecture
+
+```text
+                    +-----------------------+
+                    |   Network Dataset     |
+                    +-----------+-----------+
+                                |
+                                v
+                     Data Preprocessing
+                                |
+                                v
+                     Federated Learning
+                     (Flower + PyTorch)
+                                |
+             +------------------+------------------+
+             |                                     |
+      Client 1                               Client N
+             |                                     |
+             +------------------+------------------+
+                                |
+                                v
+                       Global Model (FedAvg)
+                                |
+                                v
+                     FastAPI Prediction API
+                                |
+          +---------------------+---------------------+
+          |                                           |
+          v                                           v
+    React Frontend                           Analytics API
+          |
+          v
+     RAG Knowledge Base
+          |
+          v
+   Semantic Retrieval (FAISS)
+          |
+          v
+     LLM Explanation (Planned)
+```
 
 ---
 
@@ -40,20 +85,30 @@ Intrusion-Detection-System/
 ├── backend/
 │   ├── federated/
 │   │   ├── client.py
-│   │   ├── config.py
-│   │   ├── dataset.py
-│   │   ├── evaluate.py
-│   │   ├── model.py
-│   │   ├── predict.py
 │   │   ├── server.py
 │   │   ├── strategy.py
+│   │   ├── dataset.py
+│   │   ├── model.py
 │   │   ├── train.py
+│   │   ├── evaluate.py
+│   │   ├── predict.py
+│   │   ├── config.py
 │   │   └── utils.py
 │   │
-│   ├── models/
-│   ├── routes/
-│   ├── llm/
 │   ├── rag/
+│   │   ├── loader.py
+│   │   ├── chunker.py
+│   │   ├── embedder.py
+│   │   ├── vector_store.py
+│   │   ├── retriever.py
+│   │   ├── rag_pipeline.py
+│   │   ├── documents/
+│   │   └── vector_db/
+│   │
+│   ├── llm/
+│   ├── routes/
+│   ├── models/
+│   ├── reports/
 │   ├── requirements.txt
 │   └── main.py
 │
@@ -77,7 +132,7 @@ Intrusion-Detection-System/
 
 ## Federated Learning
 
-- Flower Framework
+- Flower
 
 ## Backend
 
@@ -91,22 +146,27 @@ Intrusion-Detection-System/
 - TypeScript
 - Tailwind CSS
 
-## AI Components
+## RAG
 
-- Retrieval-Augmented Generation (Planned)
-- Large Language Models (Planned)
+- Sentence Transformers
+- FAISS
+- Markdown Knowledge Base
+
+## Future AI
+
+- Large Language Models (LLMs)
 
 ---
 
 # Dataset
 
-**Dataset Used**
+Dataset Used
 
 - CICIDS2017
 
-The dataset is **not included** in this repository because it exceeds GitHub's file size limit.
+The dataset is not included in this repository because it exceeds GitHub's file size limit.
 
-Download the processed dataset and place it inside:
+Place the processed dataset in:
 
 ```text
 backend/datasets/combinenew.csv
@@ -122,7 +182,7 @@ Clone the repository
 git clone https://github.com/harshakolachala/Intrusion-Detection-System.git
 ```
 
-Navigate into the project
+Navigate to the project
 
 ```bash
 cd Intrusion-Detection-System
@@ -146,48 +206,37 @@ npm install
 
 # Running the Project
 
-## 1. Start Flower Server
+## Start Flower Server
 
 ```bash
 cd backend
 python -m federated.server
 ```
 
----
-
-## 2. Start Flower Clients
+## Start Flower Clients
 
 Open three terminals.
 
-### Terminal 1
-
 ```bash
 python -m federated.client
 ```
 
-### Terminal 2
+Run the same command in each terminal.
 
-```bash
-python -m federated.client
-```
-
-### Terminal 3
-
-```bash
-python -m federated.client
-```
-
----
-
-## 3. Start FastAPI Backend
+## Start FastAPI Backend
 
 ```bash
 uvicorn main:app --reload
 ```
 
----
+## Start React Frontend
 
-## 4. Open Swagger Documentation
+```bash
+cd frontend
+npm run dev
+```
+
+## Swagger Documentation
 
 ```
 http://127.0.0.1:8000/docs
@@ -195,63 +244,79 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## 5. Start React Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
----
-
 # API Endpoints
 
 | Method | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/` | Project Status |
-| GET | `/health` | Health Check |
-| GET | `/analytics/stats` | Attack Statistics |
-| POST | `/predict` | Intrusion Prediction |
-| GET | `/chatbot/explain/{detection_id}` | Explain Detection |
-| POST | `/chatbot/explain` | Manual Attack Explanation |
+|----------|--------------------------|-----------------------------|
+| GET | / | Project Status |
+| GET | /health | Health Check |
+| GET | /analytics/stats | Dashboard Analytics |
+| POST | /predict | Predict Network Traffic |
+| GET | /chatbot/explain/{id} | Explain Detection |
+| POST | /chatbot/explain | Manual Explanation |
 
 ---
 
 # Machine Learning Pipeline
 
 ```text
-                  CICIDS2017 Dataset
-                          │
-                          ▼
-                 Data Preprocessing
-      (Cleaning • Encoding • Scaling)
-                          │
-                          ▼
-                 Train-Test Split
-                          │
-                          ▼
-             Client Data Partitioning
-                          │
-                          ▼
-                Local MLP Training
-                          │
-                          ▼
-          Federated Learning (Flower)
-                          │
-                          ▼
-          Federated Averaging (FedAvg)
-                          │
-                          ▼
-               Global Intrusion Model
-                          │
-                          ▼
-                Prediction Module
-                          │
-                          ▼
-                FastAPI REST API
-                          │
-                          ▼
-                  React Frontend
+CICIDS2017 Dataset
+        │
+        ▼
+Data Cleaning
+        │
+        ▼
+Feature Scaling
+        │
+        ▼
+Train-Test Split
+        │
+        ▼
+Client Partitioning
+        │
+        ▼
+Local MLP Training
+        │
+        ▼
+Federated Learning
+        │
+        ▼
+FedAvg Aggregation
+        │
+        ▼
+Global Model
+        │
+        ▼
+Prediction API
+```
+
+---
+
+# RAG Pipeline
+
+```text
+Cybersecurity Documents
+          │
+          ▼
+Document Loader
+          │
+          ▼
+Document Chunking
+          │
+          ▼
+Sentence Embeddings
+          │
+          ▼
+FAISS Vector Database
+          │
+          ▼
+Retriever
+          │
+          ▼
+RAG Pipeline
+          │
+          ▼
+LLM (Planned)
 ```
 
 ---
@@ -266,36 +331,42 @@ npm run dev
 | Local Training | ✅ Completed |
 | Model Evaluation | ✅ Completed |
 | Flower Integration | ✅ Completed |
-| Federated Training | ✅ Completed |
+| Federated Learning | ✅ Completed |
 | Prediction Module | ✅ Completed |
-| FastAPI Prediction API | ✅ Completed |
-| Swagger API Testing | ✅ Completed |
+| FastAPI Backend | ✅ Completed |
+| Prediction REST API | ✅ Completed |
 | Analytics API | ✅ Completed |
 | React Frontend | ✅ Completed |
-| Global Model Saving | ⏳ In Progress |
-| RAG Integration | ⏳ Planned |
-| LLM Integration | ⏳ Planned |
-| Explainable AI | ⏳ Planned |
+| RAG Document Loader | ✅ Completed |
+| Document Chunking | ✅ Completed |
+| Sentence Embeddings | ✅ Completed |
+| FAISS Vector Store | ✅ Completed |
+| Retriever | ✅ Completed |
+| RAG Pipeline | ✅ Completed |
+| LLM Integration | ⏳ In Progress |
+| Global Model Checkpointing | ⏳ In Progress |
+| Final Testing | ⏳ In Progress |
 
 ---
 
 # Future Enhancements
 
 - Automatic saving of the trained global federated model
-- End-to-end Federated Learning workflow
-- Retrieval-Augmented Generation (RAG)
 - LLM-powered attack explanation
-- Explainable AI for prediction interpretation
-- Real-time network traffic monitoring
-- Docker containerization
-- CI/CD pipeline using GitHub Actions
-- Cloud deployment (AWS/GCP/Azure)
+- Real-time network packet capture
+- Explainable AI (XAI)
+- Docker deployment
+- GitHub Actions CI/CD
+- Cloud deployment
+- Multi-class intrusion detection
+- Live network monitoring
 
 ---
 
 # Contributors
 
-Sai Rohit, Harsha and Hasini
+--Sai Rohit Harsha and Hasini--
+
 ---
 
 # License
