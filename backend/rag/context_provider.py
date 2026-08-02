@@ -1,42 +1,75 @@
-"""
-Single entry point the LLM/explain layer uses to get retrieved context.
-
-Integration contract with Hasini's retriever (backend/rag/retriever.py):
-    She should expose a function with this signature:
-
-        def retrieve(query: str, top_k: int = 3) -> list[str]
-
-    (a list of plain-text chunks, most relevant first). As soon as that
-    module exists and exposes `retrieve`, this file will use it automatically
-    -- no changes needed on Rohith's side. Until then, it falls back to the
-    local static knowledge base so /chatbot/explain works standalone today.
-"""
-
 import logging
 from typing import List
 
-from rag.knowledge_base import get_local_context
+from rag.rag_pipeline import RAGPipeline
 
 logger = logging.getLogger("rag.context_provider")
 
-_real_retrieve = None
-try:
-    # Hasini's module, once merged, should live at backend/rag/retriever.py
-    from rag.retriever import retrieve as _real_retrieve  # type: ignore
-    logger.info("Using ChromaDB retriever from rag.retriever")
-except ImportError:
-    logger.info("rag.retriever not found yet -- using local knowledge_base fallback")
 
+class ContextProvider:
+    """
+    Provides cybersecurity context for the LLM using
+    the Retrieval-Augmented Generation pipeline.
+    """
 
-def get_context(attack_type: str, top_k: int = 3) -> List[str]:
-    """Return top_k reference snippets relevant to the given attack type."""
-    if _real_retrieve is not None:
+    def __init__(self):
+
+        self.pipeline = RAGPipeline()
+
+    def get_context(
+        self,
+        attack_type: str,
+        top_k: int = 3
+    ) -> List[str]:
+
+        query = (
+            f"{attack_type} network intrusion "
+            f"attack explanation"
+        )
+
         try:
-            query = f"{attack_type} network intrusion attack detection explanation"
-            results = _real_retrieve(query, top_k=top_k)
-            if results:
-                return results
-        except Exception as exc:  # noqa: BLE001 - never let RAG errors break /explain
-            logger.warning("rag.retriever.retrieve failed (%s); falling back to local KB", exc)
 
-    return get_local_context(attack_type, top_k=top_k)
+            return self.pipeline.get_context(
+                query=query,
+                top_k=top_k
+            )
+
+        except Exception as e:
+
+            logger.error(
+                "RAG retrieval failed: %s",
+                e
+            )
+
+            return []
+
+
+provider = ContextProvider()
+
+
+def get_context(
+    attack_type: str,
+    top_k: int = 3
+) -> List[str]:
+
+    return provider.get_context(
+        attack_type,
+        top_k
+    )
+
+
+if __name__ == "__main__":
+
+    context = get_context(
+        "DDoS"
+    )
+
+    print()
+
+    for i, snippet in enumerate(context, 1):
+
+        print(f"Snippet {i}")
+
+        print(snippet)
+
+        print("-" * 60)

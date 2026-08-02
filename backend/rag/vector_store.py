@@ -4,9 +4,9 @@ import pickle
 import faiss
 import numpy as np
 
-from loader import DocumentLoader
-from chunker import DocumentChunker
-from embedder import DocumentEmbedder
+from rag.loader import DocumentLoader
+from rag.chunker import DocumentChunker
+from rag.embedder import DocumentEmbedder
 
 
 class VectorStore:

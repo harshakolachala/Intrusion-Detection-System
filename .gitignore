@@ -1,18 +1,68 @@
+# ==========================================
 # Python
+# ==========================================
 venv/
 backend/venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+
+# Environment
 .env
+.env.*
 
-# Data (large files, don't belong in git)
-backend/data/raw/
-backend/data/clients/
-vector_db/
+# ==========================================
+# Dataset (Do NOT upload large datasets)
+# ==========================================
+backend/datasets/
+*.csv
 
-# OS
+# ==========================================
+# Trained Models
+# ==========================================
+*.pth
+*.pt
+
+# Uncomment the next two lines if you DON'T want
+# to upload trained models to GitHub.
+# backend/models/
+# backend/global_model.pt
+
+# ==========================================
+# RAG Generated Files
+# ==========================================
+backend/rag/vector_db/
+
+# ==========================================
+# Logs
+# ==========================================
+logs/
+*.log
+
+# ==========================================
+# IDE
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# OS Files
+# ==========================================
 .DS_Store
+Thumbs.db
 
+# ==========================================
 # Frontend
+# ==========================================
 frontend/node_modules/
 frontend/dist/
+
+# ==========================================
+# Build / Cache
+# ==========================================
+.pytest_cache/
+.mypy_cache/
+.coverage
+.cache/

@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer
 
-from loader import DocumentLoader
-from chunker import DocumentChunker
+from rag.loader import DocumentLoader
+from rag.chunker import DocumentChunker
 
 
 class DocumentEmbedder:
