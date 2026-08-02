@@ -2,32 +2,39 @@
 
 ## Overview
 
-This project implements a **Federated Intrusion Detection System (FL-IDS)** that detects malicious network traffic while preserving data privacy. Instead of sending raw network traffic to a central server, multiple clients train a local machine learning model independently. The Flower framework aggregates the local model parameters using the Federated Averaging (FedAvg) algorithm to produce a global intrusion detection model.
+The **Federated Intrusion Detection System (FL-IDS)** is a privacy-preserving network intrusion detection solution that leverages **Federated Learning (FL)** to train machine learning models across multiple clients without sharing raw network traffic data.
 
-The system uses a Multi-Layer Perceptron (MLP) for intrusion detection and is designed to integrate with FastAPI, React, Retrieval-Augmented Generation (RAG), and Large Language Models (LLMs) for intelligent cybersecurity analysis.
+Each client trains a local **Multi-Layer Perceptron (MLP)** model on its own data. The **Flower** framework aggregates the local model parameters using the **Federated Averaging (FedAvg)** algorithm to produce a global intrusion detection model.
+
+The project integrates **FastAPI** for backend services, **React** for the frontend interface, and is designed to support **Retrieval-Augmented Generation (RAG)** and **Large Language Models (LLMs)** for intelligent cybersecurity analysis and attack explanation.
 
 ---
 
-## Features
+# Features
 
-- Data preprocessing and cleaning
+- Privacy-preserving Federated Learning
+- CICIDS2017 Dataset preprocessing
+- Data cleaning and normalization
 - Feature scaling using StandardScaler
 - Label encoding
-- Multi-Layer Perceptron (MLP) model
-- Federated Learning using Flower
+- Multi-Layer Perceptron (MLP) based IDS
+- Flower-based Federated Learning
 - FedAvg aggregation strategy
 - Multi-client federated training
 - FastAPI backend
-- React frontend
-- Prediction module (In Progress)
-- RAG integration (Planned)
-- LLM-based attack explanation (Planned)
+- REST Prediction API
+- Swagger API Documentation
+- Analytics Dashboard API
+- React Frontend
+- Real-time Intrusion Prediction
+- RAG Integration (Planned)
+- LLM-based Attack Explanation (Planned)
 
 ---
 
-## Project Structure
+# Project Structure
 
-```
+```text
 Intrusion-Detection-System/
 │
 ├── backend/
@@ -45,6 +52,8 @@ Intrusion-Detection-System/
 │   │
 │   ├── models/
 │   ├── routes/
+│   ├── llm/
+│   ├── rag/
 │   ├── requirements.txt
 │   └── main.py
 │
@@ -57,55 +66,55 @@ Intrusion-Detection-System/
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-### Machine Learning
+## Machine Learning
 
 - PyTorch
 - Scikit-learn
 - NumPy
 - Pandas
 
-### Federated Learning
+## Federated Learning
 
 - Flower Framework
 
-### Backend
+## Backend
 
 - FastAPI
 - SQLAlchemy
 - SQLite
 
-### Frontend
+## Frontend
 
 - React
 - TypeScript
 - Tailwind CSS
 
-### Future AI Components
+## AI Components
 
-- RAG
-- LLM
+- Retrieval-Augmented Generation (Planned)
+- Large Language Models (Planned)
 
 ---
 
-## Dataset
+# Dataset
 
-Dataset Used:
+**Dataset Used**
 
-**CICIDS2017**
+- CICIDS2017
 
-Due to GitHub's file size limitations, the dataset is not included in this repository.
+The dataset is **not included** in this repository because it exceeds GitHub's file size limit.
 
-Download the dataset separately and place the processed dataset here:
+Download the processed dataset and place it inside:
 
-```
+```text
 backend/datasets/combinenew.csv
 ```
 
 ---
 
-## Installation
+# Installation
 
 Clone the repository
 
@@ -113,7 +122,7 @@ Clone the repository
 git clone https://github.com/harshakolachala/Intrusion-Detection-System.git
 ```
 
-Navigate to the project
+Navigate into the project
 
 ```bash
 cd Intrusion-Detection-System
@@ -135,9 +144,9 @@ npm install
 
 ---
 
-## Running the Project
+# Running the Project
 
-### Start Flower Server
+## 1. Start Flower Server
 
 ```bash
 cd backend
@@ -146,21 +155,23 @@ python -m federated.server
 
 ---
 
-### Start Flower Clients
+## 2. Start Flower Clients
 
-Terminal 1
+Open three terminals.
 
-```bash
-python -m federated.client
-```
-
-Terminal 2
+### Terminal 1
 
 ```bash
 python -m federated.client
 ```
 
-Terminal 3
+### Terminal 2
+
+```bash
+python -m federated.client
+```
+
+### Terminal 3
 
 ```bash
 python -m federated.client
@@ -168,7 +179,7 @@ python -m federated.client
 
 ---
 
-### Start FastAPI Backend
+## 3. Start FastAPI Backend
 
 ```bash
 uvicorn main:app --reload
@@ -176,7 +187,15 @@ uvicorn main:app --reload
 
 ---
 
-### Start React Frontend
+## 4. Open Swagger Documentation
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## 5. Start React Frontend
 
 ```bash
 cd frontend
@@ -185,71 +204,100 @@ npm run dev
 
 ---
 
-## Machine Learning Pipeline
+# API Endpoints
 
-```
-Dataset
-      │
-      ▼
-Data Preprocessing
-      │
-      ▼
-Feature Scaling
-      │
-      ▼
-MLP Model
-      │
-      ▼
-Federated Training
-      │
-      ▼
-FedAvg Aggregation
-      │
-      ▼
-Global Model
-      │
-      ▼
-Prediction
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/` | Project Status |
+| GET | `/health` | Health Check |
+| GET | `/analytics/stats` | Attack Statistics |
+| POST | `/predict` | Intrusion Prediction |
+| GET | `/chatbot/explain/{detection_id}` | Explain Detection |
+| POST | `/chatbot/explain` | Manual Attack Explanation |
+
+---
+
+# Machine Learning Pipeline
+
+```text
+                  CICIDS2017 Dataset
+                          │
+                          ▼
+                 Data Preprocessing
+      (Cleaning • Encoding • Scaling)
+                          │
+                          ▼
+                 Train-Test Split
+                          │
+                          ▼
+             Client Data Partitioning
+                          │
+                          ▼
+                Local MLP Training
+                          │
+                          ▼
+          Federated Learning (Flower)
+                          │
+                          ▼
+          Federated Averaging (FedAvg)
+                          │
+                          ▼
+               Global Intrusion Model
+                          │
+                          ▼
+                Prediction Module
+                          │
+                          ▼
+                FastAPI REST API
+                          │
+                          ▼
+                  React Frontend
 ```
 
 ---
 
-## Current Project Status
+# Current Project Status
 
 | Module | Status |
 |---------|--------|
 | Dataset Preprocessing | ✅ Completed |
+| Feature Engineering | ✅ Completed |
 | MLP Model | ✅ Completed |
 | Local Training | ✅ Completed |
+| Model Evaluation | ✅ Completed |
 | Flower Integration | ✅ Completed |
 | Federated Training | ✅ Completed |
+| Prediction Module | ✅ Completed |
+| FastAPI Prediction API | ✅ Completed |
+| Swagger API Testing | ✅ Completed |
+| Analytics API | ✅ Completed |
+| React Frontend | ✅ Completed |
 | Global Model Saving | ⏳ In Progress |
-| Prediction Module | ⏳ In Progress |
-| FastAPI Prediction API | ⏳ Pending |
-| React Integration | ⏳ Pending |
-| RAG Integration | ⏳ Pending |
-| LLM Integration | ⏳ Pending |
+| RAG Integration | ⏳ Planned |
+| LLM Integration | ⏳ Planned |
+| Explainable AI | ⏳ Planned |
 
 ---
 
-## Future Enhancements
+# Future Enhancements
 
-- Automatic Global Model Saving
-- Prediction API
-- Explainable AI
+- Automatic saving of the trained global federated model
+- End-to-end Federated Learning workflow
 - Retrieval-Augmented Generation (RAG)
-- LLM-based Attack Explanation
-- Real-time Network Traffic Monitoring
-- CI/CD Deployment
+- LLM-powered attack explanation
+- Explainable AI for prediction interpretation
+- Real-time network traffic monitoring
+- Docker containerization
+- CI/CD pipeline using GitHub Actions
+- Cloud deployment (AWS/GCP/Azure)
 
 ---
 
-## Contributors
+# Contributors
 
--SaiRohit, Harsha and Hasini
-
+Sai Rohit, Harsha and Hasini
 ---
 
-## License
+# License
 
-This project is developed as part of college major project for educational and research purpose
+This project was developed as a **B.Tech Major Project** for educational and research purposes.
