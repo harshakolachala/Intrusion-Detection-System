@@ -1,9 +1,25 @@
-# SentinelAI
-### Enterprise Real-Time Federated Intrusion Detection System with Explainable AI
+# Enhancing Federated Intrusion Detection Through LLM-Driven Alert Explanation
 
-SentinelAI is an enterprise-grade Intrusion Detection System (IDS) that combines Federated Learning, Retrieval-Augmented Generation (RAG), Large Language Models (LLMs), PostgreSQL, and FastAPI to detect, analyze, and explain network attacks.
+An enterprise-grade Intrusion Detection System (IDS) that combines **Federated Learning**, **Retrieval-Augmented Generation (RAG)**, and **Large Language Models (LLMs)** to detect cyber threats, generate intelligent explanations, and provide a scalable security monitoring platform.
 
-The project is designed to evolve into a real-time network security platform capable of monitoring live traffic, detecting intrusions, generating AI-powered explanations, and presenting results through a modern web dashboard.
+---
+
+# Overview
+
+This project enhances traditional Intrusion Detection Systems by integrating Federated Learning with Explainable AI. Instead of relying on centralized training and static alerts, the system is designed to provide privacy-preserving intrusion detection with AI-generated explanations for detected attacks.
+
+The platform is being developed into a real-time enterprise IDS capable of monitoring live network traffic, detecting anomalies, storing security events, and assisting analysts with contextual explanations.
+
+---
+
+# Objectives
+
+- Develop a Federated Learning-based Intrusion Detection System
+- Preserve data privacy using decentralized model training
+- Improve alert interpretation using Retrieval-Augmented Generation (RAG)
+- Generate human-readable attack explanations using Large Language Models
+- Build an enterprise-grade backend with authentication and database support
+- Extend the system to support real-time network monitoring
 
 ---
 
@@ -11,25 +27,25 @@ The project is designed to evolve into a real-time network security platform cap
 
 ## Implemented
 
-### Authentication
-- JWT Authentication
-- User Registration
-- User Login
-- Password Hashing (bcrypt)
-- Protected API Routes
-- Role-based User Model
-
 ### Backend
 - FastAPI REST API
-- Enterprise Modular Architecture
+- Modular Enterprise Architecture
 - PostgreSQL Integration
 - SQLAlchemy ORM
 - Database Initialization
 
+### Authentication
+- User Registration
+- User Login
+- JWT Authentication
+- Password Hashing (bcrypt)
+- Protected API Routes
+- Role-Based User Model
+
 ### Federated Learning
 - Flower Framework
+- Federated Client-Server Architecture
 - Global Model Aggregation
-- Federated Clients
 - Global Model Prediction
 
 ### Explainable AI
@@ -37,10 +53,10 @@ The project is designed to evolve into a real-time network security platform cap
 - FAISS Vector Database
 - Sentence Transformers
 - LLM-based Attack Explanation
-- Context-aware Responses
+- Context Retrieval Pipeline
 
-### AI Models
-- PyTorch MLP Intrusion Detection Model
+### Machine Learning
+- PyTorch Intrusion Detection Model
 - Global Model Loading
 - Prediction API
 
@@ -49,43 +65,43 @@ The project is designed to evolve into a real-time network security platform cap
 # Planned Features
 
 - Live Packet Capture
-- Real-Time Flow Generation
+- Network Flow Generation
 - Automatic Feature Extraction
-- Continuous Intrusion Detection
+- Real-Time Intrusion Detection
 - Automatic Alert Generation
-- WebSocket Live Dashboard
+- Live Dashboard using WebSockets
 - Threat Intelligence Integration
 - Incident Management
-- PDF/CSV Reports
+- Security Reports
 - Docker Deployment
 - CI/CD Pipeline
-- Production Deployment
+- Cloud Deployment
 
 ---
 
-# Project Architecture
+# System Architecture
 
 ```
-                   React Frontend
-                         │
-                         ▼
-                  FastAPI Backend
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-        ▼                ▼                ▼
- Authentication      Prediction        Chatbot
-        │                │                │
-        ▼                ▼                ▼
- PostgreSQL      Federated Model      RAG + LLM
-                         │
-                         ▼
-                  Attack Detection
+                    React Frontend
+                           │
+                           ▼
+                     FastAPI Backend
+                           │
+      ┌────────────────────┼────────────────────┐
+      │                    │                    │
+      ▼                    ▼                    ▼
+Authentication       Prediction API        Chatbot API
+      │                    │                    │
+      ▼                    ▼                    ▼
+ PostgreSQL      Federated Learning      RAG + LLM
+                           │
+                           ▼
+                  Intrusion Detection
 ```
 
 ---
 
-# Tech Stack
+# Technology Stack
 
 ## Backend
 
@@ -99,13 +115,13 @@ The project is designed to evolve into a real-time network security platform cap
 
 - PyTorch
 - Flower Federated Learning
-- Scikit-Learn
+- Scikit-learn
 
 ## Explainable AI
 
 - FAISS
 - Sentence Transformers
-- Groq LLM
+- Groq
 - Google Gemini
 
 ## Frontend
@@ -119,18 +135,18 @@ The project is designed to evolve into a real-time network security platform cap
 
 - PostgreSQL
 
-## DevOps
+## Version Control
 
 - Git
 - GitHub
 
 ---
 
-# Folder Structure
+# Project Structure
 
 ```
 backend/
-
+│
 ├── auth/
 ├── database/
 ├── models/
@@ -158,18 +174,17 @@ backend/
 | Module | Status |
 |---------|--------|
 | Enterprise Backend | ✅ Completed |
-| PostgreSQL | ✅ Completed |
+| PostgreSQL Integration | ✅ Completed |
 | Authentication | ✅ Completed |
 | Federated Learning | ✅ Completed |
-| RAG | ✅ Completed |
+| RAG Pipeline | ✅ Completed |
 | LLM Integration | ✅ Completed |
 | Prediction API | ✅ Completed |
 | Chatbot API | ✅ Completed |
 | Frontend Dashboard | 🚧 In Progress |
 | Real-Time Detection | 🚧 In Progress |
-| WebSockets | 🚧 Planned |
-| Threat Intelligence | 🚧 Planned |
-| Docker Deployment | 🚧 Planned |
+| Threat Intelligence | ⏳ Planned |
+| Docker Deployment | ⏳ Planned |
 
 ---
 
@@ -178,7 +193,7 @@ backend/
 ## Clone Repository
 
 ```bash
-git clone https://github.com/khvs09/Intrusion-Detection-System.git
+git clone https://github.com/<your-username>/Intrusion-Detection-System.git
 
 cd Intrusion-Detection-System
 ```
@@ -215,13 +230,15 @@ pip install -r requirements.txt
 
 ## Configure PostgreSQL
 
-Create a PostgreSQL database:
+Create a PostgreSQL database.
+
+Example:
 
 ```
 sentinel_ai
 ```
 
-Update the database URL inside:
+Update the database configuration inside:
 
 ```
 backend/database/connection.py
@@ -247,7 +264,7 @@ uvicorn main:app --reload
 
 ---
 
-## Swagger
+## API Documentation
 
 ```
 http://127.0.0.1:8000/docs
@@ -255,37 +272,19 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# Authentication Endpoints
+# Available APIs
 
-## Register
+## Authentication
 
 ```
 POST /auth/register
-```
-
-## Login
-
-```
 POST /auth/login
-```
-
-## Current User
-
-```
-GET /auth/me
+GET  /auth/me
 ```
 
 ---
 
-# AI Explanation Endpoint
-
-```
-POST /chatbot/explain
-```
-
----
-
-# Prediction Endpoint
+## Prediction
 
 ```
 POST /predict
@@ -293,52 +292,56 @@ POST /predict
 
 ---
 
-# Future Roadmap
+## Explainable AI
 
-## Phase 1
-- Enterprise Backend
-- Authentication
-- PostgreSQL
-- Federated Learning
-- RAG
-
-Status: ✅ Completed
+```
+POST /chatbot/explain
+GET  /chatbot/explain/{detection_id}
+```
 
 ---
 
-## Phase 2
+# Development Roadmap
 
-- Live Packet Capture
+## Phase 1 ✅ Completed
+
+- Enterprise Backend
+- PostgreSQL Integration
+- JWT Authentication
+- Federated Learning
+- RAG Integration
+- LLM Integration
+
+---
+
+## Phase 2 🚧 In Progress
+
+- Packet Capture
 - Flow Generation
 - Feature Extraction
 - Real-Time Prediction
-- Automatic Alerts
-- WebSocket Dashboard
-
-Status: 🚧 In Progress
+- Automatic Alert Generation
+- Live Dashboard
 
 ---
 
-## Phase 3
+## Phase 3 ⏳ Planned
 
 - Threat Intelligence
-- Incident Response
+- Incident Management
 - Reports
 - Docker
 - CI/CD
 - Cloud Deployment
 
-Status: ⏳ Planned
-
 ---
 
 # Contributors
 
-- Rohith, Harsha and Hasini.
-  
+- Rohith, Harsha and Hasini
 
 ---
 
 # License
 
-This project is developed for educational and research purposes.
+This project is developed as 'Major Project' for educational and research purpose
