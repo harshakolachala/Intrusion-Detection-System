@@ -1,22 +1,43 @@
 # Distributed Denial of Service (DDoS)
 
-A Distributed Denial of Service attack attempts to make a target unavailable by flooding it with traffic from multiple compromised devices.
+## Overview
+
+A Distributed Denial of Service (DDoS) attack overwhelms a server, application, or network with traffic from multiple compromised systems. The objective is to exhaust resources and prevent legitimate users from accessing services.
 
 ## Characteristics
 
-- High traffic volume
+- Massive traffic volume
 - Multiple attacking sources
-- Service disruption
+- Network congestion
+- Resource exhaustion
 
-## Detection
+## Detection Indicators
 
-- Sudden increase in packets
+- Sudden traffic spikes
 - High bandwidth usage
-- Large number of requests
+- Increased latency
+- Service outages
+- Multiple source IP addresses
+
+## Impact
+
+- Website downtime
+- Financial loss
+- Service interruption
+- Customer dissatisfaction
 
 ## Mitigation
 
-- Rate limiting
-- Firewall rules
-- DDoS protection services
 - Traffic filtering
+- Load balancing
+- DDoS protection services
+- Rate limiting
+- Firewall configuration
+
+## Prevention
+
+- Continuous monitoring
+- CDN deployment
+- Network redundancy
+- Intrusion Detection Systems
+- Capacity planning
