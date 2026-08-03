@@ -514,17 +514,8 @@ Planned screenshots:
 
 # Contributors
 
-## Backend & Integration
+Sai Rohith | Harsha Vardhan Sharma | Hasini
 
-Harsha Vardhan Sharma
-
-## AI & Federated Learning
-
-Hasini
-
-## Frontend Development
-
-Sai Rohith
 
 ---
 
