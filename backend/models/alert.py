@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
@@ -17,10 +16,10 @@ from database.base import Base
 class Alert(Base):
     __tablename__ = "alerts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[str] = mapped_column(
+        String(36),
         primary_key=True,
-        default=uuid.uuid4,
+        default=lambda: str(uuid.uuid4()),
     )
 
     source_ip: Mapped[str] = mapped_column(
@@ -51,7 +50,7 @@ class Alert(Base):
     )
 
     attack_type: Mapped[str] = mapped_column(
-        String(100),
+        String(10),
         nullable=False,
         index=True,
     )
@@ -77,7 +76,7 @@ class Alert(Base):
     )
 
     mitre_attack: Mapped[str | None] = mapped_column(
-        String(100),
+        String(10),
         nullable=True,
     )
 
