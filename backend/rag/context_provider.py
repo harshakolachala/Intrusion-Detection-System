@@ -14,7 +14,15 @@ class ContextProvider:
 
     def __init__(self):
 
-        self.pipeline = RAGPipeline()
+        self.pipeline = None
+
+    def _get_pipeline(self):
+        """Lazy load — only creates pipeline when actually needed."""
+
+        if self.pipeline is None:
+            self.pipeline = RAGPipeline()
+
+        return self.pipeline
 
     def get_context(
         self,
@@ -29,7 +37,12 @@ class ContextProvider:
 
         try:
 
-            return self.pipeline.get_context(
+            pipeline = self._get_pipeline()
+
+            if pipeline is None:
+                return []
+
+            return pipeline.get_context(
                 query=query,
                 top_k=top_k
             )
@@ -44,18 +57,16 @@ class ContextProvider:
             return []
 
 
-provider = ContextProvider()
-
-
 def get_context(
     attack_type: str,
     top_k: int = 3
 ) -> List[str]:
 
-    return provider.get_context(
-        attack_type,
-        top_k
-    )
+    try:
+        provider = ContextProvider()
+        return provider.get_context(attack_type, top_k)
+    except Exception:
+        return []
 
 
 if __name__ == "__main__":
