@@ -1,20 +1,14 @@
-"""
-Database initialization.
-
-Creates all database tables.
-"""
-
 from database.connection import engine
 from database.base import Base
-
-# Import all models here
 from models.user import User
 from models.alert import Alert
-
+from models.audit import Audit
+from models.chat import Chat
+from models.incident import Incident
+from models.prediction import PredictionHistory
 
 def init_database():
     Base.metadata.create_all(bind=engine)
-
 
 if __name__ == "__main__":
     init_database()
