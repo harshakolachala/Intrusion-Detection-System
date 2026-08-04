@@ -69,6 +69,16 @@ class ExplainResponse(BaseModel):
     sources: List[str]
 
 
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=500)
+
+
+class ChatResponse(BaseModel):
+    response: str
+    sources: List[str]
+    llm_provider: str
+
+
 def _build_response(
     detection_id: Optional[str],
     attack_type: str,
@@ -88,7 +98,6 @@ def _build_response(
         context_snippets=sources,
         top_features=top_features,
     )
-
     return ExplainResponse(
         detection_id=detection_id,
         attack_type=attack_type,
@@ -96,6 +105,42 @@ def _build_response(
         explanation=result["explanation"],
         llm_provider=result["provider"],
         sources=sources,
+    )
+
+
+@router.post(
+    "/chat",
+    response_model=ChatResponse,
+)
+def chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Chat with the RAG-powered cybersecurity assistant.
+    """
+
+    logger.info(
+        "User %s sent chat message: %s",
+        current_user.username,
+        request.message[:50],
+    )
+
+    # Get context from RAG knowledge base
+    sources = get_context("security", top_k=3)
+
+    # Generate explanation using the LLM
+    result = generate_explanation(
+        attack_type="general",
+        confidence=1.0,
+        context_snippets=sources,
+        top_features=None,
+    )
+
+    return ChatResponse(
+        response=result["explanation"],
+        sources=sources,
+        llm_provider=result["provider"],
     )
 
 
