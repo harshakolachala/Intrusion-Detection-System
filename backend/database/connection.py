@@ -1,8 +1,8 @@
 """
 Database connection configuration.
 
-Creates the SQLAlchemy engine using the PostgreSQL
-connection string stored in the .env file.
+Creates the SQLAlchemy engine using the connection string
+stored in the .env file. Falls back to SQLite if no URL is set.
 """
 
 import os
@@ -12,18 +12,17 @@ from sqlalchemy import create_engine
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./ids_database.db"
 
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is not configured. "
-        "Please check backend/.env"
-    )
+is_postgres = DATABASE_URL.startswith("postgresql")
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    echo=False,
-)
+engine_kwargs = {
+    "pool_pre_ping": True,
+    "echo": False,
+}
+
+if is_postgres:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
