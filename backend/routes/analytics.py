@@ -6,8 +6,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from database.session import get_db
-
-from schemas.analytics import AnalyticsResponse
 from services.analytics_service import AnalyticsService
 
 router = APIRouter(
@@ -16,30 +14,16 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/dashboard",
-    response_model=AnalyticsResponse,
-)
-def get_dashboard(
-    db: Session = Depends(get_db),
-):
-    """
-    Returns complete dashboard analytics.
-    """
-
-    return AnalyticsService.get_dashboard(db)
-
-
-@router.get("/summary")
-def get_summary(
+@router.get("/dashboard")
+def dashboard(
     db: Session = Depends(get_db),
 ):
 
-    return AnalyticsService.dashboard_summary(db)
+    return AnalyticsService.dashboard(db)
 
 
 @router.get("/attack-distribution")
-def get_attack_distribution(
+def attack_distribution(
     db: Session = Depends(get_db),
 ):
 
@@ -47,16 +31,16 @@ def get_attack_distribution(
 
 
 @router.get("/severity-distribution")
-def get_severity_distribution(
+def severity_distribution(
     db: Session = Depends(get_db),
 ):
 
     return AnalyticsService.severity_distribution(db)
 
 
-@router.get("/confidence")
-def get_confidence_statistics(
+@router.get("/top-source-ips")
+def top_source_ips(
     db: Session = Depends(get_db),
 ):
 
-    return AnalyticsService.confidence_statistics(db)
+    return AnalyticsService.top_source_ips(db)

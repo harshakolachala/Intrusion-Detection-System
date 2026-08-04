@@ -17,6 +17,11 @@ from routes.audit import router as audit_router
 from exceptions import register_exception_handlers
 from middleware import LoggingMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from routes.incidents import router as incidents_router
+from routes.predictions import router as predictions_router
+from core.logger import logger
+
+
 
 from database.init_db import init_database
 
@@ -30,6 +35,7 @@ register_exception_handlers(app)
 
 # Initialize Database
 init_database()
+logger.info("SentinelAI Backend Started Successfully")
 
 # CORS Configuration
 app.add_middleware(
@@ -65,6 +71,23 @@ app.include_router(alerts_router)
 # Audit Logs
 app.include_router(audit_router)
 
+# Incident Management
+app.include_router(incidents_router)
+
+# Prediction Management
+app.include_router(predictions_router)
+
+
+@app.on_event("startup")
+async def startup():
+
+    logger.info("SentinelAI API Started")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+
+    logger.info("SentinelAI API Stopped")
 
 @app.get("/")
 def root():
