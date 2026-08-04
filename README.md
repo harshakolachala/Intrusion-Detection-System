@@ -1,358 +1,214 @@
-# Federated Intrusion Detection System (FL-IDS)
+# SentinelAI
 
-A privacy-preserving **Federated Intrusion Detection System (FL-IDS)** built using **Flower, PyTorch, FastAPI, React, Retrieval-Augmented Generation (RAG), and Large Language Models (LLMs)**.
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![License](https://img.shields.io/badge/License-Educational-orange)
 
-The system enables multiple clients to collaboratively train an intrusion detection model without sharing raw network traffic. It also provides AI-powered explanations for detected attacks using a cybersecurity knowledge base and modern LLMs.
+# Enterprise Real-Time Federated Intrusion Detection System with Explainable AI
+
+SentinelAI is an enterprise-grade Intrusion Detection System (IDS) that combines **Federated Learning**, **Retrieval-Augmented Generation (RAG)**, **Large Language Models (LLMs)**, **FastAPI**, **PostgreSQL**, and **React** to detect, analyze, and explain cyber attacks.
+
+Unlike traditional IDS solutions that rely on centralized datasets and static alerts, SentinelAI is designed as a modular, scalable platform capable of supporting real-time traffic monitoring, AI-powered attack explanations, and enterprise security workflows.
 
 ---
 
-# Project Overview
+# Key Highlights
 
-Traditional Intrusion Detection Systems require centralized collection of network traffic, creating privacy and security concerns.
-
-This project addresses those issues by combining:
-
-- Federated Learning for decentralized model training
-- Deep Learning for intrusion detection
-- FastAPI backend services
-- React frontend dashboard
-- Retrieval-Augmented Generation (RAG)
-- Groq/Gemini LLM integration for attack explanations
-
-The project is designed to evolve into a deployable enterprise cybersecurity platform.
+- Enterprise Modular Architecture
+- Federated Learning using Flower
+- Explainable AI using RAG + LLM
+- JWT Authentication
+- PostgreSQL Database
+- React + TypeScript Dashboard
+- AI-Powered Attack Explanations
+- Real-Time Intrusion Detection (In Progress)
+- WebSocket Live Monitoring (In Progress)
 
 ---
 
 # Features
 
-## Machine Learning
+## Authentication
 
-- Intrusion Detection using Multi-Layer Perceptron (MLP)
-- PyTorch implementation
-- Model evaluation
-- Automatic prediction
+- JWT Authentication
+- User Registration
+- User Login
+- Password Hashing (bcrypt)
+- Protected API Routes
+- Role-Based User Management
 
-## Federated Learning
-
-- Flower Framework
-- Multi-client training
-- FedAvg aggregation
-- Automatic global model checkpoint saving
+---
 
 ## Backend
 
 - FastAPI REST APIs
-- Prediction API
-- Analytics API
-- Chatbot API
-- SQLAlchemy
-- SQLite
+- Enterprise Folder Structure
+- SQLAlchemy ORM
+- PostgreSQL Integration
+- Dependency Injection
+- API Documentation (Swagger)
 
-## Frontend
+---
 
-- React
-- TypeScript
-- Tailwind CSS
-- Dashboard
-- Analytics
-- Alerts
-- Prediction Page
+## Federated Learning
 
-## Artificial Intelligence
+- Flower Framework
+- Global Model Aggregation
+- Distributed Clients
+- Global IDS Model
+- Model Prediction API
+
+---
+
+## Explainable AI
 
 - Retrieval-Augmented Generation (RAG)
 - FAISS Vector Database
 - Sentence Transformers
-- Cybersecurity Knowledge Base
 - Groq LLM
 - Google Gemini Support
-- AI-powered attack explanations
+- Context-Aware Attack Explanations
 
 ---
 
-# Project Architecture
+## Machine Learning
 
-```text
-                    +------------------------+
-                    |     React Frontend     |
-                    +-----------+------------+
-                                |
-                                |
-                    FastAPI Backend APIs
-                                |
-        -------------------------------------------------
-        |                |                |              |
-        ▼                ▼                ▼              ▼
- Prediction API     Analytics API    Chatbot API    Health API
-        |                                |
-        |                                |
-        ▼                                ▼
- Federated Model                 RAG Pipeline
-        |                                |
-        |                     ------------------------
-        |                     |          |           |
-        ▼                     ▼          ▼           ▼
- Flower Server           FAISS DB   Retriever   LLM (Groq/Gemini)
-        |
-        ▼
-Federated Clients
-        |
-        ▼
-CICIDS2017 Dataset
+- PyTorch MLP IDS Model
+- Global Model Loading
+- Attack Prediction API
+- Confidence Score Generation
+
+---
+
+# Planned Features
+
+- Live Packet Capture
+- Flow Generation
+- Automatic Feature Extraction
+- Continuous Intrusion Detection
+- Automatic Alert Generation
+- Incident Management
+- Threat Intelligence Integration
+- WebSocket Live Dashboard
+- PDF Report Generation
+- CSV Report Export
+- Docker Deployment
+- Kubernetes Support
+- CI/CD Pipeline
+- Cloud Deployment
+
+---
+
+# System Architecture
+
+```
+                    React Dashboard
+                           │
+                           ▼
+                     FastAPI Backend
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+        ▼                  ▼                  ▼
+ Authentication      Prediction API      Chatbot API
+        │                  │                  │
+        ▼                  ▼                  ▼
+ PostgreSQL       Federated Learning     RAG + LLM
+                           │
+                           ▼
+                    Attack Detection
 ```
 
 ---
 
 # Technology Stack
 
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- JWT Authentication
+- Pydantic
+
+---
+
+## Machine Learning
+
+- PyTorch
+- Flower
+- Scikit-Learn
+- NumPy
+- Pandas
+
+---
+
+## Explainable AI
+
+- FAISS
+- Sentence Transformers
+- Groq
+- Google Gemini
+
+---
+
 ## Frontend
 
 - React
 - TypeScript
 - Tailwind CSS
-- Axios
+- Vite
 
-## Backend
+---
 
-- FastAPI
-- SQLAlchemy
-- SQLite
-- Pydantic
+## Database
 
-## Machine Learning
+- PostgreSQL
 
-- PyTorch
-- NumPy
-- Pandas
-- Scikit-learn
+---
 
-## Federated Learning
+## DevOps
 
-- Flower
-
-## AI & RAG
-
-- Sentence Transformers
-- FAISS
-- Groq API
-- Google Gemini
-- Markdown Knowledge Base
+- Git
+- GitHub
+- Docker *(Planned)*
+- GitHub Actions *(Planned)*
 
 ---
 
 # Project Structure
 
-```text
-Intrusion-Detection-System/
+```
+backend/
 │
-├── backend/
-│   ├── federated/
-│   │   ├── client.py
-│   │   ├── server.py
-│   │   ├── strategy.py
-│   │   ├── dataset.py
-│   │   ├── model.py
-│   │   ├── train.py
-│   │   ├── evaluate.py
-│   │   ├── predict.py
-│   │   ├── config.py
-│   │   └── utils.py
-│   │
-│   ├── rag/
-│   │   ├── loader.py
-│   │   ├── chunker.py
-│   │   ├── embedder.py
-│   │   ├── vector_store.py
-│   │   ├── retriever.py
-│   │   ├── rag_pipeline.py
-│   │   ├── context_provider.py
-│   │   ├── knowledge_base.py
-│   │   ├── documents/
-│   │   └── vector_db/
-│   │
-│   ├── llm/
-│   ├── routes/
-│   ├── models/
-│   ├── reports/
-│   ├── requirements.txt
-│   └── main.py
-│
-├── frontend/
-│
-├── .github/
-│
-├── screenshots/
-│
-└── README.md
+├── auth/
+├── database/
+├── models/
+├── routes/
+├── services/
+├── websocket/
+├── capture/
+├── flow/
+├── anomaly/
+├── notifications/
+├── threat_intel/
+├── reports/
+├── middleware/
+├── utils/
+├── federated/
+├── rag/
+├── llm/
+└── main.py
+
+frontend/
+
+docs/
+
+docker/
 ```
-
----
-
-# Dataset
-
-Dataset Used:
-
-**CICIDS2017**
-
-Due to GitHub's file size limitations, the dataset is not included in this repository.
-
-Place the processed dataset in:
-
-```
-backend/datasets/combinenew.csv
-```
-
----
-
-# Installation
-
-Clone the repository
-
-```bash
-git clone https://github.com/harshakolachala/Intrusion-Detection-System.git
-```
-
-Move into the project
-
-```bash
-cd Intrusion-Detection-System
-```
-
-Install backend dependencies
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-Install frontend dependencies
-
-```bash
-cd ../frontend
-npm install
-```
-
----
-
-# Running the Project
-
-## Start Flower Server
-
-```bash
-cd backend
-python -m federated.server
-```
-
----
-
-## Start Flower Clients
-
-Open three terminals.
-
-```bash
-python -m federated.client
-```
-
-Run the same command in each terminal.
-
----
-
-## Start Backend
-
-```bash
-uvicorn main:app --reload
-```
-
----
-
-## Start Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
----
-
-## Swagger API
-
-```
-http://127.0.0.1:8000/docs
-```
-
----
-
-# Machine Learning Pipeline
-
-```text
-CICIDS2017 Dataset
-          │
-          ▼
-Data Cleaning
-          │
-          ▼
-Feature Scaling
-          │
-          ▼
-Client Partitioning
-          │
-          ▼
-Local Model Training
-          │
-          ▼
-Flower FedAvg
-          │
-          ▼
-Global Model
-          │
-          ▼
-Prediction API
-```
-
----
-
-# RAG Pipeline
-
-```text
-Cybersecurity Documents
-          │
-          ▼
-Document Loader
-          │
-          ▼
-Document Chunking
-          │
-          ▼
-Sentence Embeddings
-          │
-          ▼
-FAISS Vector Database
-          │
-          ▼
-Retriever
-          │
-          ▼
-Context Provider
-          │
-          ▼
-Groq / Gemini LLM
-          │
-          ▼
-AI Attack Explanation
-```
-
----
-
-# API Endpoints
-
-| Method | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/` | Project Status |
-| GET | `/health` | Health Check |
-| POST | `/predict` | Predict Network Traffic |
-| GET | `/analytics/stats` | Dashboard Statistics |
-| GET | `/chatbot/explain/{id}` | Explain Detection |
-| POST | `/chatbot/explain` | Manual Attack Explanation |
 
 ---
 
@@ -360,83 +216,359 @@ AI Attack Explanation
 
 | Module | Status |
 |---------|--------|
-| Dataset Preprocessing | ✅ Completed |
+| Enterprise Backend | ✅ Completed |
+| PostgreSQL | ✅ Completed |
+| Authentication | ✅ Completed |
 | Federated Learning | ✅ Completed |
-| FedAvg Aggregation | ✅ Completed |
-| Automatic Global Model Saving | ✅ Completed |
-| MLP Model | ✅ Completed |
-| Prediction API | ✅ Completed |
-| FastAPI Backend | ✅ Completed |
-| React Frontend | ✅ Completed |
-| Analytics Dashboard | ✅ Completed |
 | RAG Pipeline | ✅ Completed |
-| FAISS Vector Database | ✅ Completed |
-| AI Chatbot Backend | ✅ Completed |
-| Groq Integration | ✅ Completed |
-| Gemini Integration | ✅ Completed |
+| LLM Integration | ✅ Completed |
+| Prediction API | ✅ Completed |
+| Chatbot API | ✅ Completed |
+| Frontend Dashboard | 🚧 In Progress |
+| Real-Time Detection | 🚧 In Progress |
+| WebSockets | ⏳ Planned |
+| Threat Intelligence | ⏳ Planned |
+| Docker Deployment | ⏳ Planned |
+
+---
+
+# Installation
+
+## Clone Repository
+
+```bash
+git clone https://github.com/khvs09/Intrusion-Detection-System.git
+
+cd Intrusion-Detection-System
+```
+
+## Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Windows
+
+```bash
+venv\Scripts\activate
+```
+
+Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
+## Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## Configure PostgreSQL
+
+Create a PostgreSQL database named:
+
+```
+sentinel_ai
+```
+
+Update the database configuration inside:
+
+```
+backend/database/connection.py
+```
+
+## Initialize Database
+
+```bash
+cd backend
+
+python -m database.init_db
+```
+
+## Run Backend
+
+```bash
+uvicorn main:app --reload
+```
+
+## Swagger Documentation
+
+```
+http://127.0.0.1:8000/docs
+```
+---
+
+# API Endpoints
+
+## Authentication
+
+### Register User
+
+```http
+POST /auth/register
+```
+
+### Login User
+
+```http
+POST /auth/login
+```
+
+### Get Current User
+
+```http
+GET /auth/me
+```
+
+---
+
+## Prediction
+
+Predict whether a network flow is normal or malicious.
+
+```http
+POST /predict
+```
+
+---
+
+## AI Chatbot
+
+Generate an AI explanation for a detected attack.
+
+```http
+POST /chatbot/explain
+```
+
+Retrieve explanation using detection ID.
+
+```http
+GET /chatbot/explain/{detection_id}
+```
+
+---
+
+# Database Schema
+
+Current database tables include:
+
+- users
+- alerts
+- predictions
+- chat_history
+- incidents
+- audit_logs
+- model_versions
+
+---
+
+# Development Roadmap
+
+## ✅ Phase 1 — Enterprise Backend (Completed)
+
+- Enterprise Folder Structure
+- PostgreSQL Integration
+- SQLAlchemy ORM
+- JWT Authentication
+- User Registration
+- User Login
+- Protected APIs
+- Federated Learning Integration
+- RAG Integration
+- LLM Integration
+- Prediction API
+- AI Chatbot
+
+---
+
+## 🚧 Phase 2 — Real-Time Detection Engine (In Progress)
+
+- Live Packet Capture
+- Network Flow Generation
+- Automatic Feature Extraction
+- Continuous Prediction
+- Automatic Alert Creation
+- Incident Management
+- WebSocket Server
+- Live Dashboard Updates
+
+---
+
+## ⏳ Phase 3 — Enterprise Features
+
+- Threat Intelligence
+- AbuseIPDB Integration
+- VirusTotal Integration
+- GeoIP Lookup
+- WHOIS Lookup
+- PDF Report Generation
+- CSV Export
+- Docker Deployment
+- Docker Compose
+- GitHub Actions CI/CD
+- Cloud Deployment
+- Performance Optimization
+
+---
+
+# Project Workflow
+
+```
+                 Live Network Traffic
+                          │
+                          ▼
+                  Packet Capture Engine
+                          │
+                          ▼
+                   Flow Generation
+                          │
+                          ▼
+                Feature Extraction
+                          │
+                          ▼
+              Federated Learning Model
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+              ▼                       ▼
+      Prediction API            PostgreSQL
+              │                       │
+              ▼                       ▼
+       AI Explanation          Alert Storage
+              │                       │
+              └───────────┬───────────┘
+                          ▼
+                 React Dashboard
+```
 
 ---
 
 # Future Enhancements
 
-- User Authentication (JWT)
-- Login & Registration
-- Real-time Dashboard
-- Live Network Traffic Monitoring
-- Prediction History
-- AI Chat Interface
-- Role-Based Access Control
-- Docker Support
+- Multi-Interface Packet Capture
+- IDS Rule Engine
+- Automatic Incident Assignment
+- Email Notifications
+- SMS Notifications
+- Discord Alerts
+- Slack Integration
+- SIEM Integration
+- Multiple Federated Clients
+- Model Version Management
+- Explainability Dashboard
+- Attack Timeline Visualization
+- Network Topology Visualization
+- Threat Hunting Dashboard
 - Kubernetes Deployment
-- CI/CD using GitHub Actions
-- PostgreSQL
-- Redis Caching
-- Cloud Deployment (AWS / Azure / GCP)
-- HTTPS & SSL
-- Monitoring with Prometheus & Grafana
-- Multi-class Intrusion Detection
-- Explainable AI (SHAP/LIME)
+- AWS Deployment
+- Azure Deployment
+- Prometheus Monitoring
+- Grafana Dashboard
 
 ---
 
-# Deployment Roadmap
+# Screenshots
 
-The project is being designed for future deployment using:
+Screenshots will be added as development progresses.
 
-Frontend
-- Vercel / Netlify
+Planned screenshots:
 
-Backend
-- Docker
-- FastAPI
-- Nginx
+- Login Page
+- Registration Page
+- Dashboard
+- Analytics
+- Live Alerts
+- AI Chatbot
+- Incident Management
+- Prediction History
+- User Profile
 
-Database
-- PostgreSQL
+---
 
-Federated Learning
-- Flower SuperLink & SuperNodes
+# Security Features
 
-Vector Database
-- FAISS (local) or ChromaDB
+- JWT Authentication
+- Password Hashing (bcrypt)
+- Protected API Endpoints
+- SQLAlchemy ORM
+- PostgreSQL Database
+- Audit Logging
+- Role-Based User Access
+- Enterprise Backend Architecture
 
-LLM
-- Groq Cloud
-- Google Gemini API
+---
 
-Cloud Platforms
-- AWS
-- Azure
-- Google Cloud Platform
+# Performance Goals
+
+- Real-Time Packet Processing
+- Low Prediction Latency
+- Modular Architecture
+- Scalable Backend
+- Efficient Database Operations
+- Enterprise-Level Maintainability
 
 ---
 
 # Contributors
 
-Rohith, Harsha and Hasini
+Sai Rohith | Harsha Vardhan Sharma | Hasini
+
+
+---
+
+# Repository
+
+GitHub Repository
+
+```
+https://github.com/khvs09/Intrusion-Detection-System
+```
 
 ---
 
 # License
 
-This project is developed as a B.Tech Major Project for educational, research, and cybersecurity learning purposes.
+This project is developed for educational, academic, and research purposes.
+
+---
+
+# Disclaimer
+
+This project is intended for educational and research use only.
+
+The real-time packet capture functionality should only be used on networks where you have explicit authorization to monitor and analyze traffic.
+
+Unauthorized monitoring of network traffic may violate organizational policies or applicable laws.
+
+---
+
+# Acknowledgements
+
+This project makes use of the following technologies:
+
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- PyTorch
+- Flower Federated Learning
+- FAISS
+- Sentence Transformers
+- React
+- Tailwind CSS
+- TypeScript
+- Scikit-learn
+- Groq
+- Google Gemini
+
+---
+
+## Project Status
+
+**Current Version:** v2.0.0
+
+**Development Status:** Active 🚀
+
+SentinelAI is under active development. Upcoming releases will introduce real-time network monitoring, continuous intrusion detection, enterprise dashboard enhancements, threat intelligence integration, and production-ready deployment support.
