@@ -56,5 +56,9 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "editor.tabSize": 5,
+  "editor.accessibilityPageSize": 500,
+  "chat.editor.fontSize": 18,
+  "chat.fontSize": 16
 }
