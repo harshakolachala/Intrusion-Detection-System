@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
@@ -17,10 +16,10 @@ from database.base import Base
 class Prediction(Base):
     __tablename__ = "predictions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[str] = mapped_column(
+        String(36),
         primary_key=True,
-        default=uuid.uuid4,
+        default=lambda: str(uuid.uuid4()),
     )
 
     model_version: Mapped[str] = mapped_column(
@@ -55,8 +54,8 @@ class Prediction(Base):
         nullable=False,
     )
 
-    alert_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+    alert_id: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("alerts.id"),
         nullable=True,
     )
