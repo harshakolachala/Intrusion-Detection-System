@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
@@ -17,14 +16,14 @@ from database.base import Base
 class Audit(Base):
     __tablename__ = "audit_logs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[str] = mapped_column(
+        String(36),
         primary_key=True,
-        default=uuid.uuid4,
+        default=lambda: str(uuid.uuid4()),
     )
 
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+    user_id: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("users.id"),
         nullable=True,
     )
@@ -63,8 +62,6 @@ class Audit(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
-
-    # Relationship
 
     user = relationship(
         "User",
