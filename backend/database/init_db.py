@@ -12,6 +12,7 @@ from models.audit import Audit
 from models.chat import Chat
 from models.incident import Incident
 from models.prediction import Prediction
+from models.model_version import ModelVersion
 
 
 def init_database():

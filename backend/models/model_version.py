@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -17,10 +16,10 @@ from database.base import Base
 class ModelVersion(Base):
     __tablename__ = "model_versions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[str] = mapped_column(
+        String(36),
         primary_key=True,
-        default=uuid.uuid4,
+        default=lambda: str(uuid.uuid4()),
     )
 
     version: Mapped[str] = mapped_column(
