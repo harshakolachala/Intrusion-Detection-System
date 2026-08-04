@@ -1,30 +1,126 @@
-from fastapi import APIRouter, Depends
+"""
+Alert Routes.
+"""
+
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from database import get_db
-import models
-from pydantic import BaseModel
-from datetime import datetime
 
-router = APIRouter(prefix="/alerts", tags=["alerts"])
+from database.session import get_db
 
-class AlertResponse(BaseModel):
-    id: int
-    attack_type: str
-    confidence: float
-    source_ip: str
-    timestamp: datetime
+from schemas.alert import (
+    AlertResponse,
+    AlertStatistics,
+    AlertUpdate,
+)
 
-    class Config:
-        from_attributes = True
+from services.alert_service import AlertService
 
-@router.get("/", response_model=List[AlertResponse])
-def get_recent_alerts(db: Session = Depends(get_db)):
-    """Fetch the 10 most recent alerts for the dashboard."""
-    return db.query(models.Alert).order_by(models.Alert.timestamp.desc()).limit(10).all()
+router = APIRouter(
+    prefix="/alerts",
+    tags=["Alerts"],
+)
 
-@router.get("/history", response_model=List[AlertResponse])
-def get_alert_history(db: Session = Depends(get_db)):
-    """Fetch all historical alerts for the history page."""
-    return db.query(models.Alert).order_by(models.Alert.timestamp.desc()).all()
-# API routes for intrusion alerts
+
+@router.get(
+    "/",
+    response_model=list[AlertResponse],
+)
+def get_alerts(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+
+    return AlertService.get_all(
+        db=db,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/statistics",
+    response_model=AlertStatistics,
+)
+def get_statistics(
+    db: Session = Depends(get_db),
+):
+
+    return AlertService.statistics(db)
+
+
+@router.get(
+    "/{alert_id}",
+    response_model=AlertResponse,
+)
+def get_alert(
+    alert_id: UUID,
+    db: Session = Depends(get_db),
+):
+
+    alert = AlertService.get_by_id(
+        db,
+        alert_id,
+    )
+
+    if alert is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found.",
+        )
+
+    return alert
+
+
+@router.patch(
+    "/{alert_id}/status",
+    response_model=AlertResponse,
+)
+def update_alert_status(
+    alert_id: UUID,
+    request: AlertUpdate,
+    db: Session = Depends(get_db),
+):
+
+    alert = AlertService.update_status(
+        db,
+        alert_id,
+        request.status,
+    )
+
+    if alert is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found.",
+        )
+
+    return alert
+
+
+@router.delete(
+    "/{alert_id}",
+)
+def delete_alert(
+    alert_id: UUID,
+    db: Session = Depends(get_db),
+):
+
+    deleted = AlertService.delete(
+        db,
+        alert_id,
+    )
+
+    if not deleted:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found.",
+        )
+
+    return {
+        "message": "Alert deleted successfully."
+    }

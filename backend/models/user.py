@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
 
@@ -71,4 +71,23 @@ class User(Base):
     last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+
+    # Relationships
+
+    audit_logs = relationship(
+        "Audit",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    incidents = relationship(
+        "Incident",
+        back_populates="assigned_user",
+    )
+
+    chat_history = relationship(
+        "Chat",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
 
@@ -74,4 +74,16 @@ class Incident(Base):
     closed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+
+    # Relationships
+
+    assigned_user = relationship(
+        "User",
+        back_populates="incidents",
+    )
+
+    alert = relationship(
+        "Alert",
+        back_populates="incidents",
     )

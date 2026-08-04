@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
 
@@ -95,4 +95,17 @@ class Alert(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relationships
+
+    predictions = relationship(
+        "Prediction",
+        back_populates="alert",
+    )
+
+    incidents = relationship(
+        "Incident",
+        back_populates="alert",
+        cascade="all, delete-orphan",
     )

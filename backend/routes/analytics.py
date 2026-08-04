@@ -1,19 +1,62 @@
+"""
+Analytics Routes.
+"""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from database import get_db
-import models
 
-router = APIRouter(prefix="/analytics", tags=["analytics"])
+from database.session import get_db
 
-@router.get("/stats")
-def get_attack_stats(db: Session = Depends(get_db)):
-    """Returns the count of each attack type for the dashboard charts."""
-    stats = db.query(
-        models.Alert.attack_type, 
-        func.count(models.Alert.id).label("count")
-    ).group_by(models.Alert.attack_type).all()
-    
-    # Format as a simple dictionary: {"DDoS": 10, "Benign": 50, ...}
-    return {item.attack_type: item.count for item in stats}
-# Analytics and system integration logic
+from schemas.analytics import AnalyticsResponse
+from services.analytics_service import AnalyticsService
+
+router = APIRouter(
+    prefix="/analytics",
+    tags=["Analytics"],
+)
+
+
+@router.get(
+    "/dashboard",
+    response_model=AnalyticsResponse,
+)
+def get_dashboard(
+    db: Session = Depends(get_db),
+):
+    """
+    Returns complete dashboard analytics.
+    """
+
+    return AnalyticsService.get_dashboard(db)
+
+
+@router.get("/summary")
+def get_summary(
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService.dashboard_summary(db)
+
+
+@router.get("/attack-distribution")
+def get_attack_distribution(
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService.attack_distribution(db)
+
+
+@router.get("/severity-distribution")
+def get_severity_distribution(
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService.severity_distribution(db)
+
+
+@router.get("/confidence")
+def get_confidence_statistics(
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService.confidence_statistics(db)
