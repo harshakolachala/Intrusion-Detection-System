@@ -14,6 +14,7 @@ from routes.predict import router as predict_router
 from routes.analytics import router as analytics_router
 from routes.alerts import router as alerts_router
 from routes.audit import router as audit_router
+from routes.engine import router as engine_router
 from exceptions import register_exception_handlers
 from middleware import LoggingMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -70,6 +71,7 @@ app.include_router(alerts_router)
 
 # Audit Logs
 app.include_router(audit_router)
+app.include_router(engine_router)
 
 # Incident Management
 app.include_router(incidents_router)
