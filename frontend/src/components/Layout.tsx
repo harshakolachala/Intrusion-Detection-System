@@ -1,35 +1,47 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
-import { Box, Toolbar } from "@mui/material";
-import Navbar from "./Navbar";
-import Sidebar, { SIDEBAR_WIDTH } from "./Sidebar";
-import ErrorBoundary from "./ErrorBoundary";
+import React, { useState } from 'react';
+import { Sidebar } from './Sidebar';
+import { Navbar } from './Navbar';
 
-/** Authenticated app shell. Rendered by ProtectedRoute; pages render via <Outlet />. */
-export default function Layout() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <Navbar onMenuClick={() => setMobileOpen((prev) => !prev)} />
-      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans antialiased selection:bg-blue-500 selection:text-white flex flex-col">
+      {/* Primary Sidebar Navigation */}
+      <Sidebar 
+        collapsed={sidebarCollapsed} 
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          width: { md: `calc(100% - ${SIDEBAR_WIDTH}px)` },
-          minHeight: "100vh",
-          bgcolor: "background.default",
-        }}
+      {/* Main Content Wrapper */}
+      <div 
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          sidebarCollapsed ? 'ml-20' : 'ml-64'
+        }`}
       >
-        <Toolbar />
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-        </Box>
-      </Box>
-    </Box>
+        {/* Top Sticky Header */}
+        <Navbar />
+
+        {/* Dynamic Page View Viewport */}
+        <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
+          {children}
+        </main>
+
+        {/* SOC Console Footer */}
+        <footer className="border-t border-slate-800/80 py-4 px-8 text-xs font-mono text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 bg-[#0a0f1d]/50">
+          <span>SentinelAI Threat Detection Engine &bull; SOC Console</span>
+          <div className="flex items-center space-x-4">
+            <span className="text-emerald-400">&bull; Node Sync Active</span>
+            <span>FastAPI Port 8000</span>
+          </div>
+        </footer>
+      </div>
+    </div>
   );
-}
+};
+
+export default Layout;

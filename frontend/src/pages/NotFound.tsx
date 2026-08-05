@@ -1,32 +1,38 @@
-import { Link as RouterLink } from "react-router-dom";
-import { Box, Button, Typography } from "@mui/material";
+import React from 'react';
+import { Box, Typography, Button, Container } from '@mui/material';
+import { ErrorOutline } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
-export default function NotFound() {
+const NotFound: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        p: 3,
-        bgcolor: "background.default",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'background.default',
       }}
     >
-      <Typography variant="h1" fontWeight={800} color="primary" sx={{ fontSize: { xs: 72, sm: 120 } }}>
-        404
-      </Typography>
-      <Typography variant="h5" fontWeight={600} gutterBottom>
-        Page not found
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
-        The page you are looking for doesn&apos;t exist or has been moved.
-      </Typography>
-      <Button component={RouterLink} to="/" variant="contained">
-        Back to Dashboard
-      </Button>
+      <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
+        <ErrorOutline sx={{ fontSize: 80, color: 'error.main', mb: 2 }} />
+        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+          404
+        </Typography>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
+          Page Not Found
+        </Typography>
+        <Typography color="text.secondary" paragraph sx={{ mb: 4 }}>
+          The page you are looking for does not exist or has been moved.
+        </Typography>
+        <Button variant="contained" size="large" onClick={() => navigate('/dashboard')}>
+          Back to Dashboard
+        </Button>
+      </Container>
     </Box>
   );
-}
+};
+
+export default NotFound;

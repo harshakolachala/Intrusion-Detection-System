@@ -40,18 +40,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [clearSession]);
 
-  const login = useCallback(async (payload: LoginPayload) => {
-    const { data } = await loginRequest(payload);
-    localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
+  const login = useCallback(
+    async (payload: LoginPayload) => {
+      const { data } = await loginRequest(payload);
+      localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
 
-    const me = await getMeRequest();
-    setUser(me.data);
-  }, []);
+      const me = await getMeRequest();
+      setUser(me.data);
 
-  const register = useCallback(async (payload: RegisterPayload) => {
-    const { data } = await registerRequest(payload);
-    return data;
-  }, []);
+      // Redirect to the SOC Dashboard immediately after setting user
+      navigate("/dashboard", { replace: true });
+    },
+    [navigate]
+  );
+
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const { data } = await registerRequest(payload);
+
+      // Automatically log the user in right after registering
+      await login({ username: payload.username, password: payload.password });
+
+      return data;
+    },
+    [login]
+  );
 
   const logout = useCallback(() => {
     clearSession();

@@ -1,143 +1,172 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { Navigate, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
 import {
-  Alert,
   Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  Link,
-  Paper,
+  Card,
+  CardContent,
   TextField,
+  Button,
   Typography,
-} from "@mui/material";
-import { FiEye, FiEyeOff, FiShield } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
-import { getErrorMessage } from "../../utils/errorMessage";
+  Alert,
+  Container,
+  InputAdornment,
+  IconButton,
+  Link,
+  CircularProgress,
+} from '@mui/material';
+import {
+  Visibility,
+  VisibilityOff,
+  LockOutlined,
+  EmailOutlined,
+  ShieldOutlined,
+} from '@mui/icons-material';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-interface LocationState {
-  from?: { pathname: string };
-  registered?: boolean;
-}
-
-export default function Login() {
-  const { login, isAuthenticated } = useAuth();
+const Login: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as LocationState | null;
+  const { login } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  if (isAuthenticated) {
-    return <Navigate to={state?.from?.pathname ?? "/"} replace />;
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
-    setSubmitting(true);
+
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
 
     try {
-      await login({ username, password });
-      navigate(state?.from?.pathname ?? "/", { replace: true });
-    } catch (err) {
-      setError(getErrorMessage(err, "Invalid username or password."));
+      setLoading(true);
+      await login(email, password);
+      // Fixed: Redirect to authenticated dashboard instead of landing page
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to sign in. Please check your credentials.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-        p: 2,
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'background.default',
+        py: 4,
       }}
     >
-      <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 400 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-          <FiShield size={32} />
-          <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>
+      <Container maxWidth="xs">
+        <Box sx={{ textAlign: 'center', mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <ShieldOutlined sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             SentinelAI
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Sign in to your account
+            Enterprise Federated Intrusion Detection System
           </Typography>
         </Box>
 
-        {state?.registered && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Registration successful. Please sign in.
-          </Alert>
-        )}
+        <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+              Sign In
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Enter your credentials to access the secure dashboard.
+            </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField
-            label="Username"
-            fullWidth
-            required
-            margin="normal"
-            autoFocus
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailOutlined color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockOutlined color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-          <TextField
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            fullWidth
-            required
-            margin="normal"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      edge="end"
-                      tabIndex={-1}
-                      aria-label="Toggle password visibility"
-                    >
-                      {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{ mt: 3, mb: 2, py: 1.2, fontWeight: 600 }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              </Button>
 
-          <Button type="submit" fullWidth variant="contained" size="large" disabled={submitting} sx={{ mt: 3, mb: 2 }}>
-            {submitting ? <CircularProgress size={22} color="inherit" /> : "Sign In"}
-          </Button>
-        </Box>
-
-        <Typography variant="body2" align="center">
-          Don&apos;t have an account?{" "}
-          <Link component={RouterLink} to="/register">
-            Register
-          </Link>
-        </Typography>
-      </Paper>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Don't have an account?{' '}
+                  <Link component={RouterLink} to="/register" variant="body2" sx={{ fontWeight: 600 }}>
+                    Register
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
     </Box>
   );
-}
+};
+
+export default Login;

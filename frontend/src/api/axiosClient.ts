@@ -4,17 +4,21 @@ import axios from "axios";
  * Single shared axios instance for the whole app.
  *
  * - Base URL points at the FastAPI backend (override with VITE_API_URL).
+ * - Uses explicit IPv4 loopback (127.0.0.1) to avoid Windows localhost/IPv6 preflight CORS issues.
  * - Request interceptor attaches the JWT (if present) to every call.
  * - Response interceptor clears the session on 401 and notifies AuthContext.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 export const TOKEN_STORAGE_KEY = "sentinelai_access_token";
 
-export const axiosClient = axios.create({
+const axiosClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 axiosClient.interceptors.request.use((config) => {
