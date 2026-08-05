@@ -1,9 +1,14 @@
-import axios from "axios";
+/**
+ * Legacy service module kept for backward compatibility with existing pages
+ * (Dashboard, Alerts, Chatbot, Predict, Analytics, Settings).
+ *
+ * It now delegates to the shared axios client (src/api/axiosClient.ts) so
+ * every request automatically carries the JWT set by AuthContext. Endpoint
+ * paths and exported function names are UNCHANGED — no page needs to change.
+ */
+import axiosClient from "../api/axiosClient";
 
-export const api = axios.create({
-  baseURL: "http://localhost:8000",
-  timeout: 5000,
-});
+export const api = axiosClient;
 
 // =========================
 // Health
@@ -23,15 +28,13 @@ export const getHistory = () => api.get("/alerts/history");
 // Chatbot
 // =========================
 
-export const getExplanation = (detectionId: string) =>
-  api.get(`/chatbot/explain/${detectionId}`);
+export const getExplanation = (detectionId: string) => api.get(`/chatbot/explain/${detectionId}`);
 
 // =========================
 // Federated Learning
 // =========================
 
-export const getFlStatus = () =>
-  api.get("/training/status");
+export const getFlStatus = () => api.get("/training/status");
 
 // =========================
 // Prediction API
