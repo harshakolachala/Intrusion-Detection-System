@@ -1,42 +1,29 @@
-"""
-Incident Schemas.
-"""
-
-from datetime import datetime
-from typing import Optional
-from uuid import UUID
-
 from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 
-
-class IncidentCreate(BaseModel):
-    alert_id: UUID
+class IncidentBase(BaseModel):
     title: str
     description: Optional[str] = None
-    assigned_to: Optional[UUID] = None
-    severity: str = "Medium"
+    severity: str
+    status: Optional[str] = "Open"
+    alert_id: Optional[int] = None  # Fixed: Made optional
+    assigned_user: Optional[str] = None
 
+class IncidentCreate(IncidentBase):
+    pass
 
 class IncidentUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    assigned_to: Optional[UUID] = None
     severity: Optional[str] = None
     status: Optional[str] = None
-    resolution: Optional[str] = None
+    assigned_user: Optional[str] = None
 
-
-class IncidentResponse(BaseModel):
-    id: UUID
-    alert_id: UUID
-    assigned_to: Optional[UUID]
-    title: str
-    description: Optional[str]
-    severity: str
-    status: str
-    resolution: Optional[str]
+class IncidentResponse(IncidentBase):
+    id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

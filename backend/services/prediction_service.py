@@ -130,7 +130,6 @@ class PredictionService:
         return prediction
 
     @staticmethod
-    @staticmethod
     def predict(
 
         db: Session,
@@ -230,7 +229,7 @@ class PredictionService:
 
                 "alert_id": str(alert.id) if alert else None,
 
-         }
+           }
 
         except Exception:
 

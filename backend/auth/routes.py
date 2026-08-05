@@ -17,7 +17,6 @@ from database.session import get_db
 from models.user import User
 
 router = APIRouter(
-    prefix="/auth",
     tags=["Authentication"],
 )
 
