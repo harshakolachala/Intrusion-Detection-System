@@ -1,76 +1,45 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 220px;
-  background: #111827;
-  color: white;
-  padding: 1.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.sidebar-title {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-}
-
-.nav-link {
-  color: #cbd5e1;
-  text-decoration: none;
-  padding: 0.6rem 0.8rem;
-  border-radius: 6px;
-}
-
-.nav-link:hover {
-  background: #1f2937;
-}
-
-.nav-link.active {
-  background: #2563eb;
-  color: white;
-}
-
-.content {
-  flex: 1;
-  padding: 2rem;
-  background: #f9fafb;
-}
+/*
+ * Small set of utility classes still used by page components
+ * (Dashboard, Alerts, Analytics, Chatbot, Settings). Layout/navigation
+ * styling has moved to MUI components in src/components/.
+ */
 
 table {
-  background: white;
+  width: 100%;
+  background: var(--mui-palette-background-paper, #fff);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .card {
-  background: white;
+  background: var(--mui-palette-background-paper, #fff);
+  color: var(--mui-palette-text-primary, inherit);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   margin-bottom: 1rem;
 }
 
 .badge {
+  display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
-.badge-high { background: #fee2e2; color: #dc2626; }
-.badge-medium { background: #fef3c7; color: #d97706; }
-.badge-low { background: #dcfce7; color: #16a34a; }
+.badge-high {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge-medium {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badge-low {
+  background: #dcfce7;
+  color: #16a34a;
+}
