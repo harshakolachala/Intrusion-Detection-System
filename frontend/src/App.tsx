@@ -1,56 +1,42 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
+import Predict from "./pages/Predict";
 import Chatbot from "./pages/Chatbot";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import Predict from "./pages/Predict";
-import "./App.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="app-layout">
-        <nav className="sidebar">
-          <h2 className="sidebar-title">IDS Dashboard</h2>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-          <NavLink to="/" end className="nav-link">
-            Detection Feed
-          </NavLink>
+      {/* Protected app shell — everything below requires a valid session */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/alerts" element={<Alerts />} />
+        <Route path="/predict" element={<Predict />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
 
-          <NavLink to="/alerts" className="nav-link">
-            Alerts
-          </NavLink>
-
-          <NavLink to="/predict" className="nav-link">
-            Prediction
-          </NavLink>
-
-          <NavLink to="/chatbot" className="nav-link">
-            Explanations
-          </NavLink>
-
-          <NavLink to="/analytics" className="nav-link">
-            Analytics
-          </NavLink>
-
-          <NavLink to="/settings" className="nav-link">
-            Settings
-          </NavLink>
-        </nav>
-
-        <main className="content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/predict" element={<Predict />} />
-            <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
