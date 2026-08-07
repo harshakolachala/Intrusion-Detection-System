@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from federated.config import LEARNING_RATE
+
 
 def train_local_model(
     model,
     train_loader,
     epochs=10,
-    learning_rate=0.001,
+    learning_rate=LEARNING_RATE,
     device=None,
 ):
     """
@@ -25,14 +27,14 @@ def train_local_model(
 
     optimizer = optim.Adam(
         model.parameters(),
-        lr=learning_rate
+        lr=learning_rate,
     )
 
     model.train()
 
     for epoch in range(epochs):
 
-        total_loss = 0
+        total_loss = 0.0
         correct = 0
         total = 0
 
@@ -45,7 +47,10 @@ def train_local_model(
 
             outputs = model(features)
 
-            loss = criterion(outputs, labels)
+            loss = criterion(
+                outputs,
+                labels
+            )
 
             loss.backward()
 
@@ -53,18 +58,24 @@ def train_local_model(
 
             total_loss += loss.item()
 
-            _, predicted = torch.max(outputs, 1)
+            _, predicted = torch.max(
+                outputs,
+                dim=1
+            )
 
             total += labels.size(0)
 
-            correct += (predicted == labels).sum().item()
+            correct += (
+                predicted == labels
+            ).sum().item()
 
         avg_loss = total_loss / len(train_loader)
+
         accuracy = 100 * correct / total
 
         print(
-            f"Epoch [{epoch+1}/{epochs}] "
-            f"Loss: {avg_loss:.4f} "
+            f"Epoch [{epoch+1}/{epochs}] | "
+            f"Loss: {avg_loss:.4f} | "
             f"Accuracy: {accuracy:.2f}%"
         )
 

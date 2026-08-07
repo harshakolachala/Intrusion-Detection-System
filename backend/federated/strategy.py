@@ -3,7 +3,13 @@ import os
 import flwr as fl
 import torch
 
-from federated.config import NUM_CLIENTS
+from federated.config import (
+    INPUT_SIZE,
+    NUM_CLASSES,
+    NUM_CLIENTS,
+    MODEL_PATH,
+)
+
 from federated.model import MLPIDS
 
 
@@ -32,8 +38,8 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         parameters, metrics = aggregated
 
         model = MLPIDS(
-            input_size=78,
-            num_classes=2,
+            input_size=INPUT_SIZE,
+            num_classes=NUM_CLASSES,
         )
 
         params_dict = zip(
@@ -42,8 +48,8 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         )
 
         state_dict = {
-            k: torch.tensor(v)
-            for k, v in params_dict
+            key: torch.tensor(value)
+            for key, value in params_dict
         }
 
         model.load_state_dict(
@@ -51,16 +57,20 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
             strict=True,
         )
 
-        os.makedirs("models", exist_ok=True)
+        os.makedirs(
+            os.path.dirname(MODEL_PATH),
+            exist_ok=True,
+        )
 
         torch.save(
             model.state_dict(),
-            "models/global_model.pth",
+            MODEL_PATH,
         )
 
-        print(
-            f"\nGlobal model saved after Round {server_round}\n"
-        )
+        print("\n" + "=" * 60)
+        print(f"Global model saved after Round {server_round}")
+        print(f"Location : {MODEL_PATH}")
+        print("=" * 60 + "\n")
 
         return aggregated
 
