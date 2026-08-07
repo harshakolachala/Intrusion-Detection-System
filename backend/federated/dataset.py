@@ -145,7 +145,7 @@ class IDSDataset:
             )
 
         # Standardize features
-        X = self.scaler.fit_transform(X)
+        X = self.scaler.fit_transform(X.values)
 
         return X, y
 

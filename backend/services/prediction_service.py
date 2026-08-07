@@ -59,7 +59,7 @@ class PredictionService:
     ) -> str:
 
         return ATTACK_SEVERITY.get(
-            attack_type,
+            attack_type.strip(),
             "Low",
         )
 
@@ -70,7 +70,7 @@ class PredictionService:
     ) -> int:
 
         return ATTACK_RISK.get(
-            attack_type,
+            attack_type.strip(),
             min(100, int(confidence * 100)),
         )
 
@@ -195,7 +195,7 @@ class PredictionService:
 
         protocol: str,
 
-        model_version="v2.0",
+        model_version="v3.0",
 
     ):
 
@@ -209,11 +209,11 @@ class PredictionService:
 
             predicted_class = result["prediction"]
 
-            confidence = result["confidence"]
+            confidence = float(result["confidence"])
 
             alert = None
 
-            if predicted_class != "BENIGN":
+            if predicted_class.upper() != "BENIGN":
 
                 alert = PredictionService.create_alert(
 
@@ -268,7 +268,7 @@ class PredictionService:
 
                 "prediction": predicted_class,
 
-                "confidence": confidence,
+                "confidence": round(confidence, 4),
 
                 "latency_ms": round(latency, 2),
 

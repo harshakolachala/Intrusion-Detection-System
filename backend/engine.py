@@ -214,30 +214,23 @@ class DetectionEngine:
                 f"Confidence : {result['confidence']:.4f}"
             )
 
+            logger.info(
+                f"Latency : {result['latency_ms']} ms"
+            )
+
             if result["alert_created"]:
 
                 logger.warning("=" * 60)
                 logger.warning("INTRUSION DETECTED")
-
-                logger.warning(
-                    f"Attack Type : {result['prediction']}"
-                )
-
-                logger.warning(
-                    f"Source      : "
-                    f"{flow.src_ip}:{flow.src_port}"
-                )
-
-                logger.warning(
-                    f"Destination : "
-                    f"{flow.dst_ip}:{flow.dst_port}"
-                )
-
-                logger.warning(
-                    f"Alert ID    : {result['alert_id']}"
-                )
-
+                logger.warning(f"Attack Type : {result['prediction']}")
+                logger.warning(f"Confidence  : {result['confidence']:.4f}")
+                logger.warning(f"Severity    : Check Dashboard")
+                logger.warning(f"Source      : {flow.src_ip}:{flow.src_port}")
+                logger.warning(f"Destination : {flow.dst_ip}:{flow.dst_port}")
+                logger.warning(f"Alert ID    : {result['alert_id']}")
                 logger.warning("=" * 60)
+
+
 
             else:
 
