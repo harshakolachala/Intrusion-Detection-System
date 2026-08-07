@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class MLPIDS(nn.Module):
     """
-    Multi-Layer Perceptron for Intrusion Detection
+    Multi-Class MLP for Federated Intrusion Detection
     """
 
     def __init__(
@@ -12,7 +12,7 @@ class MLPIDS(nn.Module):
         input_size: int,
         hidden1: int = 256,
         hidden2: int = 128,
-        num_classes: int = 2,
+        num_classes: int = 15,
         dropout: float = 0.3,
     ):
         super().__init__()
@@ -29,6 +29,7 @@ class MLPIDS(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout),
 
+            # Output Layer (15 CICIDS2017 Classes)
             nn.Linear(hidden2, num_classes)
         )
 
@@ -37,18 +38,28 @@ class MLPIDS(nn.Module):
 
 
 def save_model(model, path):
+    """
+    Save trained model.
+    """
     torch.save(model.state_dict(), path)
 
 
 def load_model(path, input_size, num_classes):
+    """
+    Load trained model.
+    """
+
     model = MLPIDS(
         input_size=input_size,
-        num_classes=num_classes
+        num_classes=num_classes,
     )
 
-    model.load_state_dict(
-        torch.load(path, map_location="cpu")
+    state_dict = torch.load(
+        path,
+        map_location="cpu"
     )
+
+    model.load_state_dict(state_dict)
 
     model.eval()
 

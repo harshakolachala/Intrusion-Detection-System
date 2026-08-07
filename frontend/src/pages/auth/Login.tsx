@@ -17,17 +17,16 @@ import {
   Visibility,
   VisibilityOff,
   LockOutlined,
-  EmailOutlined,
+  AccountCircle,
   ShieldOutlined,
 } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,18 +36,25 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    if (!username || !password) {
+      setError('Please enter both username and password.');
       return;
     }
 
     try {
       setLoading(true);
-      await login(email, password);
-      // Fixed: Redirect to authenticated dashboard instead of landing page
-      navigate('/dashboard', { replace: true });
+
+      await login({
+        username,
+        password,
+      });
+
+      // Navigation is handled by AuthContext
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to sign in. Please check your credentials.');
+      setError(
+        err?.response?.data?.detail ??
+          'Invalid username or password.'
+      );
     } finally {
       setLoading(false);
     }
@@ -66,23 +72,51 @@ const Login: React.FC = () => {
       }}
     >
       <Container maxWidth="xs">
-        <Box sx={{ textAlign: 'center', mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <ShieldOutlined sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+        <Box
+          sx={{
+            textAlign: 'center',
+            mb: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <ShieldOutlined
+            sx={{
+              fontSize: 48,
+              color: 'primary.main',
+              mb: 1,
+            }}
+          />
+
+          <Typography variant="h4" fontWeight={700}>
             SentinelAI
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+          >
             Enterprise Federated Intrusion Detection System
           </Typography>
         </Box>
 
         <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
           <CardContent sx={{ p: 4 }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography
+              variant="h5"
+              fontWeight={600}
+              gutterBottom
+            >
               Sign In
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Enter your credentials to access the secure dashboard.
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 3 }}
+            >
+              Enter your credentials.
             </Typography>
 
             {error && (
@@ -91,54 +125,71 @@ const Login: React.FC = () => {
               </Alert>
             )}
 
-            <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              noValidate
+            >
               <TextField
                 margin="normal"
-                required
                 fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
+                required
+                id="username"
+                name="username"
+                label="Username"
+                autoComplete="username"
                 autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailOutlined color="action" />
-                    </InputAdornment>
-                  ),
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value)
+                }
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccountCircle color="action" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
+
               <TextField
                 margin="normal"
-                required
                 fullWidth
+                required
+                id="password"
                 name="password"
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
-                id="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockOutlined color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockOutlined color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowPassword(!showPassword)
+                          }
+                        >
+                          {showPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
 
@@ -148,15 +199,31 @@ const Login: React.FC = () => {
                 variant="contained"
                 size="large"
                 disabled={loading}
-                sx={{ mt: 3, mb: 2, py: 1.2, fontWeight: 600 }}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  py: 1.2,
+                  fontWeight: 600,
+                }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                {loading ? (
+                  <CircularProgress
+                    size={24}
+                    color="inherit"
+                  />
+                ) : (
+                  'Sign In'
+                )}
               </Button>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Don't have an account?{' '}
-                  <Link component={RouterLink} to="/register" variant="body2" sx={{ fontWeight: 600 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2">
+                  Don't have an account?{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/register"
+                    fontWeight={600}
+                  >
                     Register
                   </Link>
                 </Typography>

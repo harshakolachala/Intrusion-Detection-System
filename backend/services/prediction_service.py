@@ -12,26 +12,67 @@ from models.alert import Alert
 from models.prediction import Prediction
 
 
+ATTACK_SEVERITY = {
+    "BENIGN": "None",
+    "PortScan": "Medium",
+    "Bot": "High",
+    "DDoS": "Critical",
+    "DoS Hulk": "Critical",
+    "DoS GoldenEye": "High",
+    "DoS Slowhttptest": "High",
+    "DoS slowloris": "High",
+    "FTP-Patator": "High",
+    "SSH-Patator": "High",
+    "Heartbleed": "Critical",
+    "Infiltration": "Critical",
+    "Web Attack_Brute Force": "High",
+    "Web Attack_Sql Injection": "Critical",
+    "Web Attack_XSS": "High",
+}
+
+
+ATTACK_RISK = {
+    "BENIGN": 0,
+    "PortScan": 55,
+    "Bot": 70,
+    "DDoS": 100,
+    "DoS Hulk": 100,
+    "DoS GoldenEye": 90,
+    "DoS Slowhttptest": 90,
+    "DoS slowloris": 90,
+    "FTP-Patator": 80,
+    "SSH-Patator": 80,
+    "Heartbleed": 100,
+    "Infiltration": 95,
+    "Web Attack_Brute Force": 90,
+    "Web Attack_Sql Injection": 100,
+    "Web Attack_XSS": 85,
+}
+
+
 class PredictionService:
 
     @staticmethod
-    def calculate_severity(confidence: float) -> str:
+    def calculate_severity(
+        attack_type: str,
+        confidence: float,
+    ) -> str:
 
-        if confidence >= 0.95:
-            return "Critical"
-
-        if confidence >= 0.85:
-            return "High"
-
-        if confidence >= 0.70:
-            return "Medium"
-
-        return "Low"
+        return ATTACK_SEVERITY.get(
+            attack_type,
+            "Low",
+        )
 
     @staticmethod
-    def calculate_risk_score(confidence: float) -> int:
+    def calculate_risk_score(
+        attack_type: str,
+        confidence: float,
+    ) -> int:
 
-        return min(100, int(confidence * 100))
+        return ATTACK_RISK.get(
+            attack_type,
+            min(100, int(confidence * 100)),
+        )
 
     @staticmethod
     def create_alert(
@@ -70,9 +111,15 @@ class PredictionService:
 
             confidence=confidence,
 
-            severity=PredictionService.calculate_severity(confidence),
+            severity=PredictionService.calculate_severity(
+                attack_type,
+                confidence,
+            ),
 
-            risk_score=PredictionService.calculate_risk_score(confidence),
+            risk_score=PredictionService.calculate_risk_score(
+                attack_type,
+                confidence,
+            ),
 
             status="Open",
 
@@ -148,7 +195,7 @@ class PredictionService:
 
         protocol: str,
 
-        model_version="v1.0",
+        model_version="v2.0",
 
     ):
 
@@ -166,7 +213,7 @@ class PredictionService:
 
             alert = None
 
-            if predicted_class.lower() != "benign":
+            if predicted_class != "BENIGN":
 
                 alert = PredictionService.create_alert(
 
@@ -229,7 +276,7 @@ class PredictionService:
 
                 "alert_id": str(alert.id) if alert else None,
 
-           }
+            }
 
         except Exception:
 

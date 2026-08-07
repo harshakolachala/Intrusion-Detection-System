@@ -1,3 +1,4 @@
+import json
 import torch
 
 from federated.model import load_model
@@ -19,6 +20,13 @@ class Predictor:
             input_size=INPUT_SIZE,
             num_classes=NUM_CLASSES,
         )
+
+        with open(
+            "federated/label_mapping.json",
+            "r",
+            encoding="utf-8"
+        ) as f:
+            self.class_names = json.load(f)
 
         print("Model Loaded Successfully!")
 
@@ -45,14 +53,12 @@ class Predictor:
                 dim=1
             )
 
-            result = (
-                "Attack"
-                if prediction.item() == 1
-                else "Normal"
-            )
+            predicted_class = self.class_names[
+                str(prediction.item())
+            ]
 
             return {
-                "prediction": result,
+                "prediction": predicted_class,
                 "confidence": round(
                     confidence.item(),
                     4
