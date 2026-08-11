@@ -1,7 +1,7 @@
 import os
 import json
-import pandas as pd
 import numpy as np
+import pandas as pd
 import torch
 
 from torch.utils.data import TensorDataset, DataLoader
@@ -11,7 +11,15 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 class IDSDataset:
     """
-    Dataset class for Federated Intrusion Detection
+    Dataset pipeline for Federated Intrusion Detection.
+
+    Pipeline:
+        CSV
+        -> Cleaning
+        -> Stratified train/test split
+        -> Fit scaler on training data only
+        -> Transform train/test
+        -> Partition training data among FL clients
     """
 
     def __init__(
@@ -20,8 +28,9 @@ class IDSDataset:
         num_clients=3,
         test_size=0.2,
         random_state=42,
-        development=True,
+        development=False,
         sample_size=100000,
+        batch_size=64,
     ):
 
         self.csv_path = csv_path
@@ -30,9 +39,12 @@ class IDSDataset:
         self.random_state = random_state
         self.development = development
         self.sample_size = sample_size
+        self.batch_size = batch_size
 
         self.scaler = StandardScaler()
         self.label_encoder = LabelEncoder()
+
+        self.label_mapping = {}
 
     # -------------------------------------------------------
     # Load Dataset
@@ -40,30 +52,54 @@ class IDSDataset:
 
     def load_dataset(self):
 
-        print("Loading dataset...")
+        print("=" * 60)
+        print("Loading Dataset")
+        print("=" * 60)
+
+        print(f"Dataset Path : {self.csv_path}")
 
         df = pd.read_csv(
             self.csv_path,
             low_memory=False,
         )
 
-        # Remove extra spaces
+        # Remove whitespace from column names
         df.columns = df.columns.str.strip()
 
         # Remove rows with missing labels
-        df.dropna(subset=[df.columns[-1]], inplace=True)
+        label_column = df.columns[-1]
 
-        # Development mode: Stratified sampling
+        df.dropna(
+            subset=[label_column],
+            inplace=True,
+        )
+
+        # ---------------------------------------------------
+        # Development Mode
+        # ---------------------------------------------------
+
         if self.development:
 
-            df, _ = train_test_split(
-                df,
-                train_size=self.sample_size,
-                random_state=self.random_state,
-                stratify=df.iloc[:, -1],
+            print(
+                f"Development Mode Enabled "
+                f"| Sample Size : {self.sample_size}"
             )
 
-        print(f"Dataset Loaded : {df.shape}")
+            if self.sample_size < len(df):
+
+                df, _ = train_test_split(
+                    df,
+                    train_size=self.sample_size,
+                    random_state=self.random_state,
+                    stratify=df[label_column],
+                )
+
+        else:
+
+            print("Final Mode Enabled")
+            print("Using complete dataset.")
+
+        print(f"Dataset Shape : {df.shape}")
 
         return df
 
@@ -73,41 +109,116 @@ class IDSDataset:
 
     def clean_dataset(self, df):
 
-        print("Cleaning dataset...")
+        print("\nCleaning Dataset...")
+
+        df = df.copy()
 
         df.columns = df.columns.str.strip()
 
-        # Convert Destination Port to numeric
+        label_column = df.columns[-1]
+
+        # ---------------------------------------------------
+        # Convert Destination Port
+        # ---------------------------------------------------
+
         if "Destination Port" in df.columns:
+
             df["Destination Port"] = pd.to_numeric(
                 df["Destination Port"],
                 errors="coerce",
             )
 
-        # Remove duplicate rows
-        df.drop_duplicates(inplace=True)
+        # ---------------------------------------------------
+        # Remove duplicates
+        # ---------------------------------------------------
 
+        before = len(df)
+
+        df.drop_duplicates(
+            inplace=True
+        )
+
+        print(
+            f"Duplicates Removed : "
+            f"{before - len(df)}"
+        )
+
+        # ---------------------------------------------------
         # Replace infinity
-        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        # ---------------------------------------------------
 
-        # Remove rows with missing labels
-        df.dropna(subset=[df.columns[-1]], inplace=True)
+        df.replace(
+            [np.inf, -np.inf],
+            np.nan,
+            inplace=True,
+        )
 
-        # Convert every feature to numeric
-        feature_columns = df.columns[:-1]
+        # ---------------------------------------------------
+        # Remove rows without labels
+        # ---------------------------------------------------
 
-        df[feature_columns] = df[feature_columns].apply(
+        df.dropna(
+            subset=[label_column],
+            inplace=True,
+        )
+
+        # ---------------------------------------------------
+        # Feature columns
+        # ---------------------------------------------------
+
+        feature_columns = [
+            column
+            for column in df.columns
+            if column != label_column
+        ]
+
+        # ---------------------------------------------------
+        # Convert features to numeric
+        # ---------------------------------------------------
+
+        df[feature_columns] = df[
+            feature_columns
+        ].apply(
             pd.to_numeric,
             errors="coerce",
         )
 
-        # Fill missing feature values
-        df[feature_columns] = df[feature_columns].fillna(0)
+        # ---------------------------------------------------
+        # Replace missing feature values
+        # ---------------------------------------------------
+
+        df[feature_columns] = df[
+            feature_columns
+        ].replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+
+        df[feature_columns] = df[
+            feature_columns
+        ].fillna(0)
+
+        # ---------------------------------------------------
+        # Final validation
+        # ---------------------------------------------------
+
+        print(
+            f"Clean Dataset Shape : {df.shape}"
+        )
+
+        print(
+            f"Features : {len(feature_columns)}"
+        )
+
+        print(
+            f"Classes  : "
+            f"{df[label_column].nunique()}"
+        )
 
         return df
 
     # -------------------------------------------------------
-    # Preprocess Dataset
+    # Prepare Train/Test Data
     # -------------------------------------------------------
 
     def preprocess(self):
@@ -116,98 +227,190 @@ class IDSDataset:
 
         df = self.clean_dataset(df)
 
-        X = df.iloc[:, :-1]
+        label_column = df.columns[-1]
 
-        y = df.iloc[:, -1].astype(str)
+        X = df.drop(
+            columns=[label_column]
+        )
 
-        # Encode attack labels
-        y = self.label_encoder.fit_transform(y)
+        y = df[label_column].astype(str)
 
-        # Save label mapping
-        label_mapping = {
-            str(i): label
-            for i, label in enumerate(
+        # ---------------------------------------------------
+        # Encode Labels
+        # ---------------------------------------------------
+
+        y_encoded = self.label_encoder.fit_transform(
+            y
+        )
+
+        self.label_mapping = {
+            str(index): label
+            for index, label in enumerate(
                 self.label_encoder.classes_
             )
         }
 
-        os.makedirs("federated", exist_ok=True)
+        os.makedirs(
+            "federated",
+            exist_ok=True,
+        )
 
         with open(
             "federated/label_mapping.json",
             "w",
             encoding="utf-8",
-        ) as f:
+        ) as file:
+
             json.dump(
-                label_mapping,
-                f,
+                self.label_mapping,
+                file,
                 indent=4,
             )
 
-        # Standardize features
-        X = self.scaler.fit_transform(X.values)
+        print("\nLabel Mapping")
 
-        return X, y
+        for index, label in enumerate(
+            self.label_encoder.classes_
+        ):
 
-    # -------------------------------------------------------
-    # Train Test Split
-    # -------------------------------------------------------
+            print(
+                f"{index:2d} -> {label}"
+            )
 
-    def train_test_split_dataset(self):
+        # ---------------------------------------------------
+        # Train/Test Split
+        # ---------------------------------------------------
 
-        X, y = self.preprocess()
+        print("\nCreating stratified train/test split...")
 
-        return train_test_split(
+        X_train, X_test, y_train, y_test = train_test_split(
+
             X,
-            y,
+            y_encoded,
+
             test_size=self.test_size,
+
             random_state=self.random_state,
-            stratify=y,
+
+            stratify=y_encoded,
+        )
+
+        print(
+            f"Training Samples : {len(X_train)}"
+        )
+
+        print(
+            f"Testing Samples  : {len(X_test)}"
+        )
+
+        # ---------------------------------------------------
+        # Fit scaler ONLY on training data
+        # ---------------------------------------------------
+
+        print(
+            "\nFitting StandardScaler "
+            "on training data only..."
+        )
+
+        X_train = self.scaler.fit_transform(
+            X_train
+        )
+
+        X_test = self.scaler.transform(
+            X_test
+        )
+
+        print("Scaling completed.")
+
+        return (
+            X_train,
+            X_test,
+            y_train,
+            y_test,
         )
 
     # -------------------------------------------------------
-    # Client Partition
+    # Create Federated Clients
     # -------------------------------------------------------
 
     def create_clients(self):
 
-        X_train, X_test, y_train, y_test = self.train_test_split_dataset()
+        (
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+        ) = self.preprocess()
 
+        print("\n" + "=" * 60)
+        print("Creating Federated Clients")
+        print("=" * 60)
+
+        # ---------------------------------------------------
         # Shuffle training data
-        indices = np.random.permutation(len(X_train))
+        # ---------------------------------------------------
+
+        rng = np.random.default_rng(
+            self.random_state
+        )
+
+        indices = rng.permutation(
+            len(X_train)
+        )
 
         X_train = X_train[indices]
         y_train = y_train[indices]
 
-        client_size = len(X_train) // self.num_clients
+        # ---------------------------------------------------
+        # Partition training data
+        # ---------------------------------------------------
+
+        client_indices = np.array_split(
+            np.arange(len(X_train)),
+            self.num_clients,
+        )
 
         clients = []
 
-        for i in range(self.num_clients):
+        for client_id, indices in enumerate(
+            client_indices
+        ):
 
-            start = i * client_size
+            X_client = X_train[
+                indices
+            ]
 
-            if i == self.num_clients - 1:
-                end = len(X_train)
-            else:
-                end = start + client_size
+            y_client = y_train[
+                indices
+            ]
+
+            print(
+                f"Client {client_id} "
+                f"| Samples : {len(X_client)}"
+            )
 
             X_client = torch.tensor(
-                X_train[start:end],
+                X_client,
                 dtype=torch.float32,
             )
 
             y_client = torch.tensor(
-                y_train[start:end],
+                y_client,
                 dtype=torch.long,
             )
 
-            clients.append(
-                TensorDataset(
-                    X_client,
-                    y_client,
-                )
+            dataset = TensorDataset(
+                X_client,
+                y_client,
             )
+
+            clients.append(
+                dataset
+            )
+
+        # ---------------------------------------------------
+        # Test Dataset
+        # ---------------------------------------------------
 
         X_test = torch.tensor(
             X_test,
@@ -224,42 +427,77 @@ class IDSDataset:
             y_test,
         )
 
+        # ---------------------------------------------------
+        # DataLoaders
+        # ---------------------------------------------------
+
         client_loaders = [
+
             DataLoader(
                 client,
-                batch_size=64,
+                batch_size=self.batch_size,
                 shuffle=True,
             )
+
             for client in clients
         ]
 
         test_loader = DataLoader(
             test_dataset,
-            batch_size=64,
+            batch_size=self.batch_size,
             shuffle=False,
         )
 
-        return client_loaders, test_loader
+        print(
+            f"\nNumber of Clients : "
+            f"{len(client_loaders)}"
+        )
+
+        print(
+            f"Test Samples      : "
+            f"{len(test_dataset)}"
+        )
+
+        print("=" * 60)
+
+        return (
+            client_loaders,
+            test_loader,
+        )
 
     # -------------------------------------------------------
-    # Information
+    # Dataset Information
     # -------------------------------------------------------
 
     def get_information(self):
 
-        X, y = self.preprocess()
+        df = self.load_dataset()
 
-        print("\nDataset Information")
-        print("--------------------------")
-        print("Samples :", len(X))
-        print("Features :", X.shape[1])
-        print("Classes :", len(np.unique(y)))
-        print("--------------------------")
+        df = self.clean_dataset(df)
 
-        print("\nDetected Classes")
-        print("--------------------------")
+        label_column = df.columns[-1]
 
-        for i, label in enumerate(self.label_encoder.classes_):
-            print(f"{i:2d} -> {label}")
+        print("\n" + "=" * 60)
+        print("Dataset Information")
+        print("=" * 60)
 
-        print("--------------------------")
+        print(
+            f"Samples  : {len(df)}"
+        )
+
+        print(
+            f"Features : {len(df.columns) - 1}"
+        )
+
+        print(
+            f"Classes  : {df[label_column].nunique()}"
+        )
+
+        print("\nClass Distribution")
+        print("-" * 60)
+
+        print(
+            df[label_column].value_counts()
+        )
+
+        print("=" * 60)
