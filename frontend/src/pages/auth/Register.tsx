@@ -1,7 +1,16 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate, Link as RouterLink, useNavigate } from "react-router-dom";
-import { Alert, Box, Button, CircularProgress, Link, Paper, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { FiShield } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { getErrorMessage } from "../../utils/errorMessage";
@@ -29,21 +38,39 @@ export default function Register() {
       setError("Username must be at least 3 characters long.");
       return;
     }
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
       return;
     }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     setSubmitting(true);
+
     try {
-      await register({ username, email, password });
-      navigate("/login", { replace: true, state: { registered: true } });
+      await register({
+        username,
+        email,
+        password,
+      });
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          registered: true,
+        },
+      });
     } catch (err) {
-      setError(getErrorMessage(err, "Registration failed. Please try again."));
+      setError(
+        getErrorMessage(
+          err,
+          "Registration failed. Please try again."
+        )
+      );
     } finally {
       setSubmitting(false);
     }
@@ -60,13 +87,38 @@ export default function Register() {
         p: 2,
       }}
     >
-      <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 420 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          width: "100%",
+          maxWidth: 420,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
           <FiShield size={32} />
-          <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>
+
+          <Typography
+            variant="h5"
+            sx={{
+              mt: 1,
+              fontWeight: 700,
+            }}
+          >
             Create Account
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+          >
             Join SentinelAI IDS
           </Typography>
         </Box>
@@ -77,7 +129,11 @@ export default function Register() {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <TextField
             label="Username"
             fullWidth
@@ -121,17 +177,42 @@ export default function Register() {
             margin="normal"
             autoComplete="new-password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) =>
+              setConfirmPassword(e.target.value)
+            }
           />
 
-          <Button type="submit" fullWidth variant="contained" size="large" disabled={submitting} sx={{ mt: 3, mb: 2 }}>
-            {submitting ? <CircularProgress size={22} color="inherit" /> : "Register"}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={submitting}
+            sx={{
+              mt: 3,
+              mb: 2,
+            }}
+          >
+            {submitting ? (
+              <CircularProgress
+                size={22}
+                color="inherit"
+              />
+            ) : (
+              "Register"
+            )}
           </Button>
         </Box>
 
-        <Typography variant="body2" align="center">
+        <Typography
+          variant="body2"
+          align="center"
+        >
           Already have an account?{" "}
-          <Link component={RouterLink} to="/login">
+          <Link
+            component={RouterLink}
+            to="/login"
+          >
             Sign in
           </Link>
         </Typography>

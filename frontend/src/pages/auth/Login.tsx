@@ -89,7 +89,10 @@ const Login: React.FC = () => {
             }}
           />
 
-          <Typography variant="h4" fontWeight={700}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 700 }}
+          >
             SentinelAI
           </Typography>
 
@@ -101,12 +104,17 @@ const Login: React.FC = () => {
           </Typography>
         </Box>
 
-        <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
+        <Card
+          sx={{
+            boxShadow: 4,
+            borderRadius: 2,
+          }}
+        >
           <CardContent sx={{ p: 4 }}>
             <Typography
               variant="h5"
-              fontWeight={600}
               gutterBottom
+              sx={{ fontWeight: 600 }}
             >
               Sign In
             </Typography>
@@ -161,7 +169,11 @@ const Login: React.FC = () => {
                 id="password"
                 name="password"
                 label="Password"
-                type={showPassword ? 'text' : 'password'}
+                type={
+                  showPassword
+                    ? 'text'
+                    : 'password'
+                }
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) =>
@@ -178,7 +190,9 @@ const Login: React.FC = () => {
                       <InputAdornment position="end">
                         <IconButton
                           onClick={() =>
-                            setShowPassword(!showPassword)
+                            setShowPassword(
+                              !showPassword
+                            )
                           }
                         >
                           {showPassword ? (
@@ -218,11 +232,11 @@ const Login: React.FC = () => {
 
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2">
-                  Don't have an account?{" "}
+                  Don't have an account?{' '}
                   <Link
                     component={RouterLink}
                     to="/register"
-                    fontWeight={600}
+                    sx={{ fontWeight: 600 }}
                   >
                     Register
                   </Link>

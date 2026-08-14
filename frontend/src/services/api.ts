@@ -1,10 +1,67 @@
 import axiosClient from "../api/axiosClient";
 
 /* ===========================================================
+   Prediction Types
+=========================================================== */
+
+export interface TrafficPredictionRequest {
+  features: number[];
+
+  source_ip: string;
+  destination_ip: string;
+
+  source_port: number;
+  destination_port: number;
+
+  protocol: string;
+}
+
+export interface TrafficPredictionResponse {
+  prediction_id: string;
+  prediction: string;
+  confidence: number;
+  latency_ms: number;
+  alert_created: boolean;
+  alert_id: string | null;
+}
+
+/* ===========================================================
+   Analytics Types
+=========================================================== */
+
+export interface AnalyticsSummary {
+  total_packets: number;
+  predictions: number;
+  malicious_count: number;
+  benign_count: number;
+  avg_confidence: number;
+  total_incidents: number;
+  latency_ms: number;
+}
+
+export interface AnalyticsDistributionItem {
+  name: string;
+  value: number;
+  color?: string;
+}
+
+export interface AnalyticsCharts {
+  trends?: Array<{
+    time: string;
+    benign: number;
+    malicious: number;
+  }>;
+
+  attack_distribution: AnalyticsDistributionItem[];
+
+  severity_distribution: AnalyticsDistributionItem[];
+}
+
+/* ===========================================================
    Analytics
 =========================================================== */
 
-export const getAnalyticsSummary = async () => {
+export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
   const response = await axiosClient.get("/analytics/dashboard");
   const data = response.data;
 
@@ -19,7 +76,9 @@ export const getAnalyticsSummary = async () => {
   };
 };
 
-export const getAnalyticsCharts = async () => {
+export const getAnalyticsCharts = async (
+  _timeframe?: string
+): Promise<AnalyticsCharts> => {
   const [attackRes, severityRes] = await Promise.all([
     axiosClient.get("/analytics/attack-distribution"),
     axiosClient.get("/analytics/severity-distribution"),
@@ -54,19 +113,28 @@ export const getEngineStatus = async () => {
    Predictions
 =========================================================== */
 
-export const predictTraffic = async (data: any) => {
-  const payload = {
-    source_ip: data.src_ip || data.source_ip || "192.168.1.100",
-    destination_ip: data.dst_ip || data.destination_ip || "10.0.0.1",
-    source_port: Number(data.src_port || data.source_port || 80),
-    destination_port: Number(data.dst_port || data.destination_port || 8080),
-    protocol: data.protocol || "TCP",
-    features: Array.isArray(data.features)
-      ? data.features
-      : Object.values(data.features || {}).map(Number),
+export const predictTraffic = async (
+  data: TrafficPredictionRequest
+): Promise<TrafficPredictionResponse> => {
+  if (data.features.length !== 78) {
+    throw new Error(
+      `Prediction requires exactly 78 features. Received ${data.features.length}.`
+    );
+  }
+
+  const payload: TrafficPredictionRequest = {
+    source_ip: data.source_ip,
+    destination_ip: data.destination_ip,
+    source_port: Number(data.source_port),
+    destination_port: Number(data.destination_port),
+    protocol: data.protocol,
+    features: data.features.map(Number),
   };
 
-  const response = await axiosClient.post("/predict/", payload);
+  const response = await axiosClient.post(
+    "/predict/",
+    payload
+  );
 
   return response.data;
 };
@@ -140,7 +208,9 @@ export const getAlerts = async (
     src_ip: item.source_ip,
     dst_ip: item.destination_ip,
     severity: item.severity,
-    status: item.status ?? (item.is_resolved ? "RESOLVED" : "NEW"),
+    status:
+      item.status ??
+      (item.is_resolved ? "RESOLVED" : "NEW"),
     confidence: item.confidence ?? 0,
     description: item.description ?? "",
     is_resolved: item.is_resolved,
@@ -221,13 +291,19 @@ export const getAuditLogs = async (
    Chatbot
 =========================================================== */
 
+export interface ChatMessageRequest {
+  message: string;
+  session_id?: string;
+}
+
 export const sendChatMessage = async (
-  message: string,
-  _sessionId?: string
+  data: ChatMessageRequest
 ) => {
   const response = await axiosClient.post(
     "/chatbot/chat",
-    { message }
+    {
+      message: data.message,
+    }
   );
 
   return response.data;
