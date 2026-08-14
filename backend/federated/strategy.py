@@ -1,4 +1,5 @@
 import os
+import csv
 
 import flwr as fl
 import torch
@@ -10,17 +11,111 @@ from federated.config import (
     MODEL_PATH,
 )
 
+
 from federated.model import MLPIDS
 
+
+# ===========================================================
+# Results Configuration
+# ===========================================================
+
+RESULTS_DIR = "results"
+
+ROUND_METRICS_FILE = os.path.join(
+    RESULTS_DIR,
+    "federated_round_metrics.csv",
+)
+
+
+# ===========================================================
+# Results Directory
+# ===========================================================
+
+os.makedirs(
+    RESULTS_DIR,
+    exist_ok=True,
+)
+
+
+# ===========================================================
+# Initialize Round Metrics File
+# ===========================================================
+
+def initialize_metrics_file():
+
+    if not os.path.exists(
+        ROUND_METRICS_FILE
+    ):
+
+        with open(
+            ROUND_METRICS_FILE,
+            "w",
+            newline="",
+            encoding="utf-8",
+        ) as file:
+
+            writer = csv.writer(file)
+
+            writer.writerow(
+                [
+                    "round",
+                    "loss",
+                    "accuracy",
+                    "precision",
+                    "recall",
+                    "f1",
+                ]
+            )
+
+
+# ===========================================================
+# Save Round Metrics
+# ===========================================================
+
+def save_round_metrics(
+    server_round,
+    loss,
+    accuracy,
+    precision,
+    recall,
+    f1,
+):
+
+    with open(
+        ROUND_METRICS_FILE,
+        "a",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+
+        writer = csv.writer(file)
+
+        writer.writerow(
+            [
+                server_round,
+                f"{loss:.8f}",
+                f"{accuracy:.8f}",
+                f"{precision:.8f}",
+                f"{recall:.8f}",
+                f"{f1:.8f}",
+            ]
+        )
+
+
+# ===========================================================
+# Custom FedAvg Strategy
+# ===========================================================
 
 class SaveModelStrategy(fl.server.strategy.FedAvg):
     """
     Custom FedAvg strategy.
 
     Responsibilities:
+
         1. Federated averaging
         2. Save global model after every round
         3. Aggregate client evaluation metrics
+        4. Save round-by-round metrics for research
     """
 
     # =======================================================
@@ -41,6 +136,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         )
 
         if aggregated is None:
+
             return aggregated
 
         parameters, metrics = aggregated
@@ -122,6 +218,10 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
 
         Client metrics are weighted by the number of
         evaluation samples.
+
+        Round-level metrics are also saved to:
+
+            results/federated_round_metrics.csv
         """
 
         if not results:
@@ -138,7 +238,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
             return None
 
         # ---------------------------------------------------
-        # Weighted loss
+        # Weighted Loss
         # ---------------------------------------------------
 
         weighted_loss = sum(
@@ -200,7 +300,22 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         ) / total_examples
 
         # ---------------------------------------------------
-        # Print aggregated metrics
+        # Save Round Metrics
+        # ---------------------------------------------------
+
+        initialize_metrics_file()
+
+        save_round_metrics(
+            server_round=server_round,
+            loss=weighted_loss,
+            accuracy=accuracy,
+            precision=precision,
+            recall=recall,
+            f1=f1,
+        )
+
+        # ---------------------------------------------------
+        # Print Aggregated Metrics
         # ---------------------------------------------------
 
         print(
@@ -208,7 +323,8 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         )
 
         print(
-            f"GLOBAL EVALUATION - ROUND {server_round}"
+            f"GLOBAL EVALUATION - ROUND "
+            f"{server_round}"
         )
 
         print(
@@ -216,23 +332,33 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         )
 
         print(
-            f"Loss       : {weighted_loss:.6f}"
+            f"Loss       : "
+            f"{weighted_loss:.6f}"
         )
 
         print(
-            f"Accuracy   : {accuracy * 100:.4f}%"
+            f"Accuracy   : "
+            f"{accuracy * 100:.4f}%"
         )
 
         print(
-            f"Precision  : {precision * 100:.4f}%"
+            f"Precision  : "
+            f"{precision * 100:.4f}%"
         )
 
         print(
-            f"Recall     : {recall * 100:.4f}%"
+            f"Recall     : "
+            f"{recall * 100:.4f}%"
         )
 
         print(
-            f"F1 Score   : {f1 * 100:.4f}%"
+            f"F1 Score   : "
+            f"{f1 * 100:.4f}%"
+        )
+
+        print(
+            f"\nSaved     : "
+            f"{ROUND_METRICS_FILE}"
         )
 
         print(
@@ -242,10 +368,18 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         return (
             float(weighted_loss),
             {
-                "accuracy": float(accuracy),
-                "precision": float(precision),
-                "recall": float(recall),
-                "f1": float(f1),
+                "accuracy": float(
+                    accuracy
+                ),
+                "precision": float(
+                    precision
+                ),
+                "recall": float(
+                    recall
+                ),
+                "f1": float(
+                    f1
+                ),
             },
         )
 
@@ -256,11 +390,17 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
 
 def get_strategy():
 
+    initialize_metrics_file()
+
     return SaveModelStrategy(
+
         fraction_fit=1.0,
+
         fraction_evaluate=1.0,
 
         min_fit_clients=NUM_CLIENTS,
+
         min_evaluate_clients=NUM_CLIENTS,
+
         min_available_clients=NUM_CLIENTS,
     )

@@ -28,6 +28,7 @@ def evaluate_model(
         macro F1
         confusion matrix
         classification report
+        classification report dictionary
     """
 
     # =======================================================
@@ -69,7 +70,7 @@ def evaluate_model(
             )
 
             all_labels.extend(
-                labels.numpy()
+                labels.cpu().numpy()
             )
 
             all_predictions.extend(
@@ -147,6 +148,13 @@ def evaluate_model(
     # =======================================================
     # Classification Report
     # =======================================================
+
+    report_dict = classification_report(
+        all_labels,
+        all_predictions,
+        zero_division=0,
+        output_dict=True,
+    )
 
     report = classification_report(
         all_labels,
@@ -263,6 +271,8 @@ def evaluate_model(
         ),
 
         "classification_report": report,
+
+        "classification_report_dict": report_dict,
 
         "confusion_matrix": cm,
     }

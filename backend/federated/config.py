@@ -9,6 +9,12 @@ Flower Configuration
 SERVER_ADDRESS = "127.0.0.1:9090"
 
 # -------------------------------------------------------
+# Reproducibility
+# -------------------------------------------------------
+
+RANDOM_SEED = 42
+
+# -------------------------------------------------------
 # Federated Learning
 # -------------------------------------------------------
 
@@ -59,6 +65,28 @@ DATASET_PATH = "datasets/combinenew.csv"
 SCALER_PATH = "federated/scaler.pkl"
 
 LABEL_MAPPING_PATH = "federated/label_mapping.json"
+
+# -------------------------------------------------------
+# Results
+# -------------------------------------------------------
+
+RESULTS_DIR = "results"
+
+ROUND_METRICS_PATH = (
+    "results/federated_round_metrics.csv"
+)
+
+FINAL_METRICS_PATH = (
+    "results/final_metrics.json"
+)
+
+CLASSIFICATION_REPORT_PATH = (
+    "results/classification_report.csv"
+)
+
+CONFUSION_MATRIX_PATH = (
+    "results/confusion_matrix.csv"
+)
 
 # -------------------------------------------------------
 # Device
