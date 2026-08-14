@@ -1,6 +1,7 @@
 import json
 import joblib
 import numpy as np
+import pandas as pd
 import torch
 
 from federated.model import load_model
@@ -14,6 +15,22 @@ from federated.config import (
 
 
 class Predictor:
+    """
+    Production inference wrapper for the federated IDS model.
+
+    Pipeline:
+        78 raw CICIDS features
+            ↓
+        DataFrame with training feature names
+            ↓
+        StandardScaler
+            ↓
+        PyTorch global model
+            ↓
+        Softmax
+            ↓
+        15-class prediction
+    """
 
     def __init__(self):
 
@@ -40,27 +57,100 @@ class Predictor:
         ) as f:
             self.class_names = json.load(f)
 
+        # ---------------------------------------------------
+        # Validate model artifacts
+        # ---------------------------------------------------
+
+        if len(self.class_names) != NUM_CLASSES:
+            raise ValueError(
+                f"Expected {NUM_CLASSES} classes, "
+                f"but label mapping contains "
+                f"{len(self.class_names)}."
+            )
+
+        # ---------------------------------------------------
+        # Recover feature names from the fitted scaler
+        # ---------------------------------------------------
+
+        self.feature_names = getattr(
+            self.scaler,
+            "feature_names_in_",
+            None,
+        )
+
+        if self.feature_names is None:
+            raise ValueError(
+                "Scaler does not contain feature names. "
+                "The scaler must be fitted using a pandas "
+                "DataFrame containing the 78 CICIDS feature names."
+            )
+
+        if len(self.feature_names) != INPUT_SIZE:
+            raise ValueError(
+                f"Scaler expects {len(self.feature_names)} features, "
+                f"but INPUT_SIZE is {INPUT_SIZE}."
+            )
+
+        print(
+            f"Scaler Feature Count : "
+            f"{len(self.feature_names)}"
+        )
+
         print("Model Loaded Successfully!")
 
     def predict(self, features):
 
+        # ---------------------------------------------------
+        # Validate feature count
+        # ---------------------------------------------------
+
+        if len(features) != INPUT_SIZE:
+            raise ValueError(
+                f"Expected {INPUT_SIZE} features, "
+                f"received {len(features)}."
+            )
+
+        # ---------------------------------------------------
+        # Convert input to DataFrame
+        #
+        # This preserves the feature names expected by
+        # StandardScaler and eliminates the sklearn warning.
+        # ---------------------------------------------------
+
+        feature_array = np.asarray(
+            features,
+            dtype=np.float32,
+        ).reshape(1, -1)
+
+        feature_df = pd.DataFrame(
+            feature_array,
+            columns=self.feature_names,
+        )
+
+        # ---------------------------------------------------
+        # Scale using the training scaler
+        # ---------------------------------------------------
+
+        scaled_features = self.scaler.transform(
+            feature_df
+        )
+
+        # ---------------------------------------------------
+        # Convert to PyTorch tensor
+        # ---------------------------------------------------
+
+        x = torch.tensor(
+            scaled_features,
+            dtype=torch.float32,
+        )
+
+        # ---------------------------------------------------
+        # Model inference
+        # ---------------------------------------------------
+
         self.model.eval()
 
         with torch.no_grad():
-
-            features = np.array(
-                features,
-                dtype=np.float32,
-            ).reshape(1, -1)
-
-            features = self.scaler.transform(
-                features
-            )
-
-            x = torch.tensor(
-                features,
-                dtype=torch.float32,
-            )
 
             outputs = self.model(x)
 
@@ -74,20 +164,26 @@ class Predictor:
                 dim=1,
             )
 
-            predicted_class = self.class_names[
-                str(prediction.item())
-            ]
+        class_index = prediction.item()
 
-            return {
-                "prediction": predicted_class,
-                "confidence": round(
-                    confidence.item(),
-                    4,
-                ),
-            }
+        predicted_class = self.class_names[
+            str(class_index)
+        ]
+
+        return {
+            "prediction": predicted_class,
+            "confidence": round(
+                confidence.item(),
+                4,
+            ),
+        }
 
 
 if __name__ == "__main__":
+
+    print("=" * 60)
+    print("SentinelAI Prediction Smoke Test")
+    print("=" * 60)
 
     predictor = Predictor()
 
@@ -95,4 +191,7 @@ if __name__ == "__main__":
 
     result = predictor.predict(sample)
 
-    print(result)
+    print("\nPrediction Result")
+    print("-" * 60)
+    print(f"Prediction : {result['prediction']}")
+    print(f"Confidence : {result['confidence']}")
