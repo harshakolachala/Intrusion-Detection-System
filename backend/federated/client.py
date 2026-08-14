@@ -83,9 +83,7 @@ class FlowerClient(fl.client.NumPyClient):
         print("Loading local dataset...")
 
         dataset = IDSDataset(
-            development=True,
-            sample_size=300000,
-            num_clients=3,
+            development=False
         )
 
         (

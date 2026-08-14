@@ -16,6 +16,8 @@ class IDSDataset:
     Pipeline:
         CSV
         -> Cleaning
+        -> Optional development sampling
+        -> Label encoding
         -> Stratified train/test split
         -> Fit scaler on training data only
         -> Transform train/test
@@ -46,9 +48,9 @@ class IDSDataset:
 
         self.label_mapping = {}
 
-    # -------------------------------------------------------
+    # =======================================================
     # Load Dataset
-    # -------------------------------------------------------
+    # =======================================================
 
     def load_dataset(self):
 
@@ -63,11 +65,75 @@ class IDSDataset:
             low_memory=False,
         )
 
-        # Remove whitespace from column names
+        # ---------------------------------------------------
+        # Clean column names
+        # ---------------------------------------------------
+
         df.columns = df.columns.str.strip()
 
-        # Remove rows with missing labels
         label_column = df.columns[-1]
+
+        # ---------------------------------------------------
+        # Remove rows with missing labels
+        # ---------------------------------------------------
+
+        before = len(df)
+
+        df.dropna(
+            subset=[label_column],
+            inplace=True,
+        )
+
+        print(
+            f"Rows Removed - Missing Labels : "
+            f"{before - len(df)}"
+        )
+
+        # ===================================================
+        # INITIAL DATA CLEANING
+        # ===================================================
+
+        print("\nInitial Dataset Cleaning...")
+
+        # ---------------------------------------------------
+        # Convert Destination Port
+        # ---------------------------------------------------
+
+        if "Destination Port" in df.columns:
+
+            df["Destination Port"] = pd.to_numeric(
+                df["Destination Port"],
+                errors="coerce",
+            )
+
+        # ---------------------------------------------------
+        # Remove duplicates
+        # ---------------------------------------------------
+
+        before = len(df)
+
+        df.drop_duplicates(
+            inplace=True
+        )
+
+        print(
+            f"Duplicates Removed : "
+            f"{before - len(df)}"
+        )
+
+        # ---------------------------------------------------
+        # Replace infinity
+        # ---------------------------------------------------
+
+        df.replace(
+            [np.inf, -np.inf],
+            np.nan,
+            inplace=True,
+        )
+
+        # ---------------------------------------------------
+        # Remove rows with missing labels
+        # ---------------------------------------------------
 
         df.dropna(
             subset=[label_column],
@@ -75,39 +141,294 @@ class IDSDataset:
         )
 
         # ---------------------------------------------------
-        # Development Mode
+        # Feature columns
         # ---------------------------------------------------
+
+        feature_columns = [
+            column
+            for column in df.columns
+            if column != label_column
+        ]
+
+        # ---------------------------------------------------
+        # Convert features to numeric
+        # ---------------------------------------------------
+
+        df[feature_columns] = df[
+            feature_columns
+        ].apply(
+            pd.to_numeric,
+            errors="coerce",
+        )
+
+        # ---------------------------------------------------
+        # Replace invalid feature values
+        # ---------------------------------------------------
+
+        df[feature_columns] = df[
+            feature_columns
+        ].replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+
+        # ---------------------------------------------------
+        # Fill missing feature values
+        # ---------------------------------------------------
+
+        df[feature_columns] = df[
+            feature_columns
+        ].fillna(0)
+
+        print(
+            f"Clean Dataset Shape : {df.shape}"
+        )
+
+        print(
+            f"Features : {len(feature_columns)}"
+        )
+
+        print(
+            f"Classes  : "
+            f"{df[label_column].nunique()}"
+        )
+
+        # ===================================================
+        # CLASS DISTRIBUTION AFTER CLEANING
+        # ===================================================
+
+        class_counts = df[
+            label_column
+        ].value_counts()
+
+        print(
+            "\nClass Distribution After Cleaning"
+        )
+
+        print("-" * 60)
+
+        print(class_counts)
+
+        # ===================================================
+        # DEVELOPMENT MODE
+        # ===================================================
 
         if self.development:
 
             print(
-                f"Development Mode Enabled "
+                f"\nDevelopment Mode Enabled "
                 f"| Sample Size : {self.sample_size}"
             )
 
-            if self.sample_size < len(df):
+            # ------------------------------------------------
+            # If requested sample is >= complete dataset
+            # ------------------------------------------------
 
-                df, _ = train_test_split(
-                    df,
-                    train_size=self.sample_size,
+            if self.sample_size >= len(df):
+
+                print(
+                    "Requested sample size is greater than "
+                    "or equal to the cleaned dataset size."
+                )
+
+                print(
+                    "Using complete cleaned dataset."
+                )
+
+            else:
+
+                print(
+                    "\nCreating protected development sample..."
+                )
+
+                rng = np.random.default_rng(
+                    self.random_state
+                )
+
+                # ------------------------------------------------
+                # Minimum samples retained for every class
+                # ------------------------------------------------
+                #
+                # This prevents rare classes such as Heartbleed
+                # from disappearing from the development sample.
+                #
+                # 5 is sufficient for the later stratified
+                # train/test split.
+                # ------------------------------------------------
+
+                min_per_class = 5
+
+                selected_indices = []
+
+                # ------------------------------------------------
+                # Reserve minimum samples for every class
+                # ------------------------------------------------
+
+                for label in class_counts.index:
+
+                    class_indices = df.index[
+                        df[label_column] == label
+                    ].to_numpy()
+
+                    if len(class_indices) < min_per_class:
+
+                        raise ValueError(
+                            f"Class '{label}' contains only "
+                            f"{len(class_indices)} samples. "
+                            f"At least {min_per_class} are "
+                            "required for development mode."
+                        )
+
+                    selected = rng.choice(
+                        class_indices,
+                        size=min_per_class,
+                        replace=False,
+                    )
+
+                    selected_indices.extend(
+                        selected.tolist()
+                    )
+
+                # ------------------------------------------------
+                # Calculate remaining samples
+                # ------------------------------------------------
+
+                remaining_needed = (
+                    self.sample_size
+                    - len(selected_indices)
+                )
+
+                if remaining_needed < 0:
+
+                    raise ValueError(
+                        "sample_size is too small to preserve "
+                        "all classes."
+                    )
+
+                # ------------------------------------------------
+                # Remaining available rows
+                # ------------------------------------------------
+
+                remaining_indices = np.setdiff1d(
+                    df.index.to_numpy(),
+                    np.array(selected_indices),
+                    assume_unique=False,
+                )
+
+                # ------------------------------------------------
+                # Randomly select remaining rows
+                # ------------------------------------------------
+
+                additional_indices = rng.choice(
+                    remaining_indices,
+                    size=remaining_needed,
+                    replace=False,
+                )
+
+                selected_indices.extend(
+                    additional_indices.tolist()
+                )
+
+                # ------------------------------------------------
+                # Create development dataset
+                # ------------------------------------------------
+
+                df = df.loc[
+                    selected_indices
+                ].copy()
+
+                # ------------------------------------------------
+                # Shuffle development dataset
+                # ------------------------------------------------
+
+                df = df.sample(
+                    frac=1,
                     random_state=self.random_state,
-                    stratify=df[label_column],
+                ).reset_index(
+                    drop=True
+                )
+
+                print(
+                    "\nProtected development sampling completed."
                 )
 
         else:
 
-            print("Final Mode Enabled")
-            print("Using complete dataset.")
+            # ===================================================
+            # FINAL MODE
+            # ===================================================
 
-        print(f"Dataset Shape : {df.shape}")
+            print(
+                "\nFinal Mode Enabled"
+            )
+
+            print(
+                "Using complete cleaned dataset."
+            )
+
+        # ===================================================
+        # FINAL DATASET INFORMATION
+        # ===================================================
+
+        print(
+            f"\nFinal Dataset Shape : {df.shape}"
+        )
+
+        final_counts = df[
+            label_column
+        ].value_counts()
+
+        print(
+            "\nFinal Class Distribution"
+        )
+
+        print("-" * 60)
+
+        print(final_counts)
+
+        # ===================================================
+        # VALIDATE CLASS COUNTS
+        # ===================================================
+
+        insufficient_classes = final_counts[
+            final_counts < 2
+        ]
+
+        if len(insufficient_classes) > 0:
+
+            print(
+                "\nERROR: Stratified train/test split "
+                "cannot be performed."
+            )
+
+            print(
+                "Classes with fewer than 2 samples:"
+            )
+
+            print(
+                insufficient_classes
+            )
+
+            raise ValueError(
+                "At least one class has fewer than "
+                "2 samples after dataset preparation."
+            )
 
         return df
 
-    # -------------------------------------------------------
+    # =======================================================
     # Clean Dataset
-    # -------------------------------------------------------
+    # =======================================================
 
     def clean_dataset(self, df):
+
+        """
+        Compatibility method.
+
+        load_dataset() already performs the complete
+        cleaning pipeline, so preprocess() does not call
+        this method again.
+        """
 
         print("\nCleaning Dataset...")
 
@@ -154,7 +475,7 @@ class IDSDataset:
         )
 
         # ---------------------------------------------------
-        # Remove rows without labels
+        # Remove missing labels
         # ---------------------------------------------------
 
         df.dropna(
@@ -184,7 +505,7 @@ class IDSDataset:
         )
 
         # ---------------------------------------------------
-        # Replace missing feature values
+        # Replace invalid values
         # ---------------------------------------------------
 
         df[feature_columns] = df[
@@ -194,13 +515,13 @@ class IDSDataset:
             np.nan,
         )
 
+        # ---------------------------------------------------
+        # Fill missing values
+        # ---------------------------------------------------
+
         df[feature_columns] = df[
             feature_columns
         ].fillna(0)
-
-        # ---------------------------------------------------
-        # Final validation
-        # ---------------------------------------------------
 
         print(
             f"Clean Dataset Shape : {df.shape}"
@@ -211,37 +532,49 @@ class IDSDataset:
         )
 
         print(
-            f"Classes  : "
+            f"Classes : "
             f"{df[label_column].nunique()}"
         )
 
         return df
 
-    # -------------------------------------------------------
+    # =======================================================
     # Prepare Train/Test Data
-    # -------------------------------------------------------
+    # =======================================================
 
     def preprocess(self):
 
         df = self.load_dataset()
 
-        df = self.clean_dataset(df)
+        # IMPORTANT:
+        # Do not call clean_dataset() here.
+        # load_dataset() has already cleaned the data.
 
         label_column = df.columns[-1]
+
+        # ---------------------------------------------------
+        # Separate features and labels
+        # ---------------------------------------------------
 
         X = df.drop(
             columns=[label_column]
         )
 
-        y = df[label_column].astype(str)
+        y = df[
+            label_column
+        ].astype(str)
 
-        # ---------------------------------------------------
+        # ===================================================
         # Encode Labels
-        # ---------------------------------------------------
+        # ===================================================
 
         y_encoded = self.label_encoder.fit_transform(
             y
         )
+
+        # ---------------------------------------------------
+        # Create label mapping
+        # ---------------------------------------------------
 
         self.label_mapping = {
             str(index): label
@@ -249,6 +582,10 @@ class IDSDataset:
                 self.label_encoder.classes_
             )
         }
+
+        # ---------------------------------------------------
+        # Save label mapping
+        # ---------------------------------------------------
 
         os.makedirs(
             "federated",
@@ -267,7 +604,11 @@ class IDSDataset:
                 indent=4,
             )
 
-        print("\nLabel Mapping")
+        print(
+            "\nLabel Mapping"
+        )
+
+        print("-" * 60)
 
         for index, label in enumerate(
             self.label_encoder.classes_
@@ -277,15 +618,43 @@ class IDSDataset:
                 f"{index:2d} -> {label}"
             )
 
+        # ===================================================
+        # TRAIN / TEST SPLIT
+        # ===================================================
+
+        print(
+            "\nCreating stratified train/test split..."
+        )
+
         # ---------------------------------------------------
-        # Train/Test Split
+        # Check class counts
         # ---------------------------------------------------
 
-        print("\nCreating stratified train/test split...")
+        encoded_counts = pd.Series(
+            y_encoded
+        ).value_counts()
+
+        if encoded_counts.min() < 2:
+
+            problematic = encoded_counts[
+                encoded_counts < 2
+            ]
+
+            raise ValueError(
+                "Cannot perform stratified train/test "
+                "split because some classes have fewer "
+                f"than 2 samples: "
+                f"{problematic.to_dict()}"
+            )
+
+        # ---------------------------------------------------
+        # Stratified 80/20 split
+        # ---------------------------------------------------
 
         X_train, X_test, y_train, y_test = train_test_split(
 
             X,
+
             y_encoded,
 
             test_size=self.test_size,
@@ -303,14 +672,18 @@ class IDSDataset:
             f"Testing Samples  : {len(X_test)}"
         )
 
-        # ---------------------------------------------------
-        # Fit scaler ONLY on training data
-        # ---------------------------------------------------
+        # ===================================================
+        # STANDARD SCALING
+        # ===================================================
 
         print(
             "\nFitting StandardScaler "
             "on training data only..."
         )
+
+        # IMPORTANT:
+        # Fit scaler ONLY on training data.
+        # This prevents test-data leakage.
 
         X_train = self.scaler.fit_transform(
             X_train
@@ -320,7 +693,9 @@ class IDSDataset:
             X_test
         )
 
-        print("Scaling completed.")
+        print(
+            "Scaling completed."
+        )
 
         return (
             X_train,
@@ -329,9 +704,9 @@ class IDSDataset:
             y_test,
         )
 
-    # -------------------------------------------------------
+    # =======================================================
     # Create Federated Clients
-    # -------------------------------------------------------
+    # =======================================================
 
     def create_clients(self):
 
@@ -342,13 +717,21 @@ class IDSDataset:
             y_test,
         ) = self.preprocess()
 
-        print("\n" + "=" * 60)
-        print("Creating Federated Clients")
-        print("=" * 60)
+        print(
+            "\n" + "=" * 60
+        )
 
-        # ---------------------------------------------------
-        # Shuffle training data
-        # ---------------------------------------------------
+        print(
+            "Creating Federated Clients"
+        )
+
+        print(
+            "=" * 60
+        )
+
+        # ===================================================
+        # Shuffle Training Data
+        # ===================================================
 
         rng = np.random.default_rng(
             self.random_state
@@ -358,12 +741,17 @@ class IDSDataset:
             len(X_train)
         )
 
-        X_train = X_train[indices]
-        y_train = y_train[indices]
+        X_train = X_train[
+            indices
+        ]
 
-        # ---------------------------------------------------
-        # Partition training data
-        # ---------------------------------------------------
+        y_train = y_train[
+            indices
+        ]
+
+        # ===================================================
+        # Partition Training Data
+        # ===================================================
 
         client_indices = np.array_split(
             np.arange(len(X_train)),
@@ -389,15 +777,27 @@ class IDSDataset:
                 f"| Samples : {len(X_client)}"
             )
 
+            # ------------------------------------------------
+            # Convert features to tensors
+            # ------------------------------------------------
+
             X_client = torch.tensor(
                 X_client,
                 dtype=torch.float32,
             )
 
+            # ------------------------------------------------
+            # Convert labels to tensors
+            # ------------------------------------------------
+
             y_client = torch.tensor(
                 y_client,
                 dtype=torch.long,
             )
+
+            # ------------------------------------------------
+            # Create TensorDataset
+            # ------------------------------------------------
 
             dataset = TensorDataset(
                 X_client,
@@ -408,9 +808,9 @@ class IDSDataset:
                 dataset
             )
 
-        # ---------------------------------------------------
+        # ===================================================
         # Test Dataset
-        # ---------------------------------------------------
+        # ===================================================
 
         X_test = torch.tensor(
             X_test,
@@ -427,9 +827,9 @@ class IDSDataset:
             y_test,
         )
 
-        # ---------------------------------------------------
-        # DataLoaders
-        # ---------------------------------------------------
+        # ===================================================
+        # Client DataLoaders
+        # ===================================================
 
         client_loaders = [
 
@@ -442,11 +842,19 @@ class IDSDataset:
             for client in clients
         ]
 
+        # ===================================================
+        # Test DataLoader
+        # ===================================================
+
         test_loader = DataLoader(
             test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
         )
+
+        # ===================================================
+        # Final Information
+        # ===================================================
 
         print(
             f"\nNumber of Clients : "
@@ -458,28 +866,36 @@ class IDSDataset:
             f"{len(test_dataset)}"
         )
 
-        print("=" * 60)
+        print(
+            "=" * 60
+        )
 
         return (
             client_loaders,
             test_loader,
         )
 
-    # -------------------------------------------------------
+    # =======================================================
     # Dataset Information
-    # -------------------------------------------------------
+    # =======================================================
 
     def get_information(self):
 
         df = self.load_dataset()
 
-        df = self.clean_dataset(df)
-
         label_column = df.columns[-1]
 
-        print("\n" + "=" * 60)
-        print("Dataset Information")
-        print("=" * 60)
+        print(
+            "\n" + "=" * 60
+        )
+
+        print(
+            "Dataset Information"
+        )
+
+        print(
+            "=" * 60
+        )
 
         print(
             f"Samples  : {len(df)}"
@@ -490,14 +906,22 @@ class IDSDataset:
         )
 
         print(
-            f"Classes  : {df[label_column].nunique()}"
+            f"Classes  : "
+            f"{df[label_column].nunique()}"
         )
 
-        print("\nClass Distribution")
-        print("-" * 60)
+        print(
+            "\nClass Distribution"
+        )
+
+        print(
+            "-" * 60
+        )
 
         print(
             df[label_column].value_counts()
         )
 
-        print("=" * 60)
+        print(
+            "=" * 60
+        )
