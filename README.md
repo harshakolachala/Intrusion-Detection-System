@@ -69,7 +69,8 @@ Attack Prediction
               ▼
         SOC Dashboard
 
-🧠 Federated Learning
+## 🧠 Federated Learning
+
 FedSentry uses Flower + PyTorch for collaborative model training.
 Client 1 ──┐
 Client 2 ──┼──► Flower Server ──► Global Model
