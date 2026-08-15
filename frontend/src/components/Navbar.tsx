@@ -1,37 +1,19 @@
 import React, { useState } from 'react';
-import {
-  Bell,
-  Search,
-  Sun,
-  Moon,
-  Radio,
+import { 
+  Bell, 
+  Search, 
+  Sun, 
+  Moon, 
+  Radio, 
   ChevronDown,
   Activity,
-  CheckCircle2,
-  Shield,
-  Command,
-  Wifi,
-  UserRound,
-  LogOut,
+  X,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../context/ThemeModeContext';
-
-const NAVBAR_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700;1,9..144,900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-  .navbar-root {
-    --accent: #8B2FE0;
-    --accent-dim: #F1E4FF;
-    --rust: #FF3D6E;
-    --rust-dim: #FFE1EA;
-    --amber: #FF9D2E;
-    --grad: linear-gradient(90deg, var(--accent) 0%, var(--rust) 55%, var(--amber) 100%);
-  }
-  .navbar-root .font-display { font-family: 'Fraunces', ui-serif, Georgia, serif; font-style: italic; letter-spacing: -0.01em; }
-  .navbar-root .font-mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace; }
-  .navbar-root .grad-bg { background: var(--grad); }
-`;
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -50,25 +32,22 @@ export const Navbar: React.FC<NavbarProps> = () => {
       title: 'High Volumetric Traffic Flagged',
       time: '2 mins ago',
       type: 'danger',
-      message:
-        'Source 192.168.1.105 initiated 10,000 requests/sec targeting primary gateway.',
+      message: 'Source 192.168.1.105 initiated 10,000 requests/sec targeting primary gateway.'
     },
     {
       id: 2,
       title: 'Global FL Model Aggregated',
       time: '12 mins ago',
       type: 'success',
-      message:
-        'Federated global weight update v2.4 successfully synchronized across active nodes.',
+      message: 'Federated global weight update v2.4 successfully synchronized across active nodes.'
     },
     {
       id: 3,
       title: 'PortScan Probe Sweep',
       time: '45 mins ago',
       type: 'warning',
-      message:
-        'Port sweep detected across SSH (22) and HTTPS (443) from 192.168.1.112.',
-    },
+      message: 'Port sweep detected across SSH (22) and HTTPS (443) from 192.168.1.112.'
+    }
   ]);
 
   const unreadCount = notifications.length;
@@ -78,509 +57,129 @@ export const Navbar: React.FC<NavbarProps> = () => {
   };
 
   return (
-    <header
-      className={`navbar-root sticky top-0 z-30 h-[76px] px-3 sm:px-5 lg:px-7 ${
-        isDarkMode ? 'text-slate-100' : 'text-slate-900'
-      }`}
-    >
-      <style>{NAVBAR_STYLES}</style>
-
-      <div
-        className={`relative flex h-full items-center justify-between rounded-b-2xl border px-3 shadow-sm backdrop-blur-2xl transition-all duration-300 sm:px-4 lg:px-5 ${
-          isDarkMode
-            ? 'border-slate-800/80 bg-slate-950/80 shadow-black/20'
-            : 'border-slate-200/80 bg-white/80 shadow-slate-900/[0.04]'
-        }`}
-      >
-        {/* =====================================================
-            LEFT SIDE
-        ===================================================== */}
-        <div className="flex min-w-0 items-center gap-3 lg:gap-5">
-          {/* Brand Mark */}
-          <div
-            className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl grad-bg text-white shadow-[0_10px_24px_rgba(139,47,224,0.22)] sm:flex`}
-          >
-            <Shield className="h-[18px] w-[18px]" />
-          </div>
-
-          {/* Search */}
-          <div className="relative hidden w-56 md:block lg:w-72 xl:w-80">
-            <Search
-              className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 ${
-                isDarkMode ? 'text-slate-500' : 'text-slate-400'
-              }`}
-            />
-
-            <input
-              type="text"
-              placeholder="Search IP, Attack Vector, Rules..."
-              className={`h-10 w-full rounded-xl border pl-10 pr-11 text-xs outline-none transition-all duration-200 ${
-                isDarkMode
-                  ? 'border-slate-800 bg-slate-900/70 text-slate-200 placeholder:text-slate-600 focus:border-[#8B2FE0]/60 focus:bg-slate-900'
-                  : 'border-slate-200 bg-slate-50/80 text-slate-700 placeholder:text-slate-400 focus:border-[#8B2FE0]/40 focus:bg-white'
-              }`}
-            />
-
-            <div
-              className={`absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border px-1.5 py-1 lg:flex ${
-                isDarkMode
-                  ? 'border-slate-700 bg-slate-800/80 text-slate-500'
-                  : 'border-slate-200 bg-white text-slate-400'
-              }`}
-            >
-              <Command className="h-2.5 w-2.5" />
-              <span className="font-mono text-[8px]">K</span>
-            </div>
-          </div>
-
-          {/* Mobile Search Indicator */}
-          <button
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border md:hidden ${
-              isDarkMode
-                ? 'border-slate-800 bg-slate-900 text-slate-400'
-                : 'border-slate-200 bg-slate-50 text-slate-500'
-            }`}
-            title="Search"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-
-          {/* ===================================================
-              LIVE ENGINE STATUS
-          =================================================== */}
-          <div
-            className={`hidden items-center gap-2 rounded-xl border px-3 py-2 lg:flex ${
-              isDarkMode
-                ? 'border-emerald-500/15 bg-emerald-500/[0.06]'
-                : 'border-emerald-200 bg-emerald-50/70'
-            }`}
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-
-            <Radio
-              className={`h-3.5 w-3.5 ${
-                isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
-              }`}
-            />
-
-            <div className="flex flex-col leading-none">
-              <span
-                className={`font-mono text-[8px] font-bold uppercase tracking-[0.14em] ${
-                  isDarkMode ? 'text-emerald-400' : 'text-emerald-700'
-                }`}
-              >
-                IDS Engine
-              </span>
-
-              <span
-                className={`mt-1 text-[8px] ${
-                  isDarkMode ? 'text-slate-500' : 'text-slate-400'
-                }`}
-              >
-                Operational
-              </span>
-            </div>
-          </div>
+    <header className="sticky top-0 z-30 h-20 bg-[#0a0f1d]/90 backdrop-blur-md border-b border-slate-800/80 px-6 flex items-center justify-between">
+      {/* Search Input & Live Health Pill */}
+      <div className="flex items-center space-x-6">
+        <div className="relative hidden sm:block w-72">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search IP, Attack Vector, Rules..."
+            className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all font-mono"
+          />
         </div>
 
-        {/* =====================================================
-            RIGHT SIDE
-        ===================================================== */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Live Engine Status Badge */}
+        <div className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+          <Radio className="w-3.5 h-3.5 animate-pulse" />
+          <span>IDS Engine Active</span>
+        </div>
+      </div>
 
-          {/* Compact Connection Status */}
-          <div
-            className={`hidden items-center gap-1.5 rounded-xl px-2.5 py-2 xl:flex ${
-              isDarkMode
-                ? 'text-slate-500'
-                : 'text-slate-400'
-            }`}
-            title="Network connection active"
-          >
-            <Wifi className="h-3.5 w-3.5 text-emerald-500" />
-            <span className="font-mono text-[8px] font-bold uppercase tracking-wider">
-              Secure
-            </span>
-          </div>
+      {/* Action Controls & Profile Menu */}
+      <div className="flex items-center space-x-4">
+        {/* Theme Mode Toggle */}
+        <button
+          onClick={toggleThemeMode}
+          className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all"
+          title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+        </button>
 
-          {/* ===================================================
-              THEME MODE TOGGLE
-          =================================================== */}
+        {/* Notifications Dropdown Toggle */}
+        <div className="relative">
           <button
-            onClick={toggleThemeMode}
-            className={`group relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${
-              isDarkMode
-                ? 'border-slate-800 bg-slate-900/80 text-amber-400 hover:border-slate-700 hover:bg-slate-800'
-                : 'border-slate-200 bg-slate-50/80 text-slate-500 hover:border-slate-300 hover:bg-white hover:text-slate-800'
-            }`}
-            title={
-              isDarkMode
-                ? 'Switch to Light Mode'
-                : 'Switch to Dark Mode'
-            }
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all relative"
+            title="Notification Center"
           >
-            <span
-              className={`absolute inset-1 rounded-lg opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
-                isDarkMode ? 'bg-amber-400/5' : 'bg-[#8B2FE0]/5'
-              }`}
-            />
-
-            {isDarkMode ? (
-              <Sun className="relative z-10 h-4 w-4" />
-            ) : (
-              <Moon className="relative z-10 h-4 w-4" />
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-[#0a0f1d]"></span>
             )}
           </button>
 
-          {/* ===================================================
-              NOTIFICATION CENTER
-          =================================================== */}
-          <div className="relative">
-            <button
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className={`relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${
-                isDarkMode
-                  ? 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:bg-slate-800 hover:text-white'
-                  : 'border-slate-200 bg-slate-50/80 text-slate-500 hover:border-slate-300 hover:bg-white hover:text-slate-800'
-              }`}
-              title="Notification Center"
-            >
-              <Bell className="h-4 w-4" />
+          {/* Notifications Dropdown Panel */}
+          {notificationsOpen && (
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#0d1427] border border-slate-800 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  <h4 className="text-sm font-bold text-white">Security Event Feed</h4>
+                </div>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleClearNotifications}
+                    className="text-[11px] font-mono text-slate-400 hover:text-rose-400 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
 
-              {unreadCount > 0 && (
-                <>
-                  <span
-                    className="absolute right-1.5 top-1.5 h-2 w-2 animate-pulse rounded-full"
-                    style={{ backgroundColor: 'var(--rust)' }}
-                  />
-
-                  <span
-                    className={`absolute right-1 top-1 h-2.5 w-2.5 rounded-full ring-2 ${
-                      isDarkMode ? 'ring-slate-950' : 'ring-white'
-                    }`}
-                    style={{ backgroundColor: 'rgba(255,61,110,0.1)' }}
-                  />
-                </>
-              )}
-            </button>
-
-            {/* =================================================
-                NOTIFICATIONS DROPDOWN
-            ================================================= */}
-            {notificationsOpen && (
-              <div
-                className={`absolute right-0 mt-3 w-[calc(100vw-24px)] max-w-[390px] overflow-hidden rounded-2xl border p-3 shadow-2xl backdrop-blur-2xl sm:w-96 ${
-                  isDarkMode
-                    ? 'border-slate-800 bg-slate-950/95 shadow-black/40'
-                    : 'border-slate-200 bg-white/95 shadow-slate-900/10'
-                }`}
-              >
-                {/* Header */}
-                <div
-                  className={`flex items-center justify-between border-b px-2 pb-3 ${
-                    isDarkMode
-                      ? 'border-slate-800'
-                      : 'border-slate-100'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="flex h-8 w-8 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: 'var(--accent-dim)', color: 'var(--accent)' }}
-                    >
-                      <Activity className="h-4 w-4" />
-                    </div>
-
-                    <div>
-                      <h4
-                        className={`font-display text-xs font-semibold ${
-                          isDarkMode
-                            ? 'text-white'
-                            : 'text-slate-900'
-                        }`}
-                      >
-                        Security Event Feed
-                      </h4>
-
-                      <p
-                        className={`mt-0.5 font-mono text-[8px] uppercase tracking-wider ${
-                          isDarkMode
-                            ? 'text-slate-500'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        Live monitoring
-                      </p>
-                    </div>
+              <div className="space-y-2.5 max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-6 text-slate-500 font-mono text-xs">
+                    <CheckCircle2 className="w-6 h-6 mx-auto mb-1 text-slate-600" />
+                    <span>No unread security notifications.</span>
                   </div>
-
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={handleClearNotifications}
-                      className={`rounded-lg px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider transition-colors ${
-                        isDarkMode
-                          ? 'text-slate-500 hover:bg-rose-500/10 hover:text-rose-400'
-                          : 'text-slate-400 hover:bg-rose-50 hover:text-rose-600'
-                      }`}
+                ) : (
+                  notifications.map((item) => (
+                    <div 
+                      key={item.id} 
+                      className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 text-xs space-y-1 hover:border-slate-700 transition-all"
                     >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
-                {/* Notification List */}
-                <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-0.5">
-                  {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <div
-                        className={`mb-3 flex h-11 w-11 items-center justify-center rounded-full ${
-                          isDarkMode
-                            ? 'bg-emerald-500/10'
-                            : 'bg-emerald-50'
-                        }`}
-                      >
-                        <CheckCircle2
-                          className={`h-5 w-5 ${
-                            isDarkMode
-                              ? 'text-emerald-400'
-                              : 'text-emerald-500'
-                          }`}
-                        />
+                      <div className="flex items-center justify-between">
+                        <span className={`font-bold font-mono ${
+                          item.type === 'danger' ? 'text-rose-400' :
+                          item.type === 'warning' ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          {item.title}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">{item.time}</span>
                       </div>
-
-                      <p
-                        className={`font-mono text-[10px] font-bold uppercase tracking-wider ${
-                          isDarkMode
-                            ? 'text-slate-400'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        All clear
-                      </p>
-
-                      <span
-                        className={`mt-1 text-[10px] ${
-                          isDarkMode
-                            ? 'text-slate-600'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        No unread security notifications.
-                      </span>
+                      <p className="text-slate-400 leading-relaxed text-[11px] font-sans">{item.message}</p>
                     </div>
-                  ) : (
-                    notifications.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`group rounded-xl border p-3 transition-all duration-200 ${
-                          isDarkMode
-                            ? 'border-slate-800/80 bg-slate-900/70 hover:border-slate-700 hover:bg-slate-900'
-                            : 'border-slate-100 bg-slate-50/70 hover:border-slate-200 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                            style={
-                              item.type === 'danger'
-                                ? { backgroundColor: isDarkMode ? 'rgba(255,61,110,0.1)' : 'var(--rust-dim)', color: 'var(--rust)' }
-                                : item.type === 'warning'
-                                  ? { backgroundColor: isDarkMode ? 'rgba(255,157,46,0.1)' : '#FFF3E4', color: 'var(--amber)' }
-                                  : isDarkMode
-                                    ? { backgroundColor: 'rgba(16,185,129,0.1)', color: '#34d399' }
-                                    : { backgroundColor: '#ecfdf5', color: '#10b981' }
-                            }
-                          >
-                            {item.type === 'danger' ? (
-                              <Shield className="h-3.5 w-3.5" />
-                            ) : item.type === 'warning' ? (
-                              <Activity className="h-3.5 w-3.5" />
-                            ) : (
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                            )}
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-3">
-                              <span
-                                className="text-[10px] font-bold leading-4"
-                                style={
-                                  item.type === 'danger'
-                                    ? { color: 'var(--rust)' }
-                                    : item.type === 'warning'
-                                      ? { color: 'var(--amber)' }
-                                      : { color: isDarkMode ? '#34d399' : '#059669' }
-                                }
-                              >
-                                {item.title}
-                              </span>
-
-                              <span
-                                className={`shrink-0 font-mono text-[8px] ${
-                                  isDarkMode
-                                    ? 'text-slate-600'
-                                    : 'text-slate-400'
-                                }`}
-                              >
-                                {item.time}
-                              </span>
-                            </div>
-
-                            <p
-                              className={`mt-1.5 text-[10px] leading-5 ${
-                                isDarkMode
-                                  ? 'text-slate-500'
-                                  : 'text-slate-500'
-                              }`}
-                            >
-                              {item.message}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                  ))
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* ===================================================
-              USER ACCOUNT
-          =================================================== */}
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={`flex h-10 items-center gap-2 rounded-xl border pl-1.5 pr-2 transition-all duration-200 sm:gap-2.5 sm:pr-3 ${
-                isDarkMode
-                  ? 'border-slate-800 bg-slate-900/80 hover:border-slate-700 hover:bg-slate-800'
-                  : 'border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              {/* Avatar */}
-              <div className="grad-bg flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black text-white shadow-sm sm:h-8 sm:w-8">
-                {user?.username
-                  ? user.username.charAt(0).toUpperCase()
-                  : 'A'}
+        {/* User Account Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center space-x-3 p-1.5 pr-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-mono font-bold flex items-center justify-center text-xs shadow-md">
+              {user?.username ? user.username.charAt(0).toUpperCase() : 'A'}
+            </div>
+            <div className="hidden sm:flex flex-col text-left">
+              <span className="text-xs font-bold text-white truncate max-w-[100px]">{user?.username || 'Analyst'}</span>
+              <span className="text-[9px] text-blue-400 font-mono uppercase">SOC Lead</span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {userMenuOpen && (
+            <div className="absolute right-0 mt-3 w-48 bg-[#0d1427] border border-slate-800 rounded-xl shadow-2xl p-2 z-50 font-mono text-xs space-y-1">
+              <div className="px-3 py-2 border-b border-slate-800 text-slate-400">
+                Logged in as <span className="text-white font-bold">{user?.username || 'analyst'}</span>
               </div>
-
-              {/* User Information */}
-              <div className="hidden min-w-0 flex-col text-left sm:flex">
-                <span
-                  className={`max-w-[100px] truncate text-[10px] font-bold ${
-                    isDarkMode ? 'text-slate-100' : 'text-slate-800'
-                  }`}
-                >
-                  {user?.username || 'Analyst'}
-                </span>
-
-                <span
-                  className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-wider"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  SOC Lead
-                </span>
-              </div>
-
-              <ChevronDown
-                className={`hidden h-3.5 w-3.5 transition-transform duration-200 sm:block ${
-                  userMenuOpen ? 'rotate-180' : ''
-                } ${
-                  isDarkMode
-                    ? 'text-slate-500'
-                    : 'text-slate-400'
-                }`}
-              />
-            </button>
-
-            {/* =================================================
-                USER DROPDOWN
-            ================================================= */}
-            {userMenuOpen && (
-              <div
-                className={`absolute right-0 mt-3 w-60 overflow-hidden rounded-2xl border p-2 shadow-2xl backdrop-blur-2xl ${
-                  isDarkMode
-                    ? 'border-slate-800 bg-slate-950/95 shadow-black/40'
-                    : 'border-slate-200 bg-white/95 shadow-slate-900/10'
-                }`}
+              <button
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  logout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors"
               >
-                {/* Account Header */}
-                <div
-                  className={`rounded-xl px-3 py-3 ${
-                    isDarkMode
-                      ? 'bg-slate-900/70'
-                      : 'bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="grad-bg flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black text-white">
-                      {user?.username
-                        ? user.username.charAt(0).toUpperCase()
-                        : 'A'}
-                    </div>
-
-                    <div className="min-w-0">
-                      <p
-                        className={`truncate text-xs font-bold ${
-                          isDarkMode
-                            ? 'text-white'
-                            : 'text-slate-900'
-                        }`}
-                      >
-                        {user?.username || 'analyst'}
-                      </p>
-
-                      <p
-                        className={`mt-0.5 truncate text-[9px] ${
-                          isDarkMode
-                            ? 'text-slate-500'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        {user?.email || 'analyst@sentinel.ai'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Account Status */}
-                <div
-                  className={`mx-1 mt-2 flex items-center gap-2 rounded-lg px-2.5 py-2 ${
-                    isDarkMode
-                      ? 'text-slate-500'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  <UserRound className="h-3.5 w-3.5" />
-
-                  <span className="font-mono text-[9px] uppercase tracking-wider">
-                    Authenticated Session
-                  </span>
-
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                </div>
-
-                {/* Logout */}
-                <button
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    logout();
-                  }}
-                  className={`mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[10px] font-bold transition-all duration-200 ${
-                    isDarkMode
-                      ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
-                      : 'text-rose-600 hover:bg-rose-50 hover:text-rose-700'
-                  }`}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            )}
-          </div>
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
