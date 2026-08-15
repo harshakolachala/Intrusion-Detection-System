@@ -1,0 +1,52 @@
+{
+    "experiment": {
+        "type": "centralized",
+        "features": 78,
+        "classes": 15,
+        "training_samples": 1999827,
+        "test_samples": 499957,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.001,
+        "device": "cpu"
+    },
+    "metrics": {
+        "accuracy": 0.9117824132875427,
+        "weighted_precision": 0.9593066689063445,
+        "weighted_recall": 0.9117824132875427,
+        "weighted_f1": 0.9292157240309006,
+        "macro_precision": 0.49336855501286986,
+        "macro_recall": 0.84929682633097,
+        "macro_f1": 0.5114542909853937
+    },
+    "training": {
+        "total_seconds": 412.2363371999818
+    },
+    "inference": {
+        "total_seconds": 5.429729499999667,
+        "samples_per_second": 92077.69926660816
+    },
+    "model": {
+        "parameters": 55823,
+        "hidden1": 256,
+        "hidden2": 128,
+        "dropout": 0.3
+    },
+    "classes": [
+        "BENIGN",
+        "Bot",
+        "DDoS",
+        "DoS GoldenEye",
+        "DoS Hulk",
+        "DoS Slowhttptest",
+        "DoS slowloris",
+        "FTP-Patator",
+        "Heartbleed",
+        "Infiltration",
+        "PortScan",
+        "SSH-Patator",
+        "Web Attack_Brute Force",
+        "Web Attack_Sql Injection",
+        "Web Attack_XSS"
+    ]
+}

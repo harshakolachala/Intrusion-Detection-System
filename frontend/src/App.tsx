@@ -21,7 +21,6 @@ import Incidents from './pages/Incidents';
 import PredictionHistory from './pages/PredictionHistory';
 import AuditLogs from './pages/AuditLogs';
 import Chatbot from './pages/Chatbot';
-import Settings from './pages/Settings';
 
 // Fallback Page
 import NotFound from './pages/NotFound';
@@ -122,17 +121,6 @@ export const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <Chatbot />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Settings />
                 </Layout>
               </ProtectedRoute>
             }

@@ -1,0 +1,10 @@
+{
+    "iterations": 1000,
+    "input_features": 78,
+    "mean_latency_ms": 1.7694348003715277,
+    "median_latency_ms": 1.4123000000836328,
+    "p95_latency_ms": 2.7084100103820665,
+    "p99_latency_ms": 5.592389997327699,
+    "min_latency_ms": 1.0605000134091824,
+    "max_latency_ms": 9.84390001394786
+}

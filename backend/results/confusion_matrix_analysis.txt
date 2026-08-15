@@ -1,0 +1,149 @@
+FEDERATED IDS CONFUSION MATRIX ANALYSIS
+======================================================================
+
+PER-CLASS ANALYSIS
+----------------------------------------------------------------------
+
+Class: BENIGN
+Support: 414781
+True Positive: 365911
+False Positive: 7
+False Negative: 48870
+Precision: 0.999981
+Recall: 0.882179
+
+Class: Bot
+Support: 391
+True Positive: 390
+False Positive: 12767
+False Negative: 1
+Precision: 0.029642
+Recall: 0.997442
+
+Class: DDoS
+Support: 25603
+True Positive: 25584
+False Positive: 5808
+False Negative: 19
+Precision: 0.814985
+Recall: 0.999258
+
+Class: DoS GoldenEye
+Support: 2057
+True Positive: 2055
+False Positive: 1166
+False Negative: 2
+Precision: 0.638001
+Recall: 0.999028
+
+Class: DoS Hulk
+Support: 34570
+True Positive: 34526
+False Positive: 7689
+False Negative: 44
+Precision: 0.817861
+Recall: 0.998727
+
+Class: DoS Slowhttptest
+Support: 1046
+True Positive: 1034
+False Positive: 611
+False Negative: 12
+Precision: 0.628571
+Recall: 0.988528
+
+Class: DoS slowloris
+Support: 1077
+True Positive: 1064
+False Positive: 1469
+False Negative: 13
+Precision: 0.420055
+Recall: 0.987929
+
+Class: FTP-Patator
+Support: 1187
+True Positive: 1178
+False Positive: 1273
+False Negative: 9
+Precision: 0.480620
+Recall: 0.992418
+
+Class: Heartbleed
+Support: 2
+True Positive: 2
+False Positive: 1
+False Negative: 0
+Precision: 0.666667
+Recall: 1.000000
+
+Class: Infiltration
+Support: 7
+True Positive: 4
+False Positive: 131
+False Negative: 3
+Precision: 0.029630
+Recall: 0.571429
+
+Class: PortScan
+Support: 18164
+True Positive: 18121
+False Positive: 8546
+False Negative: 43
+Precision: 0.679529
+Recall: 0.997633
+
+Class: SSH-Patator
+Support: 644
+True Positive: 612
+False Positive: 6632
+False Negative: 32
+Precision: 0.084484
+Recall: 0.950311
+
+Class: Web Attack_Brute Force
+Support: 294
+True Positive: 281
+False Positive: 3089
+False Negative: 13
+Precision: 0.083383
+Recall: 0.955782
+
+Class: Web Attack_Sql Injection
+Support: 4
+True Positive: 0
+False Positive: 0
+False Negative: 4
+Precision: 0.000000
+Recall: 0.000000
+
+Class: Web Attack_XSS
+Support: 130
+True Positive: 2
+False Positive: 4
+False Negative: 128
+Precision: 0.333333
+Recall: 0.015385
+
+
+MOST COMMON MISCLASSIFICATIONS
+----------------------------------------------------------------------
+BENIGN -> Bot : 12766
+BENIGN -> PortScan : 8537
+BENIGN -> DoS Hulk : 7664
+BENIGN -> SSH-Patator : 6615
+BENIGN -> DDoS : 5808
+BENIGN -> Web Attack_Brute Force : 2939
+BENIGN -> DoS slowloris : 1429
+BENIGN -> FTP-Patator : 1271
+BENIGN -> DoS GoldenEye : 1106
+BENIGN -> DoS Slowhttptest : 599
+BENIGN -> Infiltration : 131
+Web Attack_XSS -> Web Attack_Brute Force : 121
+DoS Hulk -> DoS GoldenEye : 42
+PortScan -> DoS slowloris : 28
+SSH-Patator -> Web Attack_Brute Force : 20
+Web Attack_Brute Force -> SSH-Patator : 13
+DoS slowloris -> DoS Slowhttptest : 12
+PortScan -> DoS Hulk : 9
+DDoS -> DoS GoldenEye : 8
+FTP-Patator -> DoS slowloris : 7
