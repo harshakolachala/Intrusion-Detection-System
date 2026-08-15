@@ -1,5 +1,16 @@
 # FedSentry
 
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![Flower](https://img.shields.io/badge/Flower-Federated-orange)
+![License](https://img.shields.io/badge/License-Educational-lightgrey)
+
+
+
 ### Federated Learning-Based Intelligent Intrusion Detection & Security Operations Platform
 
 FedSentry is an AI-powered cybersecurity platform designed to provide intelligent, privacy-aware, and real-time network security monitoring. The platform combines **Federated Learning, Deep Learning, Intrusion Detection, Threat Intelligence, MITRE ATT&CK, Retrieval-Augmented Generation (RAG), and Large Language Models (LLMs)** into a unified SOC-oriented security platform.
