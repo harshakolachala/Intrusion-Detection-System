@@ -1,31 +1,125 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard,Activity,BarChart2,ShieldAlert,AlertTriangle,History,FileText,Bot,LogOut,ShieldCheck,ChevronLeft } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bot,
+  ChevronLeft,
+  FileText,
+  History,
+  LayoutDashboard,
+  LogOut,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-interface SidebarProps { collapsed?: boolean; onToggleCollapse?: () => void; }
-const EASE='cubic-bezier(0.22,1,0.36,1)';
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
 
-export const Sidebar: React.FC<SidebarProps> = ({collapsed=false,onToggleCollapse}) => {
-  const {user,logout}=useAuth(); const navigate=useNavigate();
-  const navItems=[
-    {name:'Overview',path:'/dashboard',icon:LayoutDashboard},{name:'Live Predict',path:'/predict',icon:Activity},{name:'Analytics',path:'/analytics',icon:BarChart2},{name:'Alerts',path:'/alerts',icon:ShieldAlert},{name:'Incidents',path:'/incidents',icon:AlertTriangle},{name:'Prediction History',path:'/prediction-history',icon:History},{name:'Audit Logs',path:'/audit',icon:FileText},{name:'AI Assistant',path:'/chatbot',icon:Bot},
-  ];
-  const handleLogout=()=>{logout();navigate('/login')};
-  return <aside className={`sidebar-root group/sidebar fixed left-0 top-[64px] z-40 flex h-[calc(100vh-64px)] flex-col border-r ${collapsed?'w-[76px] hover:w-[250px]':'w-[250px]'}`} style={{transition:`width 300ms ${EASE}`}}>
-    <div className="px-3 pt-4">
-      <div className="mb-4 flex h-12 items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[.045] px-3">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f36f45] text-white"><ShieldCheck className="h-3.5 w-3.5"/></span>
-        <div className={`${collapsed?'w-0 opacity-0 group-hover/sidebar:w-[140px] group-hover/sidebar:opacity-100':'w-[140px]'} overflow-hidden transition-all`}><div className="whitespace-nowrap text-[11px] font-semibold text-white">Security workspace</div><div className="mt-0.5 whitespace-nowrap text-[9px] text-white/40">Detection engine active</div></div>
-        {onToggleCollapse&&<button onClick={onToggleCollapse} className={`${collapsed?'opacity-0 group-hover/sidebar:opacity-100':''} ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[.05] text-white/45`}><ChevronLeft className="h-3 w-3" style={{transform:collapsed?'rotate(180deg)':'none'}}/></button>}
+const navItems = [
+  { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Live Predict', path: '/predict', icon: Activity },
+  { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+  { name: 'Alerts', path: '/alerts', icon: ShieldAlert },
+  { name: 'Incidents', path: '/incidents', icon: AlertTriangle },
+  { name: 'Prediction History', path: '/prediction-history', icon: History },
+  { name: 'Audit Logs', path: '/audit', icon: FileText },
+  { name: 'AI Assistant', path: '/chatbot', icon: Bot },
+];
+
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCollapse }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <aside
+      className={`sidebar-root fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col border-r text-white ${collapsed ? 'w-[76px]' : 'w-[232px]'}`}
+      style={{ transition: 'width 260ms cubic-bezier(.22,1,.36,1)' }}
+    >
+      <div className="flex min-h-0 flex-1 flex-col px-3 py-4">
+        <div className={`mb-4 flex items-center ${collapsed ? 'justify-center' : 'justify-between px-1'}`}>
+          {!collapsed && (
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-[.14em] text-white/35">Workspace</div>
+              <div className="mt-1 text-[13px] font-semibold text-white/88">Security cabinet</div>
+            </div>
+          )}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[.055] text-white/55 hover:bg-white/[.09] hover:text-white"
+              aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+            >
+              <ChevronLeft className={`h-3.5 w-3.5 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
+            </button>
+          )}
+        </div>
+
+        <nav className="space-y-1 overflow-y-auto pr-0.5">
+          {navItems.map(({ name, path, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              title={collapsed ? name : undefined}
+              className={({ isActive }) =>
+                `flex h-11 items-center rounded-xl text-[12px] font-medium transition ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
+                  isActive
+                    ? 'border border-[#f36f45]/20 bg-[#f36f45]/15 text-[#ff9b79]'
+                    : 'border border-transparent text-white/58 hover:bg-white/[.06] hover:text-white'
+                }`
+              }
+            >
+              <Icon className="h-[16px] w-[16px] shrink-0" />
+              {!collapsed && <span className="truncate">{name}</span>}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="mt-auto pt-4">
+          <div className={`rounded-2xl border border-white/10 bg-white/[.045] ${collapsed ? 'p-2' : 'p-3'}`}>
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d5ccc0] text-[11px] font-bold text-[#4a4741]">
+                {(user?.username || 'O').slice(0, 1).toUpperCase()}
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[11px] font-semibold text-white/88">{user?.username || 'Operator'}</div>
+                  <div className="mt-0.5 text-[9px] text-white/38">FedSentry operator</div>
+                </div>
+              )}
+            </div>
+            {!collapsed && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[.055] text-[10px] font-medium text-white/55 hover:bg-white/[.09] hover:text-white"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Sign out
+              </button>
+            )}
+          </div>
+
+          {!collapsed && (
+            <div className="mt-3 flex items-center gap-2 px-2 text-[9px] text-white/35">
+              <ShieldCheck className="h-3 w-3 text-[#69c45d]" />
+              Detection engine online
+            </div>
+          )}
+        </div>
       </div>
-      <div className={`${collapsed?'opacity-0 group-hover/sidebar:opacity-100':'opacity-100'} mb-2 px-3 text-[9px] font-semibold uppercase tracking-[.12em] text-white/30 transition-opacity`}>Workspace</div>
-      <nav className="space-y-1">{navItems.map(item=>{const Icon=item.icon;return <NavLink key={item.path} to={item.path} title={collapsed?item.name:undefined} className={({isActive})=>`flex h-10 items-center rounded-xl text-[11px] font-medium transition ${collapsed?'justify-center px-0 group-hover/sidebar:justify-start group-hover/sidebar:px-3':'px-3'} ${isActive?'bg-white/[.10] text-white':'text-white/48 hover:bg-white/[.055] hover:text-white/85'}`}><Icon className="h-4 w-4 shrink-0"/><span className={`${collapsed?'w-0 opacity-0 group-hover/sidebar:ml-3 group-hover/sidebar:w-[150px] group-hover/sidebar:opacity-100':'ml-3 w-[150px]'} overflow-hidden whitespace-nowrap transition-all`}>{item.name}</span></NavLink>})}</nav>
-    </div>
-    <div className="mt-auto border-t border-white/10 p-3">
-      {user&&<div className="mb-2 flex h-12 items-center gap-2.5 rounded-xl bg-white/[.045] px-2.5"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d9d0c4] text-[10px] font-bold text-[#4b4842]">{(user.username||'A').charAt(0).toUpperCase()}</span><div className={`${collapsed?'w-0 opacity-0 group-hover/sidebar:w-[145px] group-hover/sidebar:opacity-100':'w-[145px]'} overflow-hidden transition-all`}><div className="truncate text-[10px] font-semibold text-white/85">{user.username||'SOC Analyst'}</div><div className="truncate text-[8px] text-white/35">{user.email||'Security operator'}</div></div></div>}
-      <button onClick={handleLogout} className={`flex h-10 w-full items-center rounded-xl text-[10px] font-medium text-white/45 hover:bg-white/[.05] hover:text-[#ff9a78] ${collapsed?'justify-center group-hover/sidebar:justify-start group-hover/sidebar:px-3':'px-3'}`}><LogOut className="h-4 w-4 shrink-0"/><span className={`${collapsed?'w-0 opacity-0 group-hover/sidebar:ml-3 group-hover/sidebar:w-[100px] group-hover/sidebar:opacity-100':'ml-3 w-[100px]'} overflow-hidden whitespace-nowrap transition-all`}>Sign out</span></button>
-    </div>
-  </aside>;
+    </aside>
+  );
 };
+
 export default Sidebar;
