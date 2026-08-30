@@ -42,22 +42,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
 
   return (
     <aside
-      className={`sidebar-root fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col border-r text-white ${collapsed ? 'w-[76px]' : 'w-[232px]'}`}
-      style={{ transition: 'width 260ms cubic-bezier(.22,1,.36,1)' }}
+      className={`sidebar-root fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col border-r ${collapsed ? 'w-[76px]' : 'w-[232px]'}`}
+      style={{ transition: 'width 260ms cubic-bezier(.22,1,.36,1)', color: 'var(--text-primary)' }}
     >
       <div className="flex min-h-0 flex-1 flex-col px-3 py-4">
         <div className={`mb-4 flex items-center ${collapsed ? 'justify-center' : 'justify-between px-1'}`}>
           {!collapsed && (
             <div>
-              <div className="text-[10px] font-medium uppercase tracking-[.14em] text-white/35">Workspace</div>
-              <div className="mt-1 text-[13px] font-semibold text-white/88">Security cabinet</div>
+              <div className="text-[10px] font-medium uppercase tracking-[.14em]" style={{ color: 'var(--text-subtle)' }}>Workspace</div>
+              <div className="mt-1 text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>Security cabinet</div>
             </div>
           )}
           {onToggleCollapse && (
             <button
               type="button"
               onClick={onToggleCollapse}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[.055] text-white/55 hover:bg-white/[.09] hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-full border transition"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-soft)', color: 'var(--text-muted)' }}
               aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
             >
               <ChevronLeft className={`h-3.5 w-3.5 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
@@ -72,10 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
               to={path}
               title={collapsed ? name : undefined}
               className={({ isActive }) =>
-                `flex h-11 items-center rounded-xl text-[12px] font-medium transition ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
-                  isActive
-                    ? 'border border-[#f36f45]/20 bg-[#f36f45]/15 text-[#ff9b79]'
-                    : 'border border-transparent text-white/58 hover:bg-white/[.06] hover:text-white'
+                `sidebar-nav-link flex h-11 items-center rounded-xl border text-[12px] font-medium transition ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
+                  isActive ? 'sidebar-nav-active' : 'border-transparent'
                 }`
               }
             >
@@ -86,15 +85,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
         </nav>
 
         <div className="mt-auto pt-4">
-          <div className={`rounded-2xl border border-white/10 bg-white/[.045] ${collapsed ? 'p-2' : 'p-3'}`}>
+          <div className={`rounded-2xl border ${collapsed ? 'p-2' : 'p-3'}`} style={{ borderColor: 'var(--border)', background: 'var(--surface-soft)' }}>
             <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d5ccc0] text-[11px] font-bold text-[#4a4741]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
                 {(user?.username || 'O').slice(0, 1).toUpperCase()}
               </div>
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[11px] font-semibold text-white/88">{user?.username || 'Operator'}</div>
-                  <div className="mt-0.5 text-[9px] text-white/38">FedSentry operator</div>
+                  <div className="truncate text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.username || 'Operator'}</div>
+                  <div className="mt-0.5 text-[9px]" style={{ color: 'var(--text-subtle)' }}>FedSentry operator</div>
                 </div>
               )}
             </div>
@@ -102,7 +101,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[.055] text-[10px] font-medium text-white/55 hover:bg-white/[.09] hover:text-white"
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border text-[10px] font-medium transition"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text-muted)' }}
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
@@ -111,9 +111,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
           </div>
 
           {!collapsed && (
-            <div className="mt-3 flex items-center gap-2 px-2 text-[9px] text-white/35">
-              <ShieldCheck className="h-3 w-3 text-[#69c45d]" />
-              Detection engine online
+            <div className="mt-3 flex items-center gap-2 px-2 text-[9px]" style={{ color: 'var(--text-subtle)' }}>
+              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+              Detection engine available
             </div>
           )}
         </div>
