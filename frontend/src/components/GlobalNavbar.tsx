@@ -24,17 +24,22 @@ export const GlobalNavbar: React.FC = () => {
         ? "border-slate-800 bg-slate-950/90 text-slate-100"
         : "border-slate-200 bg-white/90 text-slate-900"
     }`}>
-      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
-          className="flex shrink-0 items-center gap-2.5"
+          className="flex shrink-0 items-center gap-3"
           aria-label="FedSentry home"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 via-pink-500 to-orange-400 text-white shadow-sm">
-            <ShieldCheck className="h-4.5 w-4.5" />
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 via-pink-500 to-orange-400 text-white shadow-sm">
+            <ShieldCheck className="h-5 w-5" />
           </span>
-          <span className="text-lg font-extrabold tracking-tight">FedSentry</span>
+          <span
+            className="text-[1.65rem] font-extrabold leading-none tracking-[-0.035em] sm:text-[1.8rem]"
+            style={{ fontFamily: '"Arial Black", "Inter", "Segoe UI", sans-serif' }}
+          >
+            FedSentry
+          </span>
         </button>
 
         {isAuthenticated && (
