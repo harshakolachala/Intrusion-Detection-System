@@ -16,45 +16,8 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const LOGIN_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700;1,9..144,900&display=swap');
-
-  .login-root {
-    --accent: #8B2FE0;
-    --accent-dim: #F1E4FF;
-    --rust: #FF3D6E;
-    --amber: #FF9D2E;
-    --grad: linear-gradient(90deg, var(--accent) 0%, var(--rust) 55%, var(--amber) 100%);
-  }
-  .login-root .font-display { font-family: 'Fraunces', ui-serif, Georgia, serif; font-style: italic; letter-spacing: -0.01em; }
-  .login-root .grad-text {
-    background: var(--grad);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .login-root .grad-bg { background: var(--grad); }
-
-  @keyframes loginBlobDrift1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, 70px) scale(1.12); } }
-  @keyframes loginBlobDrift2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-60px, -40px) scale(1.08); } }
-  @keyframes loginBlobDrift3 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(35px, -60px) scale(0.92); } }
-  @keyframes loginGrainShift { 0% { transform: translate(0, 0); } 100% { transform: translate(-120px, -90px); } }
-
-  .login-bg-blob { position: absolute; border-radius: 9999px; filter: blur(120px); will-change: transform; }
-  .login-bg-grain {
-    position: absolute; inset: -20%; opacity: 0.03; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation: loginGrainShift 12s steps(6) infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .login-root * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
-  }
-`;
-
 const Login: React.FC = () => {
   const { login } = useAuth();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -64,475 +27,81 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     if (!username || !password) {
       setError('Please enter both username and password.');
       return;
     }
-
     try {
       setLoading(true);
-
-      await login({
-        username,
-        password,
-      });
-
-      // Navigation is handled by AuthContext
+      await login({ username, password });
     } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ??
-          'Invalid username or password.'
-      );
+      setError(err?.response?.data?.detail ?? 'Invalid username or password.');
     } finally {
       setLoading(false);
     }
   };
 
+  const capabilities = [
+    { icon: <Network className="h-4 w-4" />, title: 'Network Intelligence', desc: 'Real-time traffic analysis and flow inspection.' },
+    { icon: <Activity className="h-4 w-4" />, title: 'Threat Detection', desc: 'Machine-learning powered anomaly classification.' },
+    { icon: <Fingerprint className="h-4 w-4" />, title: 'Federated Learning', desc: 'Distributed intelligence without centralized raw data.' },
+    { icon: <ShieldCheck className="h-4 w-4" />, title: 'SOC Operations', desc: 'Centralized alerts, incidents, and audit visibility.' },
+  ];
+
   return (
-    <div className="login-root relative min-h-screen overflow-hidden bg-[var(--page-bg)] text-[var(--text-primary)]">
-      <style>{LOGIN_STYLES}</style>
-
-      {/* Background — quiet, slow-drifting colour blooms rather than static glows */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-
-        <div className="login-bg-blob left-[-14%] top-[-12%] h-[520px] w-[520px]" style={{ backgroundColor: 'var(--accent)', opacity: 0.06, animation: 'loginBlobDrift1 28s ease-in-out infinite' }} />
-
-        <div className="login-bg-blob bottom-[-16%] right-[-10%] h-[540px] w-[540px]" style={{ backgroundColor: 'var(--rust)', opacity: 0.05, animation: 'loginBlobDrift2 34s ease-in-out infinite' }} />
-
-        <div className="login-bg-blob left-[46%] top-[20%] h-[300px] w-[300px]" style={{ backgroundColor: 'var(--amber)', opacity: 0.035, animation: 'loginBlobDrift3 30s ease-in-out infinite' }} />
-
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--text-primary) 1px, transparent 1px), linear-gradient(90deg, var(--text-primary) 1px, transparent 1px)',
-            backgroundSize: '52px 52px',
-          }}
-        />
-
-        <div className="login-bg-grain" />
-
-      </div>
-
-      {/* Top Brand Bar */}
-      <header className="relative z-10 flex items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
-
-        <div className="flex items-center gap-3">
-
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl grad-bg text-white shadow-[0_12px_30px_rgba(139,47,224,0.22)]">
-
-            <div className="absolute inset-1 rounded-lg border border-white/20" />
-
-            <ShieldCheck className="relative h-5 w-5" />
-
-          </div>
-
+    <div className="auth-shell min-h-screen text-[var(--text-primary)]">
+      <main className="mx-auto grid min-h-screen w-full max-w-[1500px] grid-cols-1 gap-6 px-5 py-8 lg:grid-cols-[1.2fr_.8fr] lg:items-stretch lg:px-8">
+        <section className="auth-hero-panel flex flex-col justify-between rounded-[28px] border border-white/10 p-7 sm:p-10 lg:p-12">
           <div>
-
-            <div className="font-display text-base font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-              SentinelX
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[.06] px-4 py-2 text-[#f1845d]">
+              <ScanLine className="h-4 w-4" />
+              <span className="text-[10px] font-semibold uppercase tracking-[.2em]">Secure authentication gateway</span>
             </div>
-
-            <div className="font-mono text-[7px] font-bold uppercase tracking-[0.18em] text-[var(--text-subtle)]">
-              Security Intelligence Platform
+            <h1 className="mt-10 max-w-2xl text-4xl font-semibold leading-[1.04] sm:text-5xl xl:text-6xl">
+              Intelligence for <span className="block text-[#f1845d]">modern networks.</span>
+            </h1>
+            <p className="mt-7 max-w-3xl text-sm leading-7 text-white/55 sm:text-base">
+              Access the FedSentry Security Operations Console to monitor network traffic, inspect threats, evaluate predictions, and manage security incidents through a unified intelligence platform.
+            </p>
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {capabilities.map((item) => (
+                <div key={item.title} className="auth-feature-card rounded-3xl border border-white/10 p-5">
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-[#f1845d]/15 text-[#f1845d]">{item.icon}</div>
+                  <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+                  <p className="mt-2 text-xs leading-5 text-white/45">{item.desc}</p>
+                </div>
+              ))}
             </div>
-
           </div>
+          <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-[9px] font-semibold uppercase tracking-[.16em] text-white/35">
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Secure session</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Encrypted transport</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> AI engine ready</span>
+          </div>
+        </section>
 
-        </div>
-
-        <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 shadow-[var(--shadow-sm)] sm:flex">
-
-          <span className="relative flex h-1.5 w-1.5">
-
-            <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-50" />
-
-            <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-          </span>
-
-          <span className="font-mono text-[7px] font-bold uppercase tracking-[0.15em] text-[var(--text-subtle)]">
-            Platform Operational
-          </span>
-
-        </div>
-
-      </header>
-
-      {/* Main */}
-      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-82px)] max-w-7xl items-center px-5 pb-10 pt-4 sm:px-8 lg:px-10">
-
-        <div className="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_460px] xl:gap-20">
-
-          {/* Left Information Panel */}
-          <section className="hidden lg:block">
-
-            <div className="max-w-2xl">
-
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5" style={{ color: 'var(--accent)' }}>
-
-                <ScanLine className="h-3.5 w-3.5" />
-
-                <span className="font-mono text-[8px] font-black uppercase tracking-[0.18em]">
-                  Secure Authentication Gateway
-                </span>
-
+        <section className="auth-form-panel flex items-center rounded-[28px] border border-white/10 p-6 sm:p-8 lg:p-10">
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-full bg-[#f1845d]/15 text-[#f1845d]"><LockKeyhole className="h-5 w-5" /></div>
+            <h2 className="text-3xl font-semibold text-white">Welcome back</h2>
+            <p className="mt-2 text-sm text-white/50">Sign in to access your security operations console.</p>
+            {error && <div className="mt-6 flex items-center gap-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"><AlertCircle className="h-4 w-4" />{error}</div>}
+            <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+              <div>
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[.14em] text-white/45">Username</label>
+                <div className="relative"><UserRound className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/35" /><input value={username} onChange={(e)=>setUsername(e.target.value)} className="auth-input h-14 w-full rounded-2xl pl-11 pr-4" placeholder="Enter your username" /></div>
               </div>
-
-              <h1 className="font-display max-w-xl text-5xl font-semibold leading-[1.05] text-[var(--text-primary)] xl:text-6xl">
-
-                Intelligence for
-
-                <span className="grad-text block">
-                  modern networks.
-                </span>
-
-              </h1>
-
-              <p className="mt-6 max-w-xl text-sm leading-7 text-[var(--text-muted)]">
-                Access the SentinelX Security Operations Console to monitor
-                network traffic, inspect threats, evaluate predictions, and
-                manage security incidents through a unified intelligence
-                platform.
-              </p>
-
-              {/* Security Capabilities */}
-              <div className="mt-9 grid max-w-xl grid-cols-2 gap-3">
-
-                {[
-                  { icon: <Network className="h-4 w-4" />, title: 'Network Intelligence', desc: 'Real-time traffic analysis and flow inspection.' },
-                  { icon: <Activity className="h-4 w-4" />, title: 'Threat Detection', desc: 'Machine-learning powered anomaly classification.' },
-                  { icon: <Fingerprint className="h-4 w-4" />, title: 'Federated Learning', desc: 'Distributed intelligence without centralized raw data.' },
-                  { icon: <ShieldCheck className="h-4 w-4" />, title: 'SOC Operations', desc: 'Centralized alerts, incidents, and audit visibility.' },
-                ].map((item) => (
-                  <div key={item.title} className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]">
-
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-dim)', color: 'var(--accent)' }}>
-
-                      {item.icon}
-
-                    </div>
-
-                    <p className="text-xs font-black text-[var(--text-primary)]">
-                      {item.title}
-                    </p>
-
-                    <p className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">
-                      {item.desc}
-                    </p>
-
-                  </div>
-                ))}
-
+              <div>
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[.14em] text-white/45">Password</label>
+                <div className="relative"><LockKeyhole className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/35" /><input type={showPassword?'text':'password'} value={password} onChange={(e)=>setPassword(e.target.value)} className="auth-input h-14 w-full rounded-2xl pl-11 pr-12" placeholder="Enter your password" /><button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-black/35">{showPassword?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button></div>
               </div>
-
-              {/* System Status */}
-              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-
-                <div className="flex items-center gap-2">
-
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-
-                  <span className="font-mono text-[7px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">
-                    Secure Session
-                  </span>
-
-                </div>
-
-                <div className="flex items-center gap-2">
-
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-
-                  <span className="font-mono text-[7px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">
-                    Encrypted Transport
-                  </span>
-
-                </div>
-
-                <div className="flex items-center gap-2">
-
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-
-                  <span className="font-mono text-[7px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">
-                    AI Engine Ready
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* Login Panel */}
-          <section className="w-full">
-
-            <div className="relative overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-
-              <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-[90px]" style={{ backgroundColor: 'var(--accent)', opacity: 0.07 }} />
-
-              <div className="relative p-6 sm:p-8">
-
-                {/* Mobile Brand */}
-                <div className="mb-7 lg:hidden">
-
-                  <div className="mb-5 flex items-center gap-3">
-
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl grad-bg text-white shadow-lg">
-
-                      <ShieldCheck className="h-5 w-5" />
-
-                    </div>
-
-                    <div>
-
-                      <div className="font-display text-base font-semibold text-[var(--text-primary)]">
-                        SentinelX
-                      </div>
-
-                      <div className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-subtle)]">
-                        Security Intelligence
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                {/* Login Header */}
-                <div className="mb-7">
-
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border)]" style={{ backgroundColor: 'var(--accent-dim)', color: 'var(--accent)' }}>
-
-                    <LockKeyhole className="h-5 w-5" />
-
-                  </div>
-
-                  <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">
-                    Welcome back
-                  </h2>
-
-                  <p className="mt-1.5 text-xs leading-5 text-[var(--text-muted)]">
-                    Sign in to access your security operations console.
-                  </p>
-
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 dark:border-rose-500/20 dark:bg-rose-500/10">
-
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
-
-                    <p className="text-[10px] font-medium leading-5 text-rose-600 dark:text-rose-400">
-                      {error}
-                    </p>
-
-                  </div>
-                )}
-
-                {/* Form */}
-                <form
-                  onSubmit={handleSubmit}
-                  noValidate
-                  className="space-y-5"
-                >
-
-                  {/* Username */}
-                  <div>
-
-                    <label
-                      htmlFor="username"
-                      className="mb-2 block font-mono text-[8px] font-black uppercase tracking-[0.13em] text-[var(--text-subtle)]"
-                    >
-                      Username
-                    </label>
-
-                    <div className="relative">
-
-                      <UserRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-
-                      <input
-                        id="username"
-                        name="username"
-                        type="text"
-                        autoComplete="username"
-                        autoFocus
-                        required
-                        value={username}
-                        onChange={(e) =>
-                          setUsername(e.target.value)
-                        }
-                        placeholder="Enter your username"
-                        className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] pl-11 pr-4 text-xs font-medium text-[var(--text-primary)] outline-none transition-all duration-200 placeholder:text-[var(--text-subtle)] hover:border-[var(--border-strong)] focus:border-[#8B2FE0] focus:bg-[var(--surface)] focus:ring-4 focus:ring-[#8B2FE0]/10"
-                      />
-
-                    </div>
-
-                  </div>
-
-                  {/* Password */}
-                  <div>
-
-                    <div className="mb-2 flex items-center justify-between">
-
-                      <label
-                        htmlFor="password"
-                        className="font-mono text-[8px] font-black uppercase tracking-[0.13em] text-[var(--text-subtle)]"
-                      >
-                        Password
-                      </label>
-
-                    </div>
-
-                    <div className="relative">
-
-                      <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-
-                      <input
-                        id="password"
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        autoComplete="current-password"
-                        required
-                        value={password}
-                        onChange={(e) =>
-                          setPassword(e.target.value)
-                        }
-                        placeholder="Enter your password"
-                        className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] pl-11 pr-12 text-xs font-medium text-[var(--text-primary)] outline-none transition-all duration-200 placeholder:text-[var(--text-subtle)] hover:border-[var(--border-strong)] focus:border-[#8B2FE0] focus:bg-[var(--surface)] focus:ring-4 focus:ring-[#8B2FE0]/10"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPassword(!showPassword)
-                        }
-                        aria-label={
-                          showPassword
-                            ? 'Hide password'
-                            : 'Show password'
-                        }
-                        className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
-                      >
-
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                  {/* Submit */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="group relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl grad-bg font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_14px_32px_rgba(139,47,224,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(139,47,224,0.32)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-
-                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-
-                    {loading ? (
-                      <>
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-
-                        <span className="relative">
-                          Authenticating...
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="relative">
-                          Sign In to Console
-                        </span>
-
-                        <ArrowRight className="relative h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                      </>
-                    )}
-
-                  </button>
-
-                </form>
-
-                {/* Register */}
-                <div className="mt-6 flex items-center gap-3">
-
-                  <div className="h-px flex-1 bg-[var(--border)]" />
-
-                  <span className="font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                    New operator?
-                  </span>
-
-                  <div className="h-px flex-1 bg-[var(--border)]" />
-
-                </div>
-
-                <RouterLink
-                  to="/register"
-                  className="mt-4 flex h-11 w-full items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] font-mono text-[8px] font-black uppercase tracking-[0.13em] text-[var(--text-secondary)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)]"
-                >
-                  Create Security Account
-                </RouterLink>
-
-                {/* Security Footer */}
-                <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3">
-
-                  <div className="flex items-start gap-2.5">
-
-                    <Fingerprint className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--accent)' }} />
-
-                    <div>
-
-                      <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-[var(--text-subtle)]">
-                        Secure Access
-                      </p>
-
-                      <p className="mt-1 text-[8px] leading-4 text-[var(--text-muted)]">
-                        Authentication is protected by the SentinelX security
-                        gateway and encrypted transport.
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* Bottom Status */}
-            <div className="mt-4 flex items-center justify-center gap-2">
-
-              <span className="relative flex h-1.5 w-1.5">
-
-                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-50" />
-
-                <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-              </span>
-
-              <span className="font-mono text-[7px] font-bold uppercase tracking-[0.15em] text-[var(--text-subtle)]">
-                Secure Authentication Gateway Operational
-              </span>
-
-            </div>
-
-          </section>
-
-        </div>
-
+              <button disabled={loading} className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#f1845d] text-sm font-semibold uppercase tracking-[.14em] text-white hover:bg-[#e97851]">{loading?'Signing in...':'Sign in to console'}<ArrowRight className="h-4 w-4"/></button>
+            </form>
+            <div className="my-6 h-px bg-white/10" />
+            <RouterLink to="/register" className="flex h-12 w-full items-center justify-center rounded-full border border-white/12 bg-white/[.055] text-xs font-semibold text-white/75 hover:bg-white/[.08]">Create security account</RouterLink>
+          </div>
+        </section>
       </main>
-
     </div>
   );
 };
