@@ -13,14 +13,17 @@ import {
   Network,
   ShieldCheck,
   UserRound,
+  Activity,
+  ScanLine,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getErrorMessage } from "../../utils/errorMessage";
 
 const benefits = [
-  { icon: Network, title: "Network intelligence", text: "Inspect traffic and suspicious flows in one workspace." },
-  { icon: ShieldCheck, title: "Threat operations", text: "Triage alerts, incidents and model detections faster." },
-  { icon: Fingerprint, title: "Federated learning", text: "Collaborative intelligence without centralizing raw data." },
+  { icon: Network, title: 'Network Intelligence', desc: 'Analyze network flows and suspicious activity.' },
+  { icon: Activity, title: 'Threat Detection', desc: 'Monitor malicious traffic with intelligent classification.' },
+  { icon: Fingerprint, title: 'Federated Learning', desc: 'Distributed machine learning across nodes.' },
+  { icon: ShieldCheck, title: 'SOC Operations', desc: 'Manage alerts, incidents, predictions and audits.' },
 ];
 
 export default function Register() {
@@ -30,12 +33,12 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to="/" replace />;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -43,7 +46,6 @@ export default function Register() {
     if (username.trim().length < 3) return setError("Username must be at least 3 characters long.");
     if (password.length < 8) return setError("Password must be at least 8 characters long.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
-
     setSubmitting(true);
     try {
       await register({ username, email, password });
@@ -56,107 +58,65 @@ export default function Register() {
   };
 
   return (
-    <div className="register-root min-h-screen bg-[#e9e5de] px-4 py-5 text-[#f7f5f0] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1480px] overflow-hidden rounded-[30px] border border-black/10 bg-[#585650] shadow-[0_30px_90px_rgba(45,41,36,.20)]">
-        <div className="flex min-h-[calc(100vh-40px)] flex-col lg:grid lg:grid-cols-[1.1fr_.9fr]">
-          <section className="relative border-b border-white/10 p-6 sm:p-9 lg:border-b-0 lg:border-r lg:p-12 xl:p-14">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,.08),transparent_35%),radial-gradient(circle_at_80%_85%,rgba(242,124,82,.08),transparent_35%)]" />
-            <div className="relative flex h-full flex-col">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f27c52] text-white"><ShieldCheck className="h-5 w-5" /></div>
-                <div>
-                  <div className="text-lg font-semibold tracking-[-.03em] text-white">FedSentry</div>
-                  <div className="text-[10px] uppercase tracking-[.18em] text-white/45">Security intelligence platform</div>
-                </div>
-              </div>
-
-              <div className="mt-14 max-w-2xl lg:mt-20">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#ff9d79]">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Secure operator enrollment
-                </div>
-                <h1 className="mt-6 max-w-xl text-4xl font-semibold leading-[1.02] tracking-[-.045em] text-white sm:text-5xl xl:text-6xl">
-                  Create your security workspace.
-                </h1>
-                <p className="mt-5 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
-                  Register once to access FedSentry predictions, analytics, alerts, incidents and the AI security assistant from one unified console.
-                </p>
-              </div>
-
-              <div className="mt-10 grid gap-3 sm:grid-cols-3 lg:mt-auto lg:grid-cols-1 xl:grid-cols-3">
-                {benefits.map(({ icon: Icon, title, text }) => (
-                  <div key={title} className="rounded-[18px] border border-white/10 bg-[#4a4843]/85 p-4 shadow-[0_12px_30px_rgba(28,26,23,.12)]">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f27c52]/15 text-[#ff946f]"><Icon className="h-4 w-4" /></div>
-                    <h3 className="mt-4 text-sm font-semibold text-white">{title}</h3>
-                    <p className="mt-1 text-xs leading-5 text-white/48">{text}</p>
-                  </div>
-                ))}
-              </div>
+    <div className="auth-shell min-h-screen text-[var(--text-primary)]">
+      <main className="mx-auto grid min-h-screen w-full max-w-[1500px] grid-cols-1 gap-6 px-5 py-8 lg:grid-cols-[1.15fr_.85fr] lg:items-stretch lg:px-8">
+        <section className="auth-hero-panel flex flex-col justify-between rounded-[28px] border border-white/10 p-7 sm:p-10 lg:p-12">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[.06] px-4 py-2 text-[#f1845d]">
+              <ScanLine className="h-4 w-4" />
+              <span className="text-[10px] font-semibold uppercase tracking-[.2em]">Operator registration gateway</span>
             </div>
-          </section>
-
-          <section className="flex items-center justify-center p-5 sm:p-8 lg:p-10">
-            <div className="w-full max-w-[520px] rounded-[26px] border border-white/12 bg-[#4c4944] p-6 shadow-[0_24px_70px_rgba(31,28,24,.20)] sm:p-8">
-              <div className="mb-7">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-[#f27c52]/15 text-[#ff946f]"><UserRound className="h-5 w-5" /></div>
-                <h2 className="mt-5 text-3xl font-semibold tracking-[-.035em] text-white">Create account</h2>
-                <p className="mt-2 text-sm text-white/55">Register a FedSentry operator account.</p>
-              </div>
-
-              {error && (
-                <div className="mb-5 flex items-start gap-3 rounded-2xl border border-[#e7655c]/30 bg-[#e7655c]/12 px-4 py-3">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#ff8e84]" />
-                  <p className="text-xs leading-5 text-[#ffd0cc]">{error}</p>
+            <h1 className="mt-10 max-w-2xl text-4xl font-semibold leading-[1.04] sm:text-5xl xl:text-6xl">
+              Build your <span className="block text-[#f1845d]">security workspace.</span>
+            </h1>
+            <p className="mt-7 max-w-3xl text-sm leading-7 text-white/55 sm:text-base">
+              Create your FedSentry operator account and gain access to network intelligence, threat detection, federated learning, analytics, incident response and AI-assisted SOC workflows.
+            </p>
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {benefits.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="auth-feature-card rounded-3xl border border-white/10 p-5">
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-[#f1845d]/15 text-[#f1845d]"><Icon className="h-4 w-4" /></div>
+                  <h3 className="text-sm font-semibold text-white">{title}</h3>
+                  <p className="mt-2 text-xs leading-5 text-white/45">{desc}</p>
                 </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                <Field label="Username" icon={<UserRound className="h-4 w-4" />}>
-                  <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" placeholder="Choose a username" className="auth-input" />
-                </Field>
-
-                <Field label="Email" icon={<Mail className="h-4 w-4" />}>
-                  <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="name@example.com" className="auth-input" />
-                </Field>
-
-                <Field label="Password" icon={<LockKeyhole className="h-4 w-4" />}>
-                  <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" placeholder="Minimum 8 characters" className="auth-input pr-12" />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#756f66] hover:text-[#3f3b35]" aria-label="Toggle password visibility">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </Field>
-
-                <Field label="Confirm password" icon={<LockKeyhole className="h-4 w-4" />}>
-                  <input id="confirm-password" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" placeholder="Repeat your password" className="auth-input pr-12" />
-                  <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#756f66] hover:text-[#3f3b35]" aria-label="Toggle confirm password visibility">
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </Field>
-
-                <button type="submit" disabled={submitting} className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#f27c52] text-sm font-semibold text-white shadow-[0_12px_30px_rgba(242,124,82,.22)] hover:bg-[#e96b42] disabled:opacity-60">
-                  {submitting ? "Creating account..." : "Create security account"}<ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-
-              <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/50">
-                Already registered?
-                <RouterLink to="/login" className="font-semibold text-[#ff9b78] hover:text-[#ffb39a]">Sign in</RouterLink>
-              </div>
+              ))}
             </div>
-          </section>
-        </div>
-      </div>
+          </div>
+          <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-[9px] font-semibold uppercase tracking-[.16em] text-white/35">
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Protected registration</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Secure transport</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Operator access</span>
+          </div>
+        </section>
+
+        <section className="auth-form-panel flex items-center rounded-[28px] border border-white/10 p-6 sm:p-8 lg:p-10">
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-7 flex h-12 w-12 items-center justify-center rounded-full bg-[#f1845d]/15 text-[#f1845d]"><UserRound className="h-5 w-5" /></div>
+            <h2 className="text-3xl font-semibold text-white">Create account</h2>
+            <p className="mt-2 text-sm text-white/50">Register a new FedSentry security operator.</p>
+            {error && <div className="mt-6 flex items-center gap-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"><AlertCircle className="h-4 w-4" />{error}</div>}
+            <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+              <AuthField label="Username" icon={<UserRound className="h-4 w-4" />}><input value={username} onChange={(e)=>setUsername(e.target.value)} className="auth-input h-13 w-full rounded-2xl pl-11 pr-4" placeholder="Choose a username" /></AuthField>
+              <AuthField label="Email" icon={<Mail className="h-4 w-4" />}><input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="auth-input h-13 w-full rounded-2xl pl-11 pr-4" placeholder="you@example.com" /></AuthField>
+              <AuthField label="Password" icon={<LockKeyhole className="h-4 w-4" />}>
+                <input type={showPassword?'text':'password'} value={password} onChange={(e)=>setPassword(e.target.value)} className="auth-input h-13 w-full rounded-2xl pl-11 pr-12" placeholder="At least 8 characters" />
+                <button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-black/35">{showPassword?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button>
+              </AuthField>
+              <AuthField label="Confirm password" icon={<LockKeyhole className="h-4 w-4" />}>
+                <input type={showConfirmPassword?'text':'password'} value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className="auth-input h-13 w-full rounded-2xl pl-11 pr-12" placeholder="Repeat your password" />
+                <button type="button" onClick={()=>setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-black/35">{showConfirmPassword?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button>
+              </AuthField>
+              <button disabled={submitting} className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#f1845d] text-sm font-semibold uppercase tracking-[.14em] text-white hover:bg-[#e97851]">{submitting?'Creating account...':'Create security account'}<ArrowRight className="h-4 w-4"/></button>
+            </form>
+            <div className="my-6 h-px bg-white/10" />
+            <RouterLink to="/login" className="flex h-12 w-full items-center justify-center rounded-full border border-white/12 bg-white/[.055] text-xs font-semibold text-white/75 hover:bg-white/[.08]">Already registered? Sign in</RouterLink>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
 
-function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[.14em] text-white/45">{label}</label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-[#827a70]">{icon}</span>
-        {children}
-      </div>
-    </div>
-  );
+function AuthField({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return <div><label className="mb-2 block text-[10px] font-semibold uppercase tracking-[.14em] text-white/45">{label}</label><div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-black/35">{icon}</span>{children}</div></div>;
 }
