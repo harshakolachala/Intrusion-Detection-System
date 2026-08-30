@@ -1,0 +1,52 @@
+{
+    "experiment": {
+        "clients": 3,
+        "rounds": 10,
+        "local_epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.001,
+        "features": 78,
+        "classes": 15,
+        "training_samples": 1999827,
+        "test_samples": 499957,
+        "model": "models/global_model.pth"
+    },
+    "final_metrics": {
+        "accuracy": 0.9016055380762745,
+        "weighted_precision": 0.9588498040108138,
+        "weighted_recall": 0.9016055380762745,
+        "weighted_f1": 0.9231861992774094,
+        "macro_precision": 0.44711607703498985,
+        "macro_recall": 0.8224031887081965,
+        "macro_f1": 0.5052675812548267
+    },
+    "inference": {
+        "total_inference_seconds": 5.2998439999937546,
+        "average_inference_ms": 0.010600599651557545,
+        "samples_per_second": 94334.28606588971
+    },
+    "model": {
+        "input_features": 78,
+        "hidden_layer_1": 256,
+        "hidden_layer_2": 128,
+        "dropout": 0.3,
+        "parameters": 55823
+    },
+    "classes": [
+        "BENIGN",
+        "Bot",
+        "DDoS",
+        "DoS GoldenEye",
+        "DoS Hulk",
+        "DoS Slowhttptest",
+        "DoS slowloris",
+        "FTP-Patator",
+        "Heartbleed",
+        "Infiltration",
+        "PortScan",
+        "SSH-Patator",
+        "Web Attack_Brute Force",
+        "Web Attack_Sql Injection",
+        "Web Attack_XSS"
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "dataset": "datasets/combinenew.csv",
+    "num_clients": 3,
+    "batch_size": 64,
+    "train_samples": 1999827,
+    "test_samples": 499957,
+    "features": 78,
+    "num_classes": 15,
+    "test_size": 0.2,
+    "random_state": 42,
+    "scaler": "StandardScaler",
+    "scaler_fit": "training_data_only",
+    "partitioning": "equal_after_global_shuffle"
+}

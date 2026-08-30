@@ -3,7 +3,8 @@ Detection Engine for SentinelAI.
 
 Main entry point for real-time intrusion detection.
 Runs the complete pipeline:
-  Capture -> Queue -> Flow Generator -> Feature Extractor -> Preprocessor -> Predict -> Alert
+Capture -> Queue -> Flow Generator -> Feature Extractor ->
+Preprocessor -> Federated Prediction -> Alert
 """
 
 import threading
@@ -21,16 +22,27 @@ from database.session import get_db
 
 
 class DetectionEngine:
-    """Runs the continuous detection pipeline."""
+    """Runs the continuous real-time detection pipeline."""
 
-    def __init__(self, interface=None ):
+    def __init__(self, interface=None):
+
         self.running = False
         self.interface = interface
+
         self.predictor = None
         self.flow_generator = None
         self.worker_thread = None
 
+    # ---------------------------------------------------------
+    # Start Engine
+    # ---------------------------------------------------------
+
     def start(self, interface=None):
+
+        if self.running:
+            logger.warning("Detection engine already running.")
+            return
+
         if interface:
             capture_engine.set_interface(interface)
 
@@ -41,108 +53,225 @@ class DetectionEngine:
         )
 
         capture_engine.start_capture()
+
         self.running = True
 
-        logger.info("=== Detection Engine Started ===")
-        logger.info(f"Interface: {interface or 'default'}")
+        logger.info("=" * 60)
+        logger.info("SentinelAI Detection Engine Started")
+        logger.info(f"Interface : {interface or 'default'}")
+        logger.info("=" * 60)
 
         self.worker_thread = threading.Thread(
             target=self._processing_loop,
             daemon=True,
         )
+
         self.worker_thread.start()
 
-        logger.info("Processing worker thread started.")
+    # ---------------------------------------------------------
+    # Stop Engine
+    # ---------------------------------------------------------
 
     def stop(self):
+
+        logger.info("Stopping Detection Engine...")
+
         self.running = False
+
         capture_engine.stop_capture()
-        logger.info("=== Detection Engine Stopped ===")
+
+        if self.flow_generator:
+
+            completed = self.flow_generator.flush_expired_flows()
+
+            logger.info(
+                f"Final Flush Completed Flows : {completed}"
+            )
+
+        logger.info("=" * 60)
+        logger.info("Detection Engine Stopped")
+        logger.info("=" * 60)
+
+    # ---------------------------------------------------------
+    # Packet Processing Loop
+    # ---------------------------------------------------------
 
     def _processing_loop(self):
+
         last_flush = time.time()
 
         while self.running:
+
             packet = packet_queue.dequeue()
+
             if packet:
-                # Only process packets that have valid IP addresses
+
+                logger.debug(
+                    f"Packet dequeued | Queue={packet_queue.size()}"
+                )
+
                 if packet.get("src_ip") and packet.get("dst_ip"):
                     self.flow_generator.add_packet(packet)
+
             else:
                 time.sleep(0.001)
 
             now = time.time()
-            if now - last_flush >= 5.0:
-                completed = self.flow_generator.flush_expired_flows()
-                if completed:
-                    logger.info(f"Flushed {completed} expired flows")
+
+            if now - last_flush >= 5:
+
+                logger.info("Checking expired flows...")
+
+                completed = (
+                    self.flow_generator.flush_expired_flows()
+                )
+
+                logger.info(
+                    f"Expired Flow Check Complete | "
+                    f"Completed={completed}"
+                )
+
                 last_flush = now
 
+    # ---------------------------------------------------------
+    # Flow Completed
+    # ---------------------------------------------------------
+
     def _on_flow_complete(self, flow):
-        # Skip flows without valid IPs
-        if not flow.src_ip or not flow.dst_ip:
-            return
+
+        logger.info("=" * 60)
+        logger.info("FLOW COMPLETED")
 
         logger.info(
-            f"Processing completed flow: {flow.src_ip}:{flow.src_port} -> "
+            f"{flow.src_ip}:{flow.src_port} -> "
             f"{flow.dst_ip}:{flow.dst_port}"
         )
 
-        try:
-            features = FeatureExtractor.extract(flow)
-            logger.info(f"Features extracted: {len(features)} features")
+        if not flow.src_ip or not flow.dst_ip:
 
-            features = Preprocessor.handle_missing_values(features)
+            logger.warning(
+                "Flow missing IP address. Skipping."
+            )
+
+            return
+
+        try:
+
+            features = FeatureExtractor.extract(flow)
+
+            logger.info(
+                f"Feature Extraction Successful "
+                f"({len(features)} features)"
+            )
+
+            features = (
+                Preprocessor.handle_missing_values(
+                    features
+                )
+            )
 
             if self.predictor is None:
-                self.predictor = Predictor()
 
-            result = self.predictor.predict(features)
-
-            prediction = result["prediction"]
-            confidence = result["confidence"]
-
-            logger.info(f"Prediction: {prediction} | Confidence: {confidence}")
-
-            # Only create alert for Attack predictions
-            if prediction.lower() == "attack":
-                logger.warning(
-                    f"ALERT: Attack detected from {flow.src_ip} -> {flow.dst_ip}"
+                logger.info(
+                    "Loading Federated Global Model..."
                 )
 
-                try:
-                    db = next(get_db())
-                    try:
-                        alert = PredictionService.create_alert(
-                            db=db,
-                            source_ip=flow.src_ip,
-                            destination_ip=flow.dst_ip,
-                            source_port=flow.src_port,
-                            destination_port=flow.dst_port,
-                            protocol=str(flow.protocol),
-                            attack_type=prediction,
-                            confidence=confidence,
-                        )
-                        logger.info(f"Alert created: {alert.id}")
-                        db.commit()
-                    finally:
-                        db.close()
-                except Exception as e:
-                    logger.error(f"Error creating alert: {e}")
+                self.predictor = Predictor()
+
+            db = next(get_db())
+
+            try:
+
+                result = PredictionService.predict(
+
+                    db=db,
+
+                    predictor=self.predictor,
+
+                    features=features,
+
+                    source_ip=flow.src_ip,
+
+                    destination_ip=flow.dst_ip,
+
+                    source_port=flow.src_port,
+
+                    destination_port=flow.dst_port,
+
+                    protocol=str(flow.protocol),
+
+                )
+
+            finally:
+
+                db.close()
+
+            logger.info(
+                f"Prediction : {result['prediction']}"
+            )
+
+            logger.info(
+                f"Confidence : {result['confidence']:.4f}"
+            )
+
+            logger.info(
+                f"Latency : {result['latency_ms']} ms"
+            )
+
+            if result["alert_created"]:
+
+                logger.warning("=" * 60)
+                logger.warning("INTRUSION DETECTED")
+                logger.warning(f"Attack Type : {result['prediction']}")
+                logger.warning(f"Confidence  : {result['confidence']:.4f}")
+                logger.warning(f"Severity    : Check Dashboard")
+                logger.warning(f"Source      : {flow.src_ip}:{flow.src_port}")
+                logger.warning(f"Destination : {flow.dst_ip}:{flow.dst_port}")
+                logger.warning(f"Alert ID    : {result['alert_id']}")
+                logger.warning("=" * 60)
+
+
+
+            else:
+
+                logger.info(
+                    "Traffic classified as BENIGN."
+                )
+
+            logger.info("=" * 60)
 
         except Exception as e:
-            logger.error(f"Error processing flow: {e}")
 
-    def statistics(self) -> dict:
+            logger.exception(f"Engine Error : {e}")
+
+    # ---------------------------------------------------------
+    # Statistics
+    # ---------------------------------------------------------
+
+    def statistics(self):
+
         capture_stats = capture_engine.statistics()
-        flow_stats = self.flow_generator.statistics() if self.flow_generator else {}
-        queue_stats = {"queue_size": packet_queue.size()}
+
+        flow_stats = (
+            self.flow_generator.statistics()
+            if self.flow_generator
+            else {}
+        )
 
         return {
+
             "running": self.running,
+
             "capture": capture_stats,
+
             "flows": flow_stats,
-            "queue": queue_stats,
+
+            "queue": {
+
+                "queue_size": packet_queue.size()
+
+            },
+
         }
 
 

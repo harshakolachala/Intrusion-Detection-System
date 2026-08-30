@@ -22,10 +22,10 @@ class Incident(Base):
         default=lambda: str(uuid.uuid4()),
     )
 
-    alert_id: Mapped[str] = mapped_column(
+    alert_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("alerts.id"),
-        nullable=False,
+        nullable=True,  # Fixed: Made nullable to allow incidents without alerts
     )
 
     assigned_to: Mapped[str | None] = mapped_column(

@@ -1,0 +1,1256 @@
+import React, { useState } from 'react';
+import {
+  Activity,
+  Cpu,
+  ShieldAlert,
+  CheckCircle,
+  Zap,
+  Send,
+  RefreshCw,
+  Sliders,
+  Eye,
+  Clock,
+  Info,
+  Network,
+  Gauge,
+  Server,
+  Crosshair,
+  ArrowUpRight,
+  Database,
+  ScanLine,
+  Radio,
+  Target,
+  ChevronDown
+} from 'lucide-react';
+import {
+  predictTraffic,
+  type TrafficPredictionRequest
+} from '../services/api';
+import { Loading, ErrorState } from '../components/Loading';
+
+export const Predict: React.FC = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any | null>(null);
+
+  // Default Network Flow Form Parameters
+  const [formData, setFormData] = useState<TrafficPredictionRequest>({
+    duration: 0,
+    protocol_type: 'tcp',
+    service: 'http',
+    flag: 'SF',
+    src_bytes: 232,
+    dst_bytes: 4920,
+    land: 0,
+    wrong_fragment: 0,
+    urgent: 0,
+    hot: 0,
+    num_failed_logins: 0,
+    logged_in: 1,
+    num_compromised: 0,
+    root_shell: 0,
+    su_attempted: 0,
+    num_root: 0,
+    num_file_creations: 0,
+    num_shells: 0,
+    num_access_files: 0,
+    num_outbound_cmds: 0,
+    is_host_login: 0,
+    is_guest_login: 0,
+    count: 8,
+    srv_count: 8,
+    serror_rate: 0,
+    srv_serror_rate: 0,
+    rerror_rate: 0,
+    srv_rerror_rate: 0,
+    same_srv_rate: 1.0,
+    diff_srv_rate: 0,
+    srv_diff_host_rate: 0,
+    dst_host_count: 9,
+    dst_host_srv_count: 255,
+    dst_host_same_srv_rate: 1.0,
+    dst_host_diff_srv_rate: 0,
+    dst_host_same_src_port_rate: 0.11,
+    dst_host_srv_diff_host_rate: 0,
+    dst_host_serror_rate: 0,
+    dst_host_srv_serror_rate: 0,
+    dst_host_rerror_rate: 0,
+    dst_host_srv_rerror_rate: 0,
+    src_ip: '192.168.1.105',
+    dst_ip: '10.0.0.1'
+  });
+
+  const handleInputChange = (
+    field: keyof TrafficPredictionRequest,
+    value: any
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePresetSelect = (
+    type: 'benign' | 'ddos' | 'portscan' | 'sqli'
+  ) => {
+    if (type === 'benign') {
+      setFormData((prev) => ({
+        ...prev,
+        protocol_type: 'tcp',
+        service: 'http',
+        flag: 'SF',
+        src_bytes: 232,
+        dst_bytes: 4920,
+        count: 5,
+        serror_rate: 0,
+        same_srv_rate: 1.0,
+        src_ip: '192.168.1.45',
+        dst_ip: '10.0.0.2'
+      }));
+    } else if (type === 'ddos') {
+      setFormData((prev) => ({
+        ...prev,
+        protocol_type: 'tcp',
+        service: 'private',
+        flag: 'S0',
+        src_bytes: 0,
+        dst_bytes: 0,
+        count: 512,
+        srv_count: 512,
+        serror_rate: 1.0,
+        srv_serror_rate: 1.0,
+        same_srv_rate: 1.0,
+        src_ip: '192.168.1.105',
+        dst_ip: '10.0.0.1'
+      }));
+    } else if (type === 'portscan') {
+      setFormData((prev) => ({
+        ...prev,
+        protocol_type: 'tcp',
+        service: 'private',
+        flag: 'REJ',
+        src_bytes: 0,
+        dst_bytes: 0,
+        count: 240,
+        diff_srv_rate: 0.95,
+        rerror_rate: 0.88,
+        src_ip: '192.168.1.112',
+        dst_ip: '10.0.0.4'
+      }));
+    } else if (type === 'sqli') {
+      setFormData((prev) => ({
+        ...prev,
+        protocol_type: 'tcp',
+        service: 'http',
+        flag: 'SF',
+        src_bytes: 1420,
+        dst_bytes: 8900,
+        num_compromised: 2,
+        num_access_files: 1,
+        src_ip: '172.16.0.88',
+        dst_ip: '10.0.0.12'
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    const startTime = performance.now();
+
+    try {
+      const response = await predictTraffic(formData);
+      const endTime = performance.now();
+      const executionTime = Math.round(endTime - startTime);
+
+      setResult({
+        ...response,
+        executionTime: response.execution_time ?? executionTime
+      });
+    } catch (err: any) {
+      console.error('Prediction API Error:', err);
+      setError(
+        'Failed to process packet vector through the PyTorch neural engine. Please verify backend connection.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isMalicious =
+    result?.prediction?.toLowerCase() === 'malicious' ||
+    result?.is_anomaly;
+
+  const confidence = (result?.confidence ?? 0.985) * 100;
+
+  return (
+    <div className="relative mx-auto max-w-[1500px] space-y-6 pb-10 font-sans text-[var(--text-primary)]">
+
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+
+        <div className="absolute right-[-120px] top-[-120px] h-[420px] w-[420px] rounded-full bg-blue-500/[0.045] blur-[120px]" />
+
+        <div className="absolute left-[-160px] top-[38%] h-[380px] w-[380px] rounded-full bg-cyan-500/[0.035] blur-[120px]" />
+
+        <div className="absolute bottom-[-140px] right-[25%] h-[360px] w-[360px] rounded-full bg-violet-500/[0.025] blur-[120px]" />
+
+        <div
+          className="absolute inset-0 opacity-[0.018]"
+          style={{
+            backgroundImage:
+              'linear-gradient(var(--text-primary) 1px, transparent 1px), linear-gradient(90deg, var(--text-primary) 1px, transparent 1px)',
+            backgroundSize: '48px 48px'
+          }}
+        />
+
+      </div>
+
+      <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
+
+        <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-blue-500/[0.055] blur-[90px]" />
+
+        <div className="relative p-5 sm:p-6 lg:p-7">
+
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+
+            <div className="flex min-w-0 items-start gap-4">
+
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-600 via-cyan-600 to-violet-600 text-white shadow-[0_14px_35px_rgba(37,99,235,0.2)] dark:border-blue-400/20">
+
+                <div className="absolute inset-1 rounded-xl border border-white/20" />
+
+                <ScanLine className="relative h-6 w-6" />
+
+              </div>
+
+              <div className="min-w-0">
+
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 font-mono text-[8px] font-black uppercase tracking-[0.16em] text-cyan-600 dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-400">
+
+                    <Cpu className="h-3 w-3" />
+
+                    PyTorch Inference
+
+                  </span>
+
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+
+                    <span className="relative flex h-1.5 w-1.5">
+
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-50" />
+
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+                    </span>
+
+                    Neural Engine Ready
+
+                  </span>
+
+                </div>
+
+                <h1 className="text-2xl font-black tracking-[-0.04em] text-[var(--text-primary)] sm:text-3xl">
+
+                  Live Neural Traffic Inspection
+
+                </h1>
+
+                <p className="mt-1.5 max-w-2xl text-xs leading-6 text-[var(--text-muted)] sm:text-sm">
+
+                  Submit network-flow feature vectors to the intrusion
+                  detection engine for real-time classification and anomaly
+                  evaluation.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+
+              <div className="mb-2 flex items-center gap-2">
+
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+
+                <span className="font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[var(--text-subtle)]">
+
+                  Load Sample Vector
+
+                </span>
+
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 sm:flex">
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetSelect('benign')}
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-mono text-[8px] font-black uppercase tracking-wider text-emerald-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/15"
+                >
+                  Normal
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetSelect('ddos')}
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-mono text-[8px] font-black uppercase tracking-wider text-rose-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/15"
+                >
+                  DDoS
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetSelect('portscan')}
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-mono text-[8px] font-black uppercase tracking-wider text-amber-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/15"
+                >
+                  PortScan
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetSelect('sqli')}
+                  className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 font-mono text-[8px] font-black uppercase tracking-wider text-violet-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400 dark:hover:bg-violet-500/15"
+                >
+                  SQLi
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] sm:grid-cols-4">
+
+            <div className="flex items-center gap-2.5 border-b border-r border-[var(--border)] px-4 py-3 sm:border-b-0">
+
+              <Radio className="h-3.5 w-3.5 text-emerald-500" />
+
+              <div>
+
+                <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                  Engine
+                </p>
+
+                <p className="mt-0.5 font-mono text-[9px] font-black text-emerald-500">
+                  ONLINE
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-4 py-3 sm:border-b-0 sm:border-r">
+
+              <Network className="h-3.5 w-3.5 text-blue-500" />
+
+              <div>
+
+                <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                  Inspection
+                </p>
+
+                <p className="mt-0.5 font-mono text-[9px] font-black text-blue-600 dark:text-blue-400">
+                  MANUAL FLOW
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-2.5 border-r border-[var(--border)] px-4 py-3">
+
+              <Target className="h-3.5 w-3.5 text-cyan-500" />
+
+              <div>
+
+                <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                  Model
+                </p>
+
+                <p className="mt-0.5 font-mono text-[9px] font-black text-cyan-600 dark:text-cyan-400">
+                  FEDERATED
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-2.5 px-4 py-3">
+
+              <ShieldAlert className="h-3.5 w-3.5 text-violet-500" />
+
+              <div>
+
+                <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                  Detection
+                </p>
+
+                <p className="mt-0.5 font-mono text-[9px] font-black text-violet-600 dark:text-violet-400">
+                  ZERO-DAY
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {error && (
+        <ErrorState
+          message={error}
+          onRetry={() => setError(null)}
+        />
+      )}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+
+        <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] xl:col-span-8">
+
+          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-blue-500/[0.045] blur-[90px]" />
+
+          <div className="relative p-5 sm:p-6">
+
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+
+              <div className="flex items-center gap-3">
+
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+
+                  <Sliders className="h-[18px] w-[18px]" />
+
+                </div>
+
+                <div>
+
+                  <h2 className="text-base font-black tracking-tight text-[var(--text-primary)]">
+
+                    Flow Feature Vector Parameters
+
+                  </h2>
+
+                  <p className="mt-1 text-[9px] text-[var(--text-muted)]">
+
+                    Configure the network-flow attributes supplied to the classifier.
+
+                  </p>
+
+                </div>
+
+              </div>
+
+              <span className="hidden items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)] sm:flex">
+
+                <Database className="h-3 w-3" />
+
+                Vector Input
+
+              </span>
+
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+
+              <div>
+
+                <div className="mb-3 flex items-center gap-2">
+
+                  <Network className="h-3.5 w-3.5 text-blue-500" />
+
+                  <span className="font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[var(--text-subtle)]">
+
+                    Network Context
+
+                  </span>
+
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Source IP Address
+
+                    </label>
+
+                    <div className="relative">
+
+                      <input
+                        type="text"
+                        value={formData.src_ip || ''}
+                        onChange={(e) =>
+                          handleInputChange('src_ip', e.target.value)
+                        }
+                        className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 pl-10 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all duration-200 placeholder:text-[var(--text-subtle)] hover:border-[var(--border-strong)] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                      />
+
+                      <ArrowUpRight className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-blue-500" />
+
+                    </div>
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Destination IP Address
+
+                    </label>
+
+                    <div className="relative">
+
+                      <input
+                        type="text"
+                        value={formData.dst_ip || ''}
+                        onChange={(e) =>
+                          handleInputChange('dst_ip', e.target.value)
+                        }
+                        className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 pl-10 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all duration-200 placeholder:text-[var(--text-subtle)] hover:border-[var(--border-strong)] focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                      />
+
+                      <Crosshair className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-cyan-500" />
+
+                    </div>
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Protocol Type
+
+                    </label>
+
+                    <div className="relative">
+
+                      <select
+                        value={formData.protocol_type}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'protocol_type',
+                            e.target.value
+                          )
+                        }
+                        className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 pr-10 font-mono text-[10px] font-bold uppercase text-[var(--text-primary)] outline-none transition-all duration-200 hover:border-[var(--border-strong)] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                      >
+
+                        <option value="tcp">TCP</option>
+
+                        <option value="udp">UDP</option>
+
+                        <option value="icmp">ICMP</option>
+
+                      </select>
+
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-subtle)]" />
+
+                    </div>
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Network Service
+
+                    </label>
+
+                    <div className="relative">
+
+                      <select
+                        value={formData.service}
+                        onChange={(e) =>
+                          handleInputChange('service', e.target.value)
+                        }
+                        className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 pr-10 font-mono text-[10px] font-bold uppercase text-[var(--text-primary)] outline-none transition-all duration-200 hover:border-[var(--border-strong)] focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                      >
+
+                        <option value="http">HTTP / HTTPS</option>
+
+                        <option value="private">PRIVATE</option>
+
+                        <option value="smtp">SMTP</option>
+
+                        <option value="domain_u">DNS</option>
+
+                        <option value="ftp_data">FTP</option>
+
+                        <option value="other">OTHER</option>
+
+                      </select>
+
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-subtle)]" />
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-5">
+
+                <div className="mb-3 flex items-center gap-2">
+
+                  <Activity className="h-3.5 w-3.5 text-cyan-500" />
+
+                  <span className="font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[var(--text-subtle)]">
+
+                    Packet Statistics
+
+                  </span>
+
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Source Bytes
+
+                    </label>
+
+                    <input
+                      type="number"
+                      value={formData.src_bytes}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'src_bytes',
+                          Number(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    />
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Destination Bytes
+
+                    </label>
+
+                    <input
+                      type="number"
+                      value={formData.dst_bytes}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'dst_bytes',
+                          Number(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                    />
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Flow Duration (ms)
+
+                    </label>
+
+                    <input
+                      type="number"
+                      value={formData.duration}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'duration',
+                          Number(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-5">
+
+                <div className="mb-3 flex items-center gap-2">
+
+                  <Gauge className="h-3.5 w-3.5 text-amber-500" />
+
+                  <span className="font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[var(--text-subtle)]">
+
+                    Temporal & Anomaly Indicators
+
+                  </span>
+
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      SYN Error Rate
+
+                    </label>
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="1"
+                      value={formData.serror_rate}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'serror_rate',
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10"
+                    />
+
+                    <span className="mt-1.5 block font-mono text-[7px] text-[var(--text-subtle)]">
+                      Range: 0.00 — 1.00
+                    </span>
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Connection Count
+
+                    </label>
+
+                    <input
+                      type="number"
+                      value={formData.count}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'count',
+                          Number(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10"
+                    />
+
+                    <span className="mt-1.5 block font-mono text-[7px] text-[var(--text-subtle)]">
+                      2-second observation window
+                    </span>
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-1.5 block font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Same Service Rate
+
+                    </label>
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="1"
+                      value={formData.same_srv_rate}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'same_srv_rate',
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3 font-mono text-[10px] font-bold text-[var(--text-primary)] outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                    />
+
+                    <span className="mt-1.5 block font-mono text-[7px] text-[var(--text-subtle)]">
+                      Service consistency ratio
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-5">
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                  <div className="flex items-center gap-2">
+
+                    <Server className="h-3.5 w-3.5 text-[var(--text-subtle)]" />
+
+                    <span className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-subtle)]">
+
+                      Request will be evaluated by the active neural engine
+
+                    </span>
+
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-600 to-cyan-600 px-7 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_32px_rgba(37,99,235,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_18px_40px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  >
+
+                    {loading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+
+                        <span>
+                          Evaluating PyTorch Model...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+
+                        <span>
+                          Execute Neural Inspection
+                        </span>
+                      </>
+                    )}
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </section>
+
+        <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] xl:col-span-4">
+
+          <div
+            className={`pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[90px] ${
+              isMalicious
+                ? 'bg-rose-500/[0.07]'
+                : 'bg-cyan-500/[0.045]'
+            }`}
+          />
+
+          <div className="relative flex h-full flex-col p-5 sm:p-6">
+
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-5">
+
+              <div className="flex items-center gap-3">
+
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-100 bg-cyan-50 text-cyan-600 dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-400">
+
+                  <Eye className="h-[18px] w-[18px]" />
+
+                </div>
+
+                <div>
+
+                  <h2 className="text-base font-black tracking-tight text-[var(--text-primary)]">
+
+                    Inference Diagnostic Result
+
+                  </h2>
+
+                  <p className="mt-1 text-[8px] font-mono uppercase tracking-wider text-[var(--text-subtle)]">
+
+                    Neural evaluation output
+
+                  </p>
+
+                </div>
+
+              </div>
+
+              {result && !loading && (
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+              )}
+
+            </div>
+
+            {!result && !loading && (
+              <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
+
+                <div className="relative mb-5">
+
+                  <div className="absolute inset-0 rounded-full bg-blue-500/10 blur-2xl" />
+
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-[var(--border)] bg-[var(--surface-muted)]">
+
+                    <Activity className="h-9 w-9 text-[var(--text-subtle)]" />
+
+                  </div>
+
+                </div>
+
+                <p className="max-w-xs font-mono text-[9px] leading-5 text-[var(--text-muted)]">
+
+                  Submit flow parameters to render PyTorch neural evaluation metrics.
+
+                </p>
+
+                <span className="mt-3 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+
+                  Awaiting Vector
+
+                </span>
+
+              </div>
+            )}
+
+            {loading && (
+              <div className="flex flex-1 items-center justify-center py-12">
+
+                <div className="w-full">
+
+                  <Loading type="chart" />
+
+                </div>
+
+              </div>
+            )}
+
+            {result && !loading && (
+              <div className="mt-5 flex-1 space-y-5">
+
+                <div
+                  className={`relative overflow-hidden rounded-2xl border p-4 ${
+                    isMalicious
+                      ? 'border-rose-200 bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/10'
+                      : 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10'
+                  }`}
+                >
+
+                  <div
+                    className={`absolute left-0 top-0 h-full w-1 ${
+                      isMalicious
+                        ? 'bg-rose-500'
+                        : 'bg-emerald-500'
+                    }`}
+                  />
+
+                  <div className="flex items-start gap-3">
+
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                        isMalicious
+                          ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                          : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                      }`}
+                    >
+
+                      {isMalicious ? (
+                        <ShieldAlert className="h-5 w-5" />
+                      ) : (
+                        <CheckCircle className="h-5 w-5" />
+                      )}
+
+                    </div>
+
+                    <div className="min-w-0">
+
+                      <span
+                        className={`block font-mono text-[9px] font-black uppercase tracking-[0.12em] ${
+                          isMalicious
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
+                        }`}
+                      >
+
+                        {result.prediction ||
+                          (result.is_anomaly
+                            ? 'Malicious Attack Vector'
+                            : 'Normal Benign Traffic')}
+
+                      </span>
+
+                      <span className="mt-1.5 block text-[9px] leading-5 text-[var(--text-muted)]">
+
+                        Classification:
+
+                        <strong className="ml-1 font-mono text-[var(--text-primary)]">
+
+                          {result.attack_type ||
+                            result.prediction ||
+                            'Normal'}
+
+                        </strong>
+
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+
+                  <div className="flex items-center justify-between">
+
+                    <div className="flex items-center gap-2">
+
+                      <Gauge className="h-3.5 w-3.5 text-cyan-500" />
+
+                      <span className="font-mono text-[8px] font-black uppercase tracking-wider text-[var(--text-subtle)]">
+
+                        Model Confidence
+
+                      </span>
+
+                    </div>
+
+                    <span className="font-mono text-lg font-black text-[var(--text-primary)]">
+
+                      {confidence.toFixed(1)}%
+
+                    </span>
+
+                  </div>
+
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        isMalicious
+                          ? 'bg-gradient-to-r from-rose-500 to-orange-500'
+                          : 'bg-gradient-to-r from-emerald-500 to-cyan-500'
+                      }`}
+                      style={{
+                        width: `${Math.min(100, confidence)}%`
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5">
+
+                  <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3">
+
+                    <div className="flex items-center gap-2">
+
+                      <Clock className="h-3.5 w-3.5 text-cyan-500" />
+
+                      <span className="font-mono text-[8px] text-[var(--text-subtle)]">
+                        Inference Latency
+                      </span>
+
+                    </div>
+
+                    <span className="font-mono text-[9px] font-black text-cyan-600 dark:text-cyan-400">
+
+                      {result.executionTime || 4} ms
+
+                    </span>
+
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3">
+
+                    <div className="flex items-center gap-2">
+
+                      <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+
+                      <span className="font-mono text-[8px] text-[var(--text-subtle)]">
+                        Security Alert
+                      </span>
+
+                    </div>
+
+                    <span
+                      className={`font-mono text-[8px] font-black ${
+                        result.alert_created || result.is_anomaly
+                          ? 'text-amber-500'
+                          : 'text-[var(--text-subtle)]'
+                      }`}
+                    >
+
+                      {result.alert_created || result.is_anomaly
+                        ? `YES · ${result.alert_id || 'ALT-892'}`
+                        : 'NO · CLEAN'}
+
+                    </span>
+
+                  </div>
+
+                </div>
+
+                <div className="border-t border-[var(--border)] pt-5">
+
+                  <div className="mb-4 flex items-center gap-2">
+
+                    <Crosshair className="h-3.5 w-3.5 text-violet-500" />
+
+                    <span className="font-mono text-[8px] font-black uppercase tracking-[0.12em] text-[var(--text-subtle)]">
+
+                      Primary Trigger Features
+
+                    </span>
+
+                  </div>
+
+                  <div className="space-y-4 font-mono">
+
+                    <div>
+
+                      <div className="mb-1.5 flex items-center justify-between gap-3">
+
+                        <span className="text-[8px] text-[var(--text-secondary)]">
+
+                          SYN Error Rate
+
+                        </span>
+
+                        <span className="text-[8px] font-black text-rose-500">
+
+                          +{((formData.serror_rate || 0) * 100).toFixed(0)}% Impact
+
+                        </span>
+
+                      </div>
+
+                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-rose-600 to-orange-500"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              (formData.serror_rate || 0.1) * 100
+                            )}%`
+                          }}
+                        />
+
+                      </div>
+
+                    </div>
+
+                    <div>
+
+                      <div className="mb-1.5 flex items-center justify-between gap-3">
+
+                        <span className="text-[8px] text-[var(--text-secondary)]">
+
+                          2s Window Connection Count
+
+                        </span>
+
+                        <span className="text-[8px] font-black text-amber-500">
+
+                          {formData.count} requests
+
+                        </span>
+
+                      </div>
+
+                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              (formData.count || 1) / 5
+                            )}%`
+                          }}
+                        />
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3">
+
+              <div className="flex items-start gap-2">
+
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
+
+                <span className="font-mono text-[7px] leading-4 text-[var(--text-subtle)]">
+
+                  Inference outputs are recorded directly into the prediction
+                  history database.
+
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+      <div className="flex flex-col items-center justify-between gap-3 border-t border-[var(--border)] pt-5 sm:flex-row">
+
+        <div className="flex items-center gap-2">
+
+          <span className="relative flex h-1.5 w-1.5">
+
+            <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-50" />
+
+            <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+          </span>
+
+          <span className="font-mono text-[7px] font-bold uppercase tracking-[0.16em] text-[var(--text-subtle)]">
+
+            Neural Inspection Pipeline Operational
+
+          </span>
+
+        </div>
+
+        <div className="flex items-center gap-2">
+
+          <Zap className="h-3 w-3 text-cyan-500" />
+
+          <span className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-subtle)]">
+
+            Real-Time Inference
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+};
+
+export default Predict;

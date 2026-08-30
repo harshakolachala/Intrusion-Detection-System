@@ -65,4 +65,8 @@ frontend/dist/
 .pytest_cache/
 .mypy_cache/
 .coverage
-.cache/
+.cache/*.npy
+*.db
+*.log
+backend/data/clients/*.npy
+backend/data/clients/*.db

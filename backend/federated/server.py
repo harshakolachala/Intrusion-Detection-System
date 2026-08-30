@@ -10,12 +10,13 @@ from federated.strategy import get_strategy
 
 def main():
 
-    print("=" * 50)
-    print("Starting Flower Server")
-    print("=" * 50)
+    print("=" * 60)
+    print("SentinelAI Federated Learning Server")
+    print("=" * 60)
     print(f"Server Address : {SERVER_ADDRESS}")
     print(f"Federated Rounds : {NUM_ROUNDS}")
-    print("=" * 50)
+    print("Model : Multi-Class IDS (15 Classes)")
+    print("=" * 60)
 
     fl.server.start_server(
         server_address=SERVER_ADDRESS,
