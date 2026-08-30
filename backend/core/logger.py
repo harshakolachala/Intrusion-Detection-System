@@ -12,7 +12,7 @@ def setup_logger():
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
 
-    return logging.getLogger("SentinelAI")
+    return logging.getLogger("FedSentry")
 
 
 logger = setup_logger()
