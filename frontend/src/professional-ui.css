@@ -1,24 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --hz-bg: #4b4944;
-  --hz-bg-deep: #403e39;
-  --hz-shell: #56534d;
-  --hz-panel: #595650;
-  --hz-panel-soft: #625f58;
-  --hz-panel-dark: #45433e;
+  --hz-bg: #e9e4dc;
+  --hz-bg-deep: #ddd6cb;
+  --hz-shell: #ffffff;
+  --hz-panel: #f7f3ed;
+  --hz-panel-soft: #eee8df;
+  --hz-panel-dark: #e1dbd1;
+  --hz-border: rgba(74, 68, 60, .14);
+  --hz-border-soft: rgba(74, 68, 60, .09);
+  --hz-text: #2f2c28;
+  --hz-muted: #706a62;
+  --hz-subtle: #948d84;
+  --hz-orange: #f27c52;
+  --hz-orange-hover: #e96b42;
+  --hz-green: #4da861;
+  --hz-yellow: #d89a39;
+  --hz-red: #cf5f57;
+  --hz-blue: #5d8f98;
+  --hz-input-bg: #fffdf9;
+  --hz-input-text: #2f2c28;
+  --hz-table-head: #ece7df;
+  --hz-shadow: 0 16px 40px rgba(63, 57, 49, .10);
+}
+
+html.dark,
+html[data-theme='dark'] {
+  --hz-bg: #34322e;
+  --hz-bg-deep: #2c2a27;
+  --hz-shell: #4a4843;
+  --hz-panel: #53504a;
+  --hz-panel-soft: #5c5952;
+  --hz-panel-dark: #403e39;
   --hz-border: rgba(255,255,255,.12);
   --hz-border-soft: rgba(255,255,255,.075);
   --hz-text: #f8f6f1;
-  --hz-muted: rgba(248,246,241,.64);
-  --hz-subtle: rgba(248,246,241,.43);
-  --hz-orange: #f27c52;
-  --hz-orange-hover: #e96b42;
-  --hz-green: #63c567;
-  --hz-yellow: #f4b24f;
-  --hz-red: #e7655c;
-  --hz-blue: #78aeb6;
-  --hz-shadow: 0 16px 40px rgba(27,25,22,.16);
+  --hz-muted: rgba(248,246,241,.68);
+  --hz-subtle: rgba(248,246,241,.46);
+  --hz-input-bg: #f2eee7;
+  --hz-input-text: #302d28;
+  --hz-table-head: rgba(255,255,255,.055);
+  --hz-shadow: 0 16px 40px rgba(24,22,20,.18);
 }
 
 html, body, #root {
@@ -31,11 +53,12 @@ html, body, #root {
 body {
   margin: 0;
   background:
-    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
-    linear-gradient(145deg, #514f49 0%, #494741 52%, #44423d 100%) !important;
+    linear-gradient(rgba(74,68,60,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,68,60,.028) 1px, transparent 1px),
+    linear-gradient(145deg, var(--hz-bg) 0%, var(--hz-bg-deep) 100%) !important;
   background-size: 52px 52px, 52px 52px, auto !important;
   background-attachment: fixed !important;
+  transition: background-color .22s ease, color .22s ease;
 }
 
 html.dark body,
@@ -43,11 +66,10 @@ html[data-theme='dark'] body {
   background:
     linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px),
-    linear-gradient(145deg, #3e3c38 0%, #373530 55%, #302f2b 100%) !important;
+    linear-gradient(145deg, #3e3c38 0%, #36342f 55%, #2f2d29 100%) !important;
   background-size: 52px 52px, 52px 52px, auto !important;
 }
 
-/* One visual language across every FedSentry screen. */
 .dashboard-root,
 .sidebar-root,
 .sentinel-root,
@@ -84,7 +106,6 @@ html[data-theme='dark'] body {
   font-style: normal !important;
 }
 
-/* Keep page canvas and layout visually continuous. */
 main,
 main > div,
 .login-root > main,
@@ -93,7 +114,7 @@ main > div,
   background-color: transparent !important;
 }
 
-main { color: var(--hz-text); }
+main { color: var(--hz-text) !important; }
 main h1, main h2, main h3, main h4,
 .login-root h1, .login-root h2, .login-root h3,
 .register-root h1, .register-root h2, .register-root h3,
@@ -105,18 +126,30 @@ main p,
 .register-root p,
 .sentinel-root p { color: var(--hz-muted) !important; }
 
-/* Shared panels for Dashboard, Predict, Alerts, Incidents, History, Audit, Chatbot and Analytics. */
 main section,
 main .card,
 main .premium-card,
 main [class*='rounded-2xl'][class*='border'],
 main [class*='rounded-3xl'][class*='border'],
 main [class*='rounded-[28px]'][class*='border'] {
-  background: linear-gradient(145deg, rgba(91,88,81,.96), rgba(77,75,69,.96)) !important;
+  background: var(--hz-panel) !important;
   border-color: var(--hz-border) !important;
+  color: var(--hz-text) !important;
   box-shadow: var(--hz-shadow) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
+}
+
+html.dark main section,
+html.dark main .card,
+html.dark main .premium-card,
+html.dark main [class*='rounded-2xl'][class*='border'],
+html.dark main [class*='rounded-3xl'][class*='border'],
+html.dark main [class*='rounded-[28px]'][class*='border'],
+html[data-theme='dark'] main section,
+html[data-theme='dark'] main .card,
+html[data-theme='dark'] main .premium-card {
+  background: linear-gradient(145deg, rgba(83,80,74,.96), rgba(69,67,62,.96)) !important;
 }
 
 main [class*='text-[var(--text-primary)]'] { color: var(--hz-text) !important; }
@@ -124,9 +157,30 @@ main [class*='text-[var(--text-secondary)]'],
 main [class*='text-[var(--text-muted)]'],
 main [class*='text-[var(--text-subtle)]'] { color: var(--hz-muted) !important; }
 
-/* Landing page: remove the old white/violet canvas and keep the same FedSentry charcoal world. */
+/* Fix washed-out light cards and white-on-white content. */
+html:not(.dark) main [class*='bg-white'],
+html[data-theme='light'] main [class*='bg-white'],
+html:not(.dark) .sentinel-root [class*='bg-white'],
+html[data-theme='light'] .sentinel-root [class*='bg-white'] {
+  background: var(--hz-panel) !important;
+  color: var(--hz-text) !important;
+}
+html:not(.dark) main [class*='text-white'],
+html[data-theme='light'] main [class*='text-white'],
+html:not(.dark) .sentinel-root [class*='text-white'],
+html[data-theme='light'] .sentinel-root [class*='text-white'] {
+  color: var(--hz-text) !important;
+}
+html:not(.dark) main [class*='text-slate-100'],
+html:not(.dark) main [class*='text-slate-200'],
+html:not(.dark) main [class*='text-slate-300'],
+html[data-theme='light'] main [class*='text-slate-100'],
+html[data-theme='light'] main [class*='text-slate-200'],
+html[data-theme='light'] main [class*='text-slate-300'] {
+  color: var(--hz-muted) !important;
+}
+
 .sentinel-root,
-.sentinel-root [class*='bg-white'],
 .sentinel-root [class*='bg-[#'],
 .sentinel-root section {
   background-color: transparent !important;
@@ -145,45 +199,66 @@ main [class*='text-[var(--text-subtle)]'] { color: var(--hz-muted) !important; }
   display: none !important;
 }
 
-/* Navigation */
 header {
-  background: rgba(68,66,61,.98) !important;
-  border-color: rgba(255,255,255,.09) !important;
-  box-shadow: 0 8px 24px rgba(28,26,23,.15) !important;
+  background: var(--hz-shell) !important;
+  border-color: var(--hz-border) !important;
+  box-shadow: 0 8px 24px rgba(28,26,23,.10) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
 }
-header nav a {
-  color: rgba(255,255,255,.68) !important;
-  border-radius: 999px !important;
-}
-header nav a:hover {
-  background: rgba(255,255,255,.07) !important;
-  color: #fff !important;
+header nav a,
+header button { color: var(--hz-muted) !important; }
+header nav a:hover,
+header button:hover {
+  background: var(--hz-panel-soft) !important;
+  color: var(--hz-text) !important;
 }
 header nav a[aria-current='page'] {
   background: var(--hz-orange) !important;
   color: white !important;
 }
-header button { color: rgba(255,255,255,.86); }
+html.dark header,
+html[data-theme='dark'] header {
+  background: rgba(68,66,61,.98) !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+html.dark header nav a,
+html.dark header button,
+html[data-theme='dark'] header nav a,
+html[data-theme='dark'] header button { color: rgba(255,255,255,.72) !important; }
 
 aside.sidebar-root {
+  background: var(--hz-shell) !important;
+  border-color: var(--hz-border) !important;
+  box-shadow: 10px 0 32px rgba(29,27,24,.10) !important;
+}
+aside.sidebar-root nav a { color: var(--hz-muted) !important; }
+aside.sidebar-root nav a:hover {
+  background: var(--hz-panel-soft) !important;
+  color: var(--hz-text) !important;
+}
+aside.sidebar-root nav a[aria-current='page'] {
+  background: rgba(242,124,82,.14) !important;
+  color: #c9552f !important;
+  border-color: rgba(242,124,82,.18) !important;
+}
+html.dark aside.sidebar-root,
+html[data-theme='dark'] aside.sidebar-root {
   background: rgba(70,68,63,.985) !important;
   border-color: rgba(255,255,255,.09) !important;
-  box-shadow: 10px 0 32px rgba(29,27,24,.14) !important;
 }
-aside.sidebar-root nav a { color: rgba(255,255,255,.60) !important; }
-aside.sidebar-root nav a:hover {
+html.dark aside.sidebar-root nav a,
+html[data-theme='dark'] aside.sidebar-root nav a { color: rgba(255,255,255,.62) !important; }
+html.dark aside.sidebar-root nav a:hover,
+html[data-theme='dark'] aside.sidebar-root nav a:hover {
   background: rgba(255,255,255,.065) !important;
   color: white !important;
 }
-aside.sidebar-root nav a[aria-current='page'] {
-  background: rgba(242,124,82,.16) !important;
+html.dark aside.sidebar-root nav a[aria-current='page'],
+html[data-theme='dark'] aside.sidebar-root nav a[aria-current='page'] {
   color: #ffad91 !important;
-  border-color: rgba(242,124,82,.18) !important;
 }
 
-/* Controls */
 button[class*='bg-blue-600'],
 button[class*='bg-violet-600'],
 a[class*='bg-blue-600'],
@@ -196,10 +271,10 @@ button[class*='bg-blue-600']:hover,
 button[class*='bg-violet-600']:hover { background: var(--hz-orange-hover) !important; }
 
 input, textarea, select {
-  background: #f2eee7 !important;
-  border: 1px solid rgba(66,61,54,.14) !important;
-  color: #302d28 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.88) !important;
+  background: var(--hz-input-bg) !important;
+  border: 1px solid var(--hz-border) !important;
+  color: var(--hz-input-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.82) !important;
 }
 input::placeholder,
 textarea::placeholder { color: #958e84 !important; }
@@ -220,7 +295,6 @@ textarea { border-radius: 16px !important; }
   outline: none;
 }
 
-/* Auth pages: same full-page charcoal background, lighter cards for hierarchy. */
 .login-root,
 .register-root {
   min-height: calc(100vh - 64px) !important;
@@ -233,61 +307,78 @@ textarea { border-radius: 16px !important; }
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
-.login-root main > div,
-.register-root main > div {
-  border-color: var(--hz-border) !important;
-}
 .login-root label,
-.register-root label { color: rgba(255,255,255,.50) !important; }
+.register-root label { color: var(--hz-muted) !important; }
 
-/* Tables */
+/* Tables and empty states */
 table {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   color: var(--hz-text) !important;
 }
-thead { background: transparent !important; }
+thead { background: var(--hz-table-head) !important; }
 th {
-  color: rgba(255,255,255,.50) !important;
-  border-bottom: 1px solid rgba(255,255,255,.10) !important;
+  color: var(--hz-muted) !important;
+  border-bottom: 1px solid var(--hz-border) !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
 }
 td {
-  color: rgba(255,255,255,.78) !important;
-  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  color: var(--hz-text) !important;
+  border-bottom: 1px solid var(--hz-border-soft) !important;
 }
-tbody tr:hover { background: rgba(255,255,255,.035) !important; }
+tbody tr:hover { background: rgba(242,124,82,.055) !important; }
 
-/* Status colours */
 .badge-low,
 .badge-success {
-  background: rgba(99,197,103,.16) !important;
-  color: #9be49e !important;
+  background: rgba(77,168,97,.14) !important;
+  color: #2f7f44 !important;
 }
 .badge-medium {
-  background: rgba(244,178,79,.16) !important;
-  color: #ffd27d !important;
+  background: rgba(216,154,57,.14) !important;
+  color: #9e6c18 !important;
 }
 .badge-high {
-  background: rgba(231,101,92,.16) !important;
-  color: #ff9b94 !important;
+  background: rgba(207,95,87,.14) !important;
+  color: #a9433d !important;
 }
+html.dark .badge-low,
+html.dark .badge-success,
+html[data-theme='dark'] .badge-low,
+html[data-theme='dark'] .badge-success { color: #9be49e !important; }
+html.dark .badge-medium,
+html[data-theme='dark'] .badge-medium { color: #ffd27d !important; }
+html.dark .badge-high,
+html[data-theme='dark'] .badge-high { color: #ff9b94 !important; }
 
-/* Charts */
-.recharts-cartesian-grid line { stroke: rgba(255,255,255,.10) !important; }
+.recharts-cartesian-grid line { stroke: var(--hz-border) !important; }
 .recharts-text,
 .recharts-legend-item-text {
-  fill: rgba(255,255,255,.62) !important;
-  color: rgba(255,255,255,.62) !important;
+  fill: var(--hz-muted) !important;
+  color: var(--hz-muted) !important;
   font-family: 'DM Sans', sans-serif !important;
 }
 .recharts-default-tooltip {
-  background: rgba(69,67,62,.98) !important;
-  border: 1px solid rgba(255,255,255,.11) !important;
+  background: var(--hz-shell) !important;
+  color: var(--hz-text) !important;
+  border: 1px solid var(--hz-border) !important;
   border-radius: 14px !important;
-  box-shadow: 0 16px 38px rgba(31,28,24,.22) !important;
+  box-shadow: 0 16px 38px rgba(31,28,24,.18) !important;
+}
+
+/* Chatbot contrast fixes */
+main [class*='bg-white/'],
+main [class*='bg-slate-50'],
+main [class*='bg-gray-50'] {
+  background: var(--hz-panel-soft) !important;
+  color: var(--hz-text) !important;
+}
+main button[class*='bg-white'],
+main a[class*='bg-white'] {
+  background: var(--hz-panel-soft) !important;
+  color: var(--hz-text) !important;
+  border-color: var(--hz-border) !important;
 }
 
 .security-grid,
