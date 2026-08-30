@@ -123,3 +123,55 @@ input,textarea,select { color:var(--text-primary); background:var(--surface-elev
 :focus-visible { outline:2px solid rgba(242,124,82,.55); outline-offset:2px; }
 .security-grid { display:none; }
 .ambient-glow-blue,.ambient-glow-cyan,.ambient-glow-indigo { display:none; }
+
+/* Dark-mode compatibility for legacy page-local palettes and pale cards. */
+html.dark .sentinel-root,
+html[data-theme='dark'] .sentinel-root,
+html.dark .login-root,
+html[data-theme='dark'] .login-root,
+html.dark .register-root,
+html[data-theme='dark'] .register-root,
+html.dark .dashboard-root,
+html[data-theme='dark'] .dashboard-root {
+  --bg: #34322e !important;
+  --card: #53504a !important;
+  --surface: #5c5952 !important;
+  --ink: #f8f6f1 !important;
+  --muted: rgba(248,246,241,.68) !important;
+  --line: rgba(255,255,255,.10) !important;
+  --accent: #f27c52 !important;
+  --accent-dim: rgba(242,124,82,.16) !important;
+  --accent-deep: #ff9b79 !important;
+  --rust: #f27c52 !important;
+  --rust-dim: rgba(242,124,82,.15) !important;
+  --amber: #e7b45c !important;
+}
+
+html.dark main [class*='bg-white'],
+html[data-theme='dark'] main [class*='bg-white'],
+html.dark main [class*='bg-[#F7F4FC]'],
+html[data-theme='dark'] main [class*='bg-[#F7F4FC]'],
+html.dark main [class*='bg-[#F8F5FC]'],
+html[data-theme='dark'] main [class*='bg-[#F8F5FC]'],
+html.dark main [class*='bg-[#F9F7FC]'],
+html[data-theme='dark'] main [class*='bg-[#F9F7FC]'],
+html.dark .sentinel-root [class*='bg-white'],
+html[data-theme='dark'] .sentinel-root [class*='bg-white'] {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark main [class*='text-[#150B24]'],
+html[data-theme='dark'] main [class*='text-[#150B24]'],
+html.dark .sentinel-root [class*='text-[#150B24]'],
+html[data-theme='dark'] .sentinel-root [class*='text-[#150B24]'] {
+  color: var(--text-primary) !important;
+}
+
+html.dark main [class*='text-[#6B6478]'],
+html[data-theme='dark'] main [class*='text-[#6B6478]'],
+html.dark .sentinel-root [class*='text-[#6B6478]'],
+html[data-theme='dark'] .sentinel-root [class*='text-[#6B6478]'] {
+  color: var(--text-muted) !important;
+}
