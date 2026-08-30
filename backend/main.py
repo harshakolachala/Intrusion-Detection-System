@@ -25,6 +25,7 @@ from routes.audit import router as audit_router
 from routes.engine import router as engine_router
 from routes.incidents import router as incidents_router
 from routes.predictions import router as predictions_router
+from routes.reports import router as reports_router
 
 from exceptions import register_exception_handlers
 from middleware import LoggingMiddleware
@@ -159,6 +160,13 @@ app.include_router(incidents_router)
 # =========================================================
 
 app.include_router(predictions_router)
+
+
+# =========================================================
+# Reports / Exports
+# =========================================================
+
+app.include_router(reports_router)
 
 
 # =========================================================
