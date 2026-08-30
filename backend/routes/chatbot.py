@@ -1,7 +1,12 @@
 """
 Chatbot routes.
 
-Uses RAG + LLM to explain IDS predictions.
+Uses RAG + LLM to power the SentinelAI AI Assistant:
+  - POST /chatbot/chat        -> free-form Q&A, grounded in the security
+                                  knowledge base AND live SentinelAI data.
+  - GET  /chatbot/explain/{id} -> explain an existing alert.
+  - POST /chatbot/explain      -> explain a prediction that hasn't been
+                                   saved yet (used by the Predict page).
 """
 
 import logging
@@ -9,12 +14,16 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from auth.dependencies import get_current_user
+from database.session import get_db
 from models.user import User
 
 from rag.context_provider import get_context
 from llm.explainer import generate_explanation
+from services.alert_service import AlertService
+from services.chatbot_service import ChatbotService
 
 logger = logging.getLogger("routes.chatbot")
 
@@ -22,30 +31,6 @@ router = APIRouter(
     prefix="/chatbot",
     tags=["Chatbot"],
 )
-
-# Temporary mock detections
-MOCK_DETECTIONS = {
-    "a1": {
-        "attackType": "DDoS",
-        "confidence": 0.94,
-        "sourceIp": "192.168.1.14",
-    },
-    "a2": {
-        "attackType": "PortScan",
-        "confidence": 0.81,
-        "sourceIp": "10.0.0.22",
-    },
-    "a3": {
-        "attackType": "FTP-Patator",
-        "confidence": 0.88,
-        "sourceIp": "172.16.0.5",
-    },
-    "a4": {
-        "attackType": "Bot",
-        "confidence": 0.62,
-        "sourceIp": "192.168.1.30",
-    },
-}
 
 
 class FeatureContribution(BaseModel):
@@ -77,9 +62,10 @@ class ChatResponse(BaseModel):
     response: str
     sources: List[str]
     llm_provider: str
+    context_used: bool
 
 
-def _build_response(
+def _build_explanation(
     detection_id: Optional[str],
     attack_type: str,
     confidence: float,
@@ -115,9 +101,15 @@ def _build_response(
 def chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
-    Chat with the RAG-powered cybersecurity assistant.
+    Chat with the RAG-powered SentinelAI security assistant.
+
+    Grounds answers in the static security knowledge base AND live
+    SentinelAI data (recent alerts/incidents/predictions relevant to
+    the question), so analysts can ask about the system's current
+    state as well as general cybersecurity topics.
     """
 
     logger.info(
@@ -126,21 +118,17 @@ def chat(
         request.message[:50],
     )
 
-    # Get context from RAG knowledge base
-    sources = get_context("security", top_k=3)
-
-    # Generate explanation using the LLM
-    result = generate_explanation(
-        attack_type="general",
-        confidence=1.0,
-        context_snippets=sources,
-        top_features=None,
+    result = ChatbotService.handle_chat(
+        db=db,
+        user=current_user,
+        message=request.message,
     )
 
     return ChatResponse(
-        response=result["explanation"],
-        sources=sources,
+        response=result["response"],
+        sources=result["sources"],
         llm_provider=result["provider"],
+        context_used=bool(result["sources"]),
     )
 
 
@@ -151,14 +139,15 @@ def chat(
 def explain_detection(
     detection_id: str,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
-    Explain an existing detection.
+    Explain an existing detection using its real alert record.
     """
 
-    detection = MOCK_DETECTIONS.get(detection_id)
+    alert = AlertService.get_by_id(db, detection_id)
 
-    if detection is None:
+    if alert is None:
         raise HTTPException(
             status_code=404,
             detail="Detection not found.",
@@ -170,10 +159,10 @@ def explain_detection(
         detection_id,
     )
 
-    return _build_response(
+    return _build_explanation(
         detection_id=detection_id,
-        attack_type=detection["attackType"],
-        confidence=detection["confidence"],
+        attack_type=alert.attack_type,
+        confidence=alert.confidence,
         top_features=None,
     )
 
@@ -201,7 +190,7 @@ def explain_manual(
         else None
     )
 
-    return _build_response(
+    return _build_explanation(
         detection_id=None,
         attack_type=payload.attack_type,
         confidence=payload.confidence,
