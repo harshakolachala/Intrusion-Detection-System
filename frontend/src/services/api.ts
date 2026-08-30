@@ -203,8 +203,8 @@ export const getAlerts = async (
   return response.data.map((item: any) => ({
     id: item.id,
     timestamp: item.created_at,
-    title: item.alert_type,
-    attack_type: item.alert_type,
+    title: item.alert_type ?? item.attack_type,
+    attack_type: item.alert_type ?? item.attack_type,
     src_ip: item.source_ip,
     dst_ip: item.destination_ip,
     severity: item.severity,
@@ -212,7 +212,7 @@ export const getAlerts = async (
       item.status ??
       (item.is_resolved ? "RESOLVED" : "NEW"),
     confidence: item.confidence ?? 0,
-    description: item.description ?? "",
+    description: item.description ?? item.llm_summary ?? "",
     is_resolved: item.is_resolved,
   }));
 };
@@ -254,12 +254,17 @@ export const getIncidents = async (
   return response.data.map((item: any) => ({
     id: item.id,
     timestamp: item.created_at,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    closed_at: item.closed_at,
+    alert_id: item.alert_id,
     title: item.title,
     description: item.description,
     status: item.status,
     severity: item.severity,
+    resolution: item.resolution,
     assigned_to:
-      item.assigned_user ||
+      item.assigned_user?.username ||
       item.assigned_to ||
       "Unassigned",
   }));
@@ -340,7 +345,7 @@ export const updateIncident = async (
   incidentId: string | number,
   payload: Partial<CreateIncidentPayload>
 ) => {
-  const response = await axiosClient.put(
+  const response = await axiosClient.patch(
     `/incidents/${incidentId}`,
     payload
   );
@@ -357,6 +362,41 @@ export const deleteIncident = async (
 
   return response.data;
 };
+
+/* ===========================================================
+   Reports / Downloads
+=========================================================== */
+
+const downloadReport = async (url: string, fallbackFilename: string) => {
+  const response = await axiosClient.get(url, { responseType: "blob" });
+  const disposition = String(response.headers["content-disposition"] ?? "");
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  const filename = match?.[1] || fallbackFilename;
+
+  const objectUrl = window.URL.createObjectURL(response.data);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(objectUrl);
+};
+
+export const downloadAlertsCsv = () =>
+  downloadReport("/reports/alerts.csv", "fedsentry-alerts.csv");
+
+export const downloadIncidentsCsv = () =>
+  downloadReport("/reports/incidents.csv", "fedsentry-incidents.csv");
+
+export const downloadPredictionsCsv = () =>
+  downloadReport("/reports/predictions.csv", "fedsentry-predictions.csv");
+
+export const downloadSecuritySummaryPdf = () =>
+  downloadReport("/reports/security-summary.pdf", "fedsentry-security-summary.pdf");
+
+export const downloadIncidentPdf = (incidentId: string | number) =>
+  downloadReport(`/reports/incidents/${incidentId}.pdf`, `fedsentry-incident-${incidentId}.pdf`);
 
 /* ===========================================================
    Health
