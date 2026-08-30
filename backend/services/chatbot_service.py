@@ -1,37 +1,28 @@
 """
 Chatbot Service.
 
-Orchestrates the SentinelAI AI Assistant: retrieves relevant context
-from two sources -- the static RAG knowledge base (rag/documents) and
-live SentinelAI data (recent alerts/incidents/predictions) -- combines
-them, asks the LLM for a grounded answer, and persists the exchange to
-chat_history for audit/debugging.
-
-This is intentionally the ONLY place that builds the "what does the
-assistant currently know" context, so /chatbot/chat stays a thin route.
+Orchestrates the FedSentry AI Assistant: retrieves relevant context from the
+static RAG knowledge base and live FedSentry data, combines them, asks the LLM
+for a grounded answer, and persists the exchange for audit/debugging.
 """
 
-import re
 import logging
+import re
 from typing import List, Optional
 
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
+from llm.explainer import generate_chat_response
 from models.alert import Alert
+from models.chat import Chat
 from models.incident import Incident
 from models.prediction import Prediction
-from models.chat import Chat
 from models.user import User
-
 from rag.context_provider import get_context, get_sources
-from llm.explainer import generate_chat_response
 
 logger = logging.getLogger("services.chatbot_service")
 
-# Attack labels the IDS actually predicts (see ATTACK_SEVERITY in
-# prediction_service.py) -- used to detect which attack, if any, the
-# analyst is asking about so live records can be filtered by it.
 KNOWN_ATTACK_TYPES = [
     "DDoS",
     "PortScan",
@@ -51,19 +42,43 @@ KNOWN_ATTACK_TYPES = [
 ]
 
 _RECENCY_KEYWORDS = (
-    "recent", "latest", "last", "current", "currently", "now",
-    "active", "summarize", "summary", "situation", "today",
+    "recent",
+    "latest",
+    "last",
+    "current",
+    "currently",
+    "now",
+    "active",
+    "summarize",
+    "summary",
+    "situation",
+    "today",
 )
 
 _IP_PATTERN = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
-
-# Live records are summarised to only the fields useful for analysis --
-# never raw DB rows -- to avoid leaking anything unrelated to the question.
 _MAX_LIVE_RECORDS = 5
 
 
-class ChatbotService:
+def _short_id(value: object, length: int = 8) -> str:
+    """Return a short printable identifier for UUIDs, strings, ints, etc."""
+    if value is None:
+        return "unknown"
+    return str(value)[:length]
 
+
+def _format_timestamp(value: object) -> str:
+    if value is None:
+        return "unknown time"
+    formatter = getattr(value, "strftime", None)
+    if callable(formatter):
+        try:
+            return formatter("%Y-%m-%d %H:%M UTC")
+        except Exception:  # noqa: BLE001
+            pass
+    return str(value)
+
+
+class ChatbotService:
     @staticmethod
     def _match_attack_type(message: str) -> Optional[str]:
         lowered = message.lower()
@@ -84,87 +99,96 @@ class ChatbotService:
 
     @staticmethod
     def retrieve_live_context(db: Session, message: str) -> List[str]:
-        """Pull relevant, *current* SentinelAI records for grounding.
+        """Pull relevant current FedSentry records without breaking chat.
 
-        Filters by attack type / IP mentioned in the question when
-        possible; otherwise falls back to "recent activity" only when the
-        question actually asks about it, so unrelated questions (e.g.
-        "what is a DDoS attack?") don't pull in noisy live data.
+        Database context is enrichment, not a hard dependency. Any malformed
+        or unexpected record is skipped so RAG + LLM chat can still respond.
         """
-
         attack_type = ChatbotService._match_attack_type(message)
         source_ip = ChatbotService._extract_ip(message)
         wants_recent = ChatbotService._wants_recent(message)
-
         snippets: List[str] = []
 
         if attack_type or source_ip or wants_recent:
-            alert_query = db.query(Alert).order_by(desc(Alert.created_at))
+            try:
+                alert_query = db.query(Alert).order_by(desc(Alert.created_at))
+                if attack_type:
+                    alert_query = alert_query.filter(Alert.attack_type == attack_type)
+                if source_ip:
+                    alert_query = alert_query.filter(
+                        or_(Alert.source_ip == source_ip, Alert.destination_ip == source_ip)
+                    )
 
-            if attack_type:
-                alert_query = alert_query.filter(Alert.attack_type == attack_type)
-
-            if source_ip:
-                alert_query = alert_query.filter(
-                    or_(Alert.source_ip == source_ip, Alert.destination_ip == source_ip)
-                )
-
-            for alert in alert_query.limit(_MAX_LIVE_RECORDS).all():
-                snippets.append(
-                    f"[Alert {alert.id[:8]}] {alert.attack_type} from "
-                    f"{alert.source_ip} to {alert.destination_ip}:"
-                    f"{alert.destination_port}/{alert.protocol} -- "
-                    f"confidence {alert.confidence:.0%}, severity "
-                    f"{alert.severity}, risk score {alert.risk_score}, "
-                    f"status {alert.status}, detected "
-                    f"{alert.created_at.strftime('%Y-%m-%d %H:%M UTC')}."
-                )
+                for alert in alert_query.limit(_MAX_LIVE_RECORDS).all():
+                    try:
+                        confidence = float(alert.confidence or 0)
+                        snippets.append(
+                            f"[Alert {_short_id(alert.id)}] {alert.attack_type} from "
+                            f"{alert.source_ip} to {alert.destination_ip}:"
+                            f"{alert.destination_port}/{alert.protocol} -- "
+                            f"confidence {confidence:.0%}, severity "
+                            f"{alert.severity}, risk score {alert.risk_score}, "
+                            f"status {alert.status}, detected "
+                            f"{_format_timestamp(alert.created_at)}."
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("Skipping malformed alert context row: %s", exc)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not retrieve live alert context: %s", exc)
 
         if attack_type or wants_recent or "incident" in message.lower():
-            incident_query = db.query(Incident).order_by(desc(Incident.created_at))
-
-            for incident in incident_query.limit(3).all():
-                snippets.append(
-                    f"[Incident {incident.id[:8]}] '{incident.title}' -- "
-                    f"severity {incident.severity}, status {incident.status}, "
-                    f"opened {incident.created_at.strftime('%Y-%m-%d %H:%M UTC')}."
-                )
+            try:
+                incident_query = db.query(Incident).order_by(desc(Incident.created_at))
+                for incident in incident_query.limit(3).all():
+                    try:
+                        snippets.append(
+                            f"[Incident {_short_id(incident.id)}] '{incident.title}' -- "
+                            f"severity {incident.severity}, status {incident.status}, "
+                            f"opened {_format_timestamp(incident.created_at)}."
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("Skipping malformed incident context row: %s", exc)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not retrieve live incident context: %s", exc)
 
         if wants_recent and not attack_type and not source_ip:
-            prediction_query = db.query(Prediction).order_by(desc(Prediction.created_at))
-
-            for prediction in prediction_query.limit(_MAX_LIVE_RECORDS).all():
-                snippets.append(
-                    f"[Prediction {prediction.id[:8]}] {prediction.predicted_class} "
-                    f"({prediction.confidence:.0%} confidence) "
-                    f"{prediction.source_ip} -> {prediction.destination_ip}, "
-                    f"{prediction.created_at.strftime('%Y-%m-%d %H:%M UTC')}."
-                )
+            try:
+                prediction_query = db.query(Prediction).order_by(desc(Prediction.created_at))
+                for prediction in prediction_query.limit(_MAX_LIVE_RECORDS).all():
+                    try:
+                        confidence = float(prediction.confidence or 0)
+                        snippets.append(
+                            f"[Prediction {_short_id(prediction.id)}] {prediction.predicted_class} "
+                            f"({confidence:.0%} confidence) "
+                            f"{prediction.source_ip} -> {prediction.destination_ip}, "
+                            f"{_format_timestamp(prediction.created_at)}."
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("Skipping malformed prediction context row: %s", exc)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not retrieve live prediction context: %s", exc)
 
         return snippets
 
     @staticmethod
     def handle_chat(db: Session, user: User, message: str) -> dict:
-        """Answer a SOC analyst's question, grounded in KB + live data.
-
-        Returns {"response": str, "provider": str, "sources": List[str]}.
-        """
-
+        """Answer a SOC analyst question using live context + RAG + LLM."""
         live_context = ChatbotService.retrieve_live_context(db, message)
         kb_context = get_context(message, top_k=3)
         kb_sources = get_sources(message, top_k=3)
 
         combined_context = live_context + kb_context
-
         result = generate_chat_response(
             question=message,
             context_snippets=combined_context,
         )
 
-        # Live records cite themselves (e.g. "Alert 3f9a1c2b"); knowledge
-        # base snippets cite their source markdown file.
-        live_source_labels = [s.split("]", 1)[0].lstrip("[") for s in live_context]
-        sources = live_source_labels + [s for s in kb_sources if s]
+        live_source_labels = [
+            snippet.split("]", 1)[0].lstrip("[")
+            for snippet in live_context
+            if snippet.startswith("[") and "]" in snippet
+        ]
+        sources = live_source_labels + [source for source in kb_sources if source]
 
         ChatbotService._persist(
             db=db,
@@ -191,7 +215,6 @@ class ChatbotService:
         context: List[str],
     ) -> None:
         """Best-effort chat history logging. Never breaks the chat reply."""
-
         try:
             chat = Chat(
                 user_id=user.id,
