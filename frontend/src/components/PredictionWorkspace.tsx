@@ -50,9 +50,9 @@ type EngineTelemetry = {
   queue_size?: number;
 };
 
-const isMaliciousRow = (row: any) => {
+const isMaliciousRow = (row: any): boolean => {
   const value = String(row?.prediction ?? row?.attack_type ?? '').toLowerCase();
-  return row?.is_anomaly === true || (value && value !== 'benign' && value !== 'normal traffic');
+  return row?.is_anomaly === true || Boolean(value && value !== 'benign' && value !== 'normal traffic');
 };
 
 const confidencePct = (value: unknown) => {
