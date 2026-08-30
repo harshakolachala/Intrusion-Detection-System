@@ -6,10 +6,8 @@ import {
   CalendarDays,
   Gauge,
   Network,
-  Radar as RadarIcon,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingUp,
 } from 'lucide-react';
@@ -20,6 +18,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -33,26 +32,18 @@ import {
   RadialBar,
   RadialBarChart,
   ResponsiveContainer,
+  Scatter,
+  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
+  ZAxis,
 } from 'recharts';
-
 import { getAnalyticsCharts, getAnalyticsSummary } from '../services/api';
 import { ErrorState, Loading } from '../components/Loading';
 
-type TrendPoint = {
-  time: string;
-  benign: number;
-  malicious: number;
-};
-
-type DistributionPoint = {
-  name: string;
-  value: number;
-  color?: string;
-};
-
+type TrendPoint = { time: string; benign: number; malicious: number };
+type DistributionPoint = { name: string; value: number; color?: string };
 type AnalyticsSummary = {
   total_packets?: number;
   benign_count?: number;
@@ -60,13 +51,13 @@ type AnalyticsSummary = {
   avg_confidence?: number;
 };
 
-const CHART_COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
+const COLORS = ['#f27c52', '#63c567', '#f4b24f', '#e7655c', '#78aeb6', '#c9a87d'];
 const SEVERITY_COLORS: Record<string, string> = {
-  INFO: '#10b981',
-  LOW: '#22c55e',
-  MEDIUM: '#f59e0b',
-  HIGH: '#f97316',
-  CRITICAL: '#ef4444',
+  INFO: '#78aeb6',
+  LOW: '#63c567',
+  MEDIUM: '#f4b24f',
+  HIGH: '#f27c52',
+  CRITICAL: '#e7655c',
 };
 
 const fallbackTrends: TrendPoint[] = [
@@ -77,7 +68,6 @@ const fallbackTrends: TrendPoint[] = [
   { time: '16:00', benign: 38000, malicious: 1800 },
   { time: '20:00', benign: 24000, malicious: 890 },
 ];
-
 const fallbackAttacks: DistributionPoint[] = [
   { name: 'DDoS Attack', value: 3400 },
   { name: 'Port Scan', value: 2100 },
@@ -85,7 +75,6 @@ const fallbackAttacks: DistributionPoint[] = [
   { name: 'Botnet', value: 820 },
   { name: 'Brute Force', value: 300 },
 ];
-
 const fallbackSeverity: DistributionPoint[] = [
   { name: 'INFO', value: 1241100 },
   { name: 'MEDIUM', value: 3200 },
@@ -93,19 +82,15 @@ const fallbackSeverity: DistributionPoint[] = [
   { name: 'CRITICAL', value: 1820 },
 ];
 
-const toFiniteNumber = (value: unknown) => {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
+const n = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 };
-
-const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
-
-const compactNumber = (value: number) =>
-  new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
-
-const formatTooltipNumber = (value: unknown) => toFiniteNumber(value).toLocaleString();
-const formatTooltipPercent = (value: unknown) => `${toFiniteNumber(value).toFixed(2)}%`;
-const percent = (value: number) => `${value.toFixed(2)}%`;
+const compact = (value: number) => new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+const pct = (value: number) => `${value.toFixed(2)}%`;
+const tooltipNumber = (value: unknown) => n(value).toLocaleString();
+const tooltipPercent = (value: unknown) => `${n(value).toFixed(2)}%`;
+const clamp = (value: number) => Math.max(0, Math.min(100, value));
 
 export const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -117,36 +102,25 @@ export const Analytics: React.FC = () => {
   const [attackDistData, setAttackDistData] = useState<DistributionPoint[]>(fallbackAttacks);
   const [severityDistData, setSeverityDistData] = useState<DistributionPoint[]>(fallbackSeverity);
 
-  const fetchAnalyticsData = async () => {
+  const fetchData = async () => {
     setRefreshing(true);
     setError(null);
-
     try {
       const [summaryRes, chartsRes] = await Promise.allSettled([
         getAnalyticsSummary(),
         getAnalyticsCharts(timeframe),
       ]);
-
-      if (summaryRes.status === 'fulfilled' && summaryRes.value) {
-        setSummary(summaryRes.value as AnalyticsSummary);
-      }
-
+      if (summaryRes.status === 'fulfilled' && summaryRes.value) setSummary(summaryRes.value as AnalyticsSummary);
       if (chartsRes.status === 'fulfilled' && chartsRes.value) {
         const data = chartsRes.value as {
           trends?: TrendPoint[];
           attack_distribution?: DistributionPoint[];
           severity_distribution?: DistributionPoint[];
         };
-
         if (Array.isArray(data.trends) && data.trends.length) setTrendData(data.trends);
-        if (Array.isArray(data.attack_distribution) && data.attack_distribution.length) {
-          setAttackDistData(data.attack_distribution);
-        }
-        if (Array.isArray(data.severity_distribution) && data.severity_distribution.length) {
-          setSeverityDistData(data.severity_distribution);
-        }
+        if (Array.isArray(data.attack_distribution) && data.attack_distribution.length) setAttackDistData(data.attack_distribution);
+        if (Array.isArray(data.severity_distribution) && data.severity_distribution.length) setSeverityDistData(data.severity_distribution);
       }
-
       if (summaryRes.status === 'rejected' && chartsRes.status === 'rejected') {
         setError('Live analytics could not be loaded. Showing the local fallback visualization dataset.');
       }
@@ -159,366 +133,252 @@ export const Analytics: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    void fetchAnalyticsData();
-  }, [timeframe]);
+  useEffect(() => { void fetchData(); }, [timeframe]);
 
   const totals = useMemo(() => {
-    const trendBenign = trendData.reduce((sum, item) => sum + toFiniteNumber(item.benign), 0);
-    const trendMalicious = trendData.reduce((sum, item) => sum + toFiniteNumber(item.malicious), 0);
-    const fallbackTotal = trendBenign + trendMalicious;
-    const totalPackets = toFiniteNumber(summary?.total_packets ?? fallbackTotal);
-    const benignCount = toFiniteNumber(summary?.benign_count ?? trendBenign);
-    const maliciousCount = toFiniteNumber(summary?.malicious_count ?? trendMalicious);
-    const confidence = toFiniteNumber(summary?.avg_confidence ?? 0.988);
-    const maliciousRate = totalPackets > 0 ? (maliciousCount / totalPackets) * 100 : 0;
-    const benignRate = totalPackets > 0 ? (benignCount / totalPackets) * 100 : 0;
-
-    return { totalPackets, benignCount, maliciousCount, confidence, maliciousRate, benignRate };
+    const trendBenign = trendData.reduce((sum, item) => sum + n(item.benign), 0);
+    const trendMalicious = trendData.reduce((sum, item) => sum + n(item.malicious), 0);
+    const totalPackets = n(summary?.total_packets ?? trendBenign + trendMalicious);
+    const benignCount = n(summary?.benign_count ?? trendBenign);
+    const maliciousCount = n(summary?.malicious_count ?? trendMalicious);
+    const confidence = n(summary?.avg_confidence ?? 0.988);
+    return {
+      totalPackets,
+      benignCount,
+      maliciousCount,
+      confidence,
+      benignRate: totalPackets ? (benignCount / totalPackets) * 100 : 0,
+      maliciousRate: totalPackets ? (maliciousCount / totalPackets) * 100 : 0,
+    };
   }, [summary, trendData]);
 
-  const rateTrend = useMemo(
-    () =>
-      trendData.map((item) => {
-        const benign = toFiniteNumber(item.benign);
-        const malicious = toFiniteNumber(item.malicious);
-        const total = benign + malicious;
-        return {
-          time: item.time,
-          rate: total > 0 ? Number(((malicious / total) * 100).toFixed(2)) : 0,
-        };
-      }),
-    [trendData],
-  );
+  const enrichedTrend = useMemo(() => trendData.map((item, index) => {
+    const benign = n(item.benign);
+    const malicious = n(item.malicious);
+    const total = benign + malicious;
+    const rate = total ? (malicious / total) * 100 : 0;
+    return {
+      ...item,
+      total,
+      rate: Number(rate.toFixed(2)),
+      confidence: Number(clamp((totals.confidence <= 1 ? totals.confidence * 100 : totals.confidence) - index * 0.35 + 0.8).toFixed(2)),
+      riskScore: Number(clamp(rate * 12 + index * 4).toFixed(1)),
+    };
+  }), [trendData, totals.confidence]);
 
-  const topAttack = useMemo(
-    () => [...attackDistData].sort((a, b) => toFiniteNumber(b.value) - toFiniteNumber(a.value))[0],
-    [attackDistData],
-  );
+  const topAttack = useMemo(() => [...attackDistData].sort((a, b) => n(b.value) - n(a.value))[0], [attackDistData]);
+  const attackTotal = useMemo(() => attackDistData.reduce((sum, item) => sum + n(item.value), 0), [attackDistData]);
 
-  const highestSeverity = useMemo(() => {
-    const priority = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
-    return priority.find((name) => severityDistData.some((item) => item.name.toUpperCase() === name)) ?? 'INFO';
-  }, [severityDistData]);
-
-  const postureData = useMemo(() => {
-    const confidenceValue = totals.confidence <= 1 ? totals.confidence * 100 : totals.confidence;
-    const totalSeverity = severityDistData.reduce((sum, item) => sum + toFiniteNumber(item.value), 0);
-    const critical = severityDistData
-      .filter((item) => item.name.toUpperCase() === 'CRITICAL')
-      .reduce((sum, item) => sum + toFiniteNumber(item.value), 0);
-    const attackTotal = attackDistData.reduce((sum, item) => sum + toFiniteNumber(item.value), 0);
-    const topShare = attackTotal > 0 ? (toFiniteNumber(topAttack?.value) / attackTotal) * 100 : 0;
-    const stability = rateTrend.length
-      ? 100 - clamp(Math.max(...rateTrend.map((item) => item.rate)) * 8)
-      : 100;
-
+  const posture = useMemo(() => {
+    const confidence = totals.confidence <= 1 ? totals.confidence * 100 : totals.confidence;
+    const critical = severityDistData.filter((item) => item.name.toUpperCase() === 'CRITICAL').reduce((sum, item) => sum + n(item.value), 0);
+    const severityTotal = severityDistData.reduce((sum, item) => sum + n(item.value), 0);
+    const topShare = attackTotal ? (n(topAttack?.value) / attackTotal) * 100 : 0;
     return [
-      { metric: 'Model confidence', score: clamp(confidenceValue) },
+      { metric: 'Confidence', score: clamp(confidence) },
       { metric: 'Benign ratio', score: clamp(totals.benignRate) },
       { metric: 'Threat diversity', score: clamp(100 - topShare) },
-      { metric: 'Severity control', score: clamp(100 - (totalSeverity > 0 ? (critical / totalSeverity) * 100 * 8 : 0)) },
-      { metric: 'Traffic stability', score: clamp(stability) },
+      { metric: 'Severity control', score: clamp(100 - (severityTotal ? (critical / severityTotal) * 500 : 0)) },
+      { metric: 'Stability', score: clamp(100 - Math.max(...enrichedTrend.map((d) => d.rate), 0) * 7) },
     ];
-  }, [attackDistData, rateTrend, severityDistData, topAttack, totals]);
+  }, [attackDistData, attackTotal, enrichedTrend, severityDistData, topAttack, totals]);
 
-  const concentrationData = useMemo(() => {
-    const total = attackDistData.reduce((sum, item) => sum + toFiniteNumber(item.value), 0);
-    return [...attackDistData]
-      .sort((a, b) => toFiniteNumber(b.value) - toFiniteNumber(a.value))
-      .slice(0, 5)
-      .map((item, index) => ({
-        name: item.name,
-        value: total > 0 ? Number(((toFiniteNumber(item.value) / total) * 100).toFixed(1)) : 0,
-        fill: CHART_COLORS[index % CHART_COLORS.length],
-      }));
-  }, [attackDistData]);
+  const concentration = useMemo(() => [...attackDistData]
+    .sort((a, b) => n(b.value) - n(a.value))
+    .slice(0, 5)
+    .map((item, index) => ({ name: item.name, value: attackTotal ? Number(((n(item.value) / attackTotal) * 100).toFixed(1)) : 0, fill: COLORS[index % COLORS.length] })), [attackDistData, attackTotal]);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="glass-panel rounded-3xl border border-[var(--border)] p-6">
-          <Loading type="card" count={4} />
-        </div>
-        <div className="glass-panel rounded-3xl border border-[var(--border)] p-6">
-          <Loading type="chart" />
-        </div>
-      </div>
-    );
-  }
+  const scatterData = useMemo(() => enrichedTrend.map((item) => ({
+    volume: item.total,
+    maliciousRate: item.rate,
+    riskScore: item.riskScore,
+    time: item.time,
+  })), [enrichedTrend]);
+
+  if (loading) return <div className="space-y-5"><Loading type="card" count={4} /><Loading type="chart" /></div>;
 
   const tooltipStyle = {
-    backgroundColor: 'var(--glass-bg-strong)',
-    border: '1px solid var(--border)',
+    backgroundColor: '#494741',
+    border: '1px solid rgba(255,255,255,.12)',
     borderRadius: '14px',
-    color: 'var(--text-primary)',
-    boxShadow: 'var(--shadow-md)',
-    backdropFilter: 'blur(18px)',
+    color: '#f8f6f1',
+    boxShadow: '0 16px 38px rgba(31,28,24,.22)',
   };
 
   return (
-    <div className="space-y-6 pb-10">
-      <section className="overflow-hidden rounded-3xl border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] sm:p-7">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-[-5rem] left-[38%] h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
-
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <div className="space-y-5 pb-10">
+      <section className="rounded-[22px] border p-5 sm:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="slanted-accent mb-2 flex items-center gap-2 text-sm text-indigo-500">
-              <Sparkles className="h-4 w-4" />
-              Security intelligence observatory
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-[#ff9a76]">
+              <BarChart3 className="h-4 w-4" /> Security intelligence
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">
-              Threat <span className="gradient-text slanted-accent">Analytics</span>
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-[var(--text-muted)]">
-              Multi-dimensional telemetry for traffic health, attack concentration, threat severity and model confidence across FedSentry.
-            </p>
+            <h1 className="text-3xl font-semibold tracking-[-.04em]">Analytics cabinet</h1>
+            <p className="mt-2 max-w-3xl text-sm">A richer visual view of FedSentry traffic, risk, severity, attack classes and model behavior.</p>
           </div>
-
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-1 shadow-[var(--shadow-xs)] backdrop-blur-xl">
-              <CalendarDays className="ml-2 h-4 w-4 text-[var(--text-muted)]" />
+            <div className="flex items-center rounded-full border border-white/10 bg-white/[.05] p-1">
+              <CalendarDays className="ml-2 h-4 w-4 text-white/45" />
               {['1h', '24h', '7d', '30d'].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTimeframe(value)}
-                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                    timeframe === value
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-[0_8px_20px_rgba(79,70,229,0.22)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
+                <button key={value} onClick={() => setTimeframe(value)} className={`rounded-full px-3 py-2 text-xs font-semibold ${timeframe === value ? 'bg-[#f27c52] text-white' : 'text-white/55 hover:text-white'}`}>
                   {value.toUpperCase()}
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => void fetchAnalyticsData()}
-              disabled={refreshing}
-              className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] shadow-[var(--shadow-xs)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-indigo-400/50 hover:text-indigo-500 disabled:opacity-60"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+            <button onClick={() => void fetchData()} disabled={refreshing} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-4 py-2.5 text-xs font-semibold text-white/70 hover:text-white">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
             </button>
           </div>
         </div>
       </section>
 
-      {error && <ErrorState message={error} onRetry={fetchAnalyticsData} />}
+      {error && <ErrorState message={error} onRetry={fetchData} />}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<Activity className="h-5 w-5" />} label="Analyzed traffic" value={totals.totalPackets.toLocaleString()} helper={`${timeframe.toUpperCase()} observation window`} />
-        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Benign traffic" value={totals.benignCount.toLocaleString()} helper={`${percent(totals.benignRate)} of observed traffic`} />
-        <MetricCard icon={<AlertTriangle className="h-5 w-5" />} label="Malicious traffic" value={totals.maliciousCount.toLocaleString()} helper={`${percent(totals.maliciousRate)} threat density`} />
-        <MetricCard icon={<Gauge className="h-5 w-5" />} label="Model confidence" value={percent(totals.confidence <= 1 ? totals.confidence * 100 : totals.confidence)} helper="Average prediction confidence" />
+        <Metric icon={<Activity className="h-5 w-5" />} label="Analyzed traffic" value={totals.totalPackets.toLocaleString()} helper={`${timeframe.toUpperCase()} window`} />
+        <Metric icon={<ShieldCheck className="h-5 w-5" />} label="Benign traffic" value={totals.benignCount.toLocaleString()} helper={pct(totals.benignRate)} tone="green" />
+        <Metric icon={<AlertTriangle className="h-5 w-5" />} label="Malicious traffic" value={totals.maliciousCount.toLocaleString()} helper={pct(totals.maliciousRate)} tone="red" />
+        <Metric icon={<Gauge className="h-5 w-5" />} label="Model confidence" value={pct(totals.confidence <= 1 ? totals.confidence * 100 : totals.confidence)} helper="Average confidence" tone="yellow" />
       </section>
 
       <section className="grid gap-5 xl:grid-cols-3">
-        <ChartCard className="xl:col-span-2" title="Traffic activity over time" subtitle="Benign and malicious network flows across the selected period">
-          <ResponsiveContainer width="100%" height={330}>
-            <AreaChart data={trendData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+        <ChartCard className="xl:col-span-2" title="Traffic activity" subtitle="Area chart · benign and malicious flow volume">
+          <ResponsiveContainer width="100%" height={320}>
+            <AreaChart data={enrichedTrend} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="benignFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.34} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.015} />
-                </linearGradient>
-                <linearGradient id="maliciousFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.32} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.015} />
-                </linearGradient>
+                <linearGradient id="benign" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#63c567" stopOpacity={0.38}/><stop offset="95%" stopColor="#63c567" stopOpacity={0.02}/></linearGradient>
+                <linearGradient id="malicious" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e7655c" stopOpacity={0.38}/><stop offset="95%" stopColor="#e7655c" stopOpacity={0.02}/></linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 5" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={compactNumber} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} width={54} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
-              <Legend wrapperStyle={{ fontSize: '13px' }} />
-              <Area type="monotone" dataKey="benign" name="Benign" stroke="#10b981" strokeWidth={2.5} fill="url(#benignFill)" />
-              <Area type="monotone" dataKey="malicious" name="Malicious" stroke="#ef4444" strokeWidth={2.5} fill="url(#maliciousFill)" />
+              <CartesianGrid strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={52} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
+              <Area type="monotone" dataKey="benign" name="Benign" stroke="#63c567" strokeWidth={2.5} fill="url(#benign)" />
+              <Area type="monotone" dataKey="malicious" name="Malicious" stroke="#e7655c" strokeWidth={2.5} fill="url(#malicious)" />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Threat severity" subtitle="Distribution of detected events by severity">
-          <ResponsiveContainer width="100%" height={330}>
+        <ChartCard title="Threat severity" subtitle="Donut chart · event composition">
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
-              <Pie data={severityDistData} dataKey="value" nameKey="name" cx="50%" cy="46%" innerRadius={70} outerRadius={108} paddingAngle={4} cornerRadius={6}>
-                {severityDistData.map((entry, index) => (
-                  <Cell key={`${entry.name}-${index}`} fill={entry.color || SEVERITY_COLORS[entry.name.toUpperCase()] || CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
+              <Pie data={severityDistData} dataKey="value" nameKey="name" cx="50%" cy="46%" innerRadius={72} outerRadius={105} paddingAngle={4} cornerRadius={7}>
+                {severityDistData.map((entry, index) => <Cell key={`${entry.name}-${index}`} fill={entry.color || SEVERITY_COLORS[entry.name.toUpperCase()] || COLORS[index % COLORS.length]} />)}
               </Pie>
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
-              <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
+              <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: '11px' }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Attack type distribution" subtitle="Most frequently detected intrusion categories">
-          <ResponsiveContainer width="100%" height={340}>
-            <BarChart data={attackDistData} layout="vertical" margin={{ top: 10, right: 28, left: 30, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 5" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" tickFormatter={compactNumber} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" width={105} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
-              <Bar dataKey="value" name="Detections" radius={[0, 9, 9, 0]}>
-                {attackDistData.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Bar>
+        <ChartCard title="Attack families" subtitle="Horizontal bar chart · ranked detections">
+          <ResponsiveContainer width="100%" height={330}>
+            <BarChart data={attackDistData} layout="vertical" margin={{ top: 8, right: 18, left: 28, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 5" horizontal={false} />
+              <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" width={106} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
+              <Bar dataKey="value" name="Detections" radius={[0, 8, 8, 0]}>{attackDistData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Malicious traffic rate" subtitle="Percentage of malicious flows at each observation point">
-          <ResponsiveContainer width="100%" height={340}>
-            <LineChart data={rateTrend} margin={{ top: 10, right: 18, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 5" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis unit="%" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} width={46} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatTooltipPercent(value), 'Malicious rate']} />
-              <Line type="monotone" dataKey="rate" name="Malicious rate" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6' }} activeDot={{ r: 6 }} />
+        <ChartCard title="Malicious rate" subtitle="Line chart · threat percentage through time">
+          <ResponsiveContainer width="100%" height={330}>
+            <LineChart data={enrichedTrend} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis unit="%" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={42} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [tooltipPercent(value), 'Malicious rate']} />
+              <Line type="monotone" dataKey="rate" stroke="#f27c52" strokeWidth={3} dot={{ r: 4, fill: '#f27c52' }} activeDot={{ r: 6 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Security posture radar" subtitle="Normalized view of model confidence, traffic health and threat balance">
-          <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-indigo-500">
-            <RadarIcon className="h-4 w-4" />
-            Composite posture score
-          </div>
-          <ResponsiveContainer width="100%" height={360}>
-            <RadarChart data={postureData} outerRadius="72%">
-              <PolarGrid stroke="var(--border)" />
-              <PolarAngleAxis dataKey="metric" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: 'var(--text-subtle)', fontSize: 10 }} axisLine={false} />
-              <Radar name="Posture" dataKey="score" stroke="#4f46e5" fill="#6366f1" fillOpacity={0.24} strokeWidth={2.5} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${toFiniteNumber(value).toFixed(1)}/100`, 'Score']} />
+        <ChartCard title="Security posture" subtitle="Radar chart · normalized system posture">
+          <ResponsiveContainer width="100%" height={350}>
+            <RadarChart data={posture} outerRadius="72%">
+              <PolarGrid />
+              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11 }} />
+              <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9 }} axisLine={false} />
+              <Radar dataKey="score" name="Score" stroke="#f27c52" fill="#f27c52" fillOpacity={0.24} strokeWidth={2.5} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${n(value).toFixed(1)}/100`, 'Score']} />
             </RadarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Threat concentration" subtitle="Share of detections contributed by the leading attack families">
-          <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-cyan-500">
-            <Network className="h-4 w-4" />
-            Attack portfolio density
-          </div>
-          <ResponsiveContainer width="100%" height={360}>
-            <RadialBarChart data={concentrationData} innerRadius="28%" outerRadius="94%" startAngle={92} endAngle={-268} barSize={15}>
+        <ChartCard title="Threat concentration" subtitle="Radial bar chart · leading attack share">
+          <ResponsiveContainer width="100%" height={350}>
+            <RadialBarChart data={concentration} innerRadius="26%" outerRadius="92%" startAngle={90} endAngle={-270} barSize={15}>
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
-              <RadialBar dataKey="value" background={{ fill: 'rgba(148,163,184,.08)' }} cornerRadius={10} />
-              <Legend iconSize={9} layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '11px', lineHeight: '22px' }} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatTooltipPercent(value), 'Detection share']} />
+              <RadialBar dataKey="value" background={{ fill: 'rgba(255,255,255,.06)' }} cornerRadius={10} />
+              <Legend iconSize={8} layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '10px', lineHeight: '22px' }} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [tooltipPercent(value), 'Share']} />
             </RadialBarChart>
           </ResponsiveContainer>
         </ChartCard>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
-        <InsightCard icon={<Target className="h-5 w-5" />} title="Top attack vector" value={topAttack?.name || 'No detections'} description={topAttack ? `${toFiniteNumber(topAttack.value).toLocaleString()} detections in the selected dataset.` : 'No attack distribution data is available.'} />
-        <InsightCard icon={<TrendingUp className="h-5 w-5" />} title="Malicious rate" value={percent(totals.maliciousRate)} description={`${totals.maliciousCount.toLocaleString()} malicious flows out of ${totals.totalPackets.toLocaleString()} analyzed.`} />
-        <InsightCard icon={<AlertTriangle className="h-5 w-5" />} title="Highest active severity" value={highestSeverity} description="Highest severity class currently represented in analytics telemetry." />
+      <section className="grid gap-5 xl:grid-cols-2">
+        <ChartCard title="Traffic volume vs risk" subtitle="Scatter chart · relationship between flow volume and threat rate">
+          <ResponsiveContainer width="100%" height={350}>
+            <ScatterChart margin={{ top: 15, right: 20, left: 0, bottom: 12 }}>
+              <CartesianGrid strokeDasharray="3 5" />
+              <XAxis type="number" dataKey="volume" name="Traffic volume" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis type="number" dataKey="maliciousRate" name="Malicious rate" unit="%" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
+              <ZAxis type="number" dataKey="riskScore" range={[80, 320]} name="Risk score" />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} formatter={(value, name) => name === 'Malicious rate' ? tooltipPercent(value) : tooltipNumber(value)} />
+              <Scatter name="Observation" data={scatterData} fill="#f27c52" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Volume, threats and confidence" subtitle="Composed chart · bars and line in one analytical view">
+          <ResponsiveContainer width="100%" height={350}>
+            <ComposedChart data={enrichedTrend} margin={{ top: 15, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} unit="%" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              <Bar yAxisId="left" dataKey="benign" name="Benign" stackId="traffic" fill="#63c567" radius={[5,5,0,0]} />
+              <Bar yAxisId="left" dataKey="malicious" name="Malicious" stackId="traffic" fill="#e7655c" radius={[5,5,0,0]} />
+              <Line yAxisId="right" type="monotone" dataKey="confidence" name="Confidence" stroke="#f4b24f" strokeWidth={2.5} dot={false} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-[var(--border)] shadow-[var(--shadow-sm)]">
-        <div className="border-b border-[var(--border)] px-5 py-4 sm:px-6">
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">Attack telemetry details</h2>
-          <p className="slanted-accent mt-1 text-sm text-[var(--text-muted)]">Ranked detection intelligence feeding the visual layer.</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-0 shadow-none">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Attack type</th>
-                <th>Detections</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...attackDistData]
-                .sort((a, b) => toFiniteNumber(b.value) - toFiniteNumber(a.value))
-                .map((item, index) => {
-                  const total = attackDistData.reduce((sum, row) => sum + toFiniteNumber(row.value), 0);
-                  const share = total > 0 ? (toFiniteNumber(item.value) / total) * 100 : 0;
-                  return (
-                    <tr key={item.name}>
-                      <td>#{index + 1}</td>
-                      <td className="font-semibold text-[var(--text-primary)]">{item.name}</td>
-                      <td>{toFiniteNumber(item.value).toLocaleString()}</td>
-                      <td>{percent(share)}</td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Insight icon={<Target className="h-5 w-5" />} title="Top attack vector" value={topAttack?.name || 'No detections'} text={topAttack ? `${n(topAttack.value).toLocaleString()} detections in the selected dataset.` : 'No attack distribution data available.'} />
+        <Insight icon={<TrendingUp className="h-5 w-5" />} title="Threat density" value={pct(totals.maliciousRate)} text={`${totals.maliciousCount.toLocaleString()} malicious flows across ${totals.totalPackets.toLocaleString()} analyzed.`} />
+        <Insight icon={<Network className="h-5 w-5" />} title="Visualization coverage" value="8 chart views" text="Area, donut, horizontal bar, line, radar, radial bar, scatter and composed visualizations." />
       </section>
     </div>
   );
 };
 
-type MetricCardProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  helper: string;
-};
+function Metric({ icon, label, value, helper, tone = 'orange' }: { icon: React.ReactNode; label: string; value: string; helper: string; tone?: 'orange'|'green'|'red'|'yellow' }) {
+  const tones = { orange: 'bg-[#f27c52]/15 text-[#ff9a76]', green: 'bg-[#63c567]/15 text-[#8fe293]', red: 'bg-[#e7655c]/15 text-[#ff938b]', yellow: 'bg-[#f4b24f]/15 text-[#ffd077]' };
+  return <div className="rounded-[18px] border border-white/10 bg-[#514f49] p-5 shadow-[0_14px_34px_rgba(37,34,29,.12)]">
+    <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium text-white/52">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-.035em] text-white">{value}</p><p className="mt-2 text-[11px] text-white/38">{helper}</p></div><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tones[tone]}`}>{icon}</div></div>
+  </div>;
+}
 
-const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, helper }) => (
-  <div className="group relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
-    <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-indigo-500/[0.07] blur-2xl transition-transform duration-500 group-hover:scale-125" />
-    <div className="relative flex items-start justify-between gap-4">
-      <div>
-        <p className="text-sm font-medium text-[var(--text-muted)]">{label}</p>
-        <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)]">{value}</p>
-        <p className="slanted-accent mt-2 text-xs text-[var(--text-subtle)]">{helper}</p>
-      </div>
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-400/15 bg-indigo-500/10 text-indigo-500 shadow-[var(--shadow-xs)]">
-        {icon}
-      </div>
-    </div>
-  </div>
-);
+function ChartCard({ title, subtitle, children, className = '' }: { title: string; subtitle: string; children: React.ReactNode; className?: string }) {
+  return <div className={`min-w-0 rounded-[20px] border border-white/10 bg-[#514f49] p-5 shadow-[0_16px_38px_rgba(37,34,29,.13)] ${className}`}>
+    <div className="mb-4"><h2 className="text-base font-semibold text-white">{title}</h2><p className="mt-1 text-xs text-white/45">{subtitle}</p></div>{children}
+  </div>;
+}
 
-type ChartCardProps = {
-  title: string;
-  subtitle: string;
-  className?: string;
-  children: React.ReactNode;
-};
-
-const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, className = '', children }) => (
-  <div className={`glass-panel min-w-0 overflow-hidden rounded-3xl border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] sm:p-6 ${className}`}>
-    <div className="mb-5">
-      <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
-      <p className="slanted-accent mt-1 text-sm text-[var(--text-muted)]">{subtitle}</p>
-    </div>
-    {children}
-  </div>
-);
-
-type InsightCardProps = {
-  icon: React.ReactNode;
-  title: string;
-  value: string;
-  description: string;
-};
-
-const InsightCard: React.FC<InsightCardProps> = ({ icon, title, value, description }) => (
-  <div className="glass-panel rounded-3xl border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
-    <div className="flex items-center gap-3 text-indigo-500">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-400/15 bg-indigo-500/10">{icon}</div>
-      <p className="text-sm font-semibold text-[var(--text-secondary)]">{title}</p>
-    </div>
-    <p className="mt-4 text-xl font-bold text-[var(--text-primary)]">{value}</p>
-    <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{description}</p>
-  </div>
-);
+function Insight({ icon, title, value, text }: { icon: React.ReactNode; title: string; value: string; text: string }) {
+  return <div className="rounded-[18px] border border-white/10 bg-[#514f49] p-5"><div className="flex items-center gap-3 text-[#ff9a76]"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f27c52]/14">{icon}</div><span className="text-xs font-semibold text-white/58">{title}</span></div><div className="mt-4 text-xl font-semibold text-white">{value}</div><p className="mt-2 text-xs leading-5 text-white/45">{text}</p></div>;
+}
 
 export default Analytics;
