@@ -3,15 +3,15 @@
 :root {
   --hz-bg: #e9e4dc;
   --hz-bg-deep: #ddd6cb;
-  --hz-shell: #ffffff;
+  --hz-shell: #eee8df;
   --hz-panel: #f7f3ed;
-  --hz-panel-soft: #eee8df;
-  --hz-panel-dark: #e1dbd1;
-  --hz-border: rgba(74, 68, 60, .14);
-  --hz-border-soft: rgba(74, 68, 60, .09);
+  --hz-panel-soft: #e5ded4;
+  --hz-panel-dark: #d9d1c6;
+  --hz-border: rgba(74, 68, 60, .16);
+  --hz-border-soft: rgba(74, 68, 60, .10);
   --hz-text: #2f2c28;
-  --hz-muted: #706a62;
-  --hz-subtle: #948d84;
+  --hz-muted: #625c55;
+  --hz-subtle: #847d75;
   --hz-orange: #f27c52;
   --hz-orange-hover: #e96b42;
   --hz-green: #4da861;
@@ -20,7 +20,7 @@
   --hz-blue: #5d8f98;
   --hz-input-bg: #fffdf9;
   --hz-input-text: #2f2c28;
-  --hz-table-head: #ece7df;
+  --hz-table-head: #e8e1d8;
   --hz-shadow: 0 16px 40px rgba(63, 57, 49, .10);
 }
 
@@ -28,15 +28,15 @@ html.dark,
 html[data-theme='dark'] {
   --hz-bg: #34322e;
   --hz-bg-deep: #2c2a27;
-  --hz-shell: #4a4843;
+  --hz-shell: #403e39;
   --hz-panel: #53504a;
-  --hz-panel-soft: #5c5952;
-  --hz-panel-dark: #403e39;
+  --hz-panel-soft: #4a4741;
+  --hz-panel-dark: #393732;
   --hz-border: rgba(255,255,255,.12);
   --hz-border-soft: rgba(255,255,255,.075);
   --hz-text: #f8f6f1;
-  --hz-muted: rgba(248,246,241,.68);
-  --hz-subtle: rgba(248,246,241,.46);
+  --hz-muted: rgba(248,246,241,.74);
+  --hz-subtle: rgba(248,246,241,.50);
   --hz-input-bg: #f2eee7;
   --hz-input-text: #302d28;
   --hz-table-head: rgba(255,255,255,.055);
@@ -157,7 +157,6 @@ main [class*='text-[var(--text-secondary)]'],
 main [class*='text-[var(--text-muted)]'],
 main [class*='text-[var(--text-subtle)]'] { color: var(--hz-muted) !important; }
 
-/* Fix washed-out light cards and white-on-white content. */
 html:not(.dark) main [class*='bg-white'],
 html[data-theme='light'] main [class*='bg-white'],
 html:not(.dark) .sentinel-root [class*='bg-white'],
@@ -199,192 +198,120 @@ html[data-theme='light'] main [class*='text-slate-300'] {
   display: none !important;
 }
 
+/* Top navigation follows the same warm neutral / charcoal system as the app. */
 header {
   background: var(--hz-shell) !important;
   border-color: var(--hz-border) !important;
+  color: var(--hz-text) !important;
   box-shadow: 0 8px 24px rgba(28,26,23,.10) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
 }
 header nav a,
-header button { color: var(--hz-muted) !important; }
+header button {
+  color: var(--hz-muted) !important;
+}
 header nav a:hover,
 header button:hover {
   background: var(--hz-panel-soft) !important;
   color: var(--hz-text) !important;
 }
-header nav a[aria-current='page'] {
+header nav a[aria-current='page'],
+header .top-nav-active {
   background: var(--hz-orange) !important;
-  color: white !important;
+  color: #fffaf6 !important;
+  border-color: transparent !important;
+}
+header nav a[aria-current='page'] *,
+header .top-nav-active * {
+  color: #fffaf6 !important;
 }
 html.dark header,
 html[data-theme='dark'] header {
-  background: rgba(68,66,61,.98) !important;
-  border-color: rgba(255,255,255,.09) !important;
+  background: #403e39 !important;
+  border-color: rgba(255,255,255,.10) !important;
+  color: #f8f6f1 !important;
 }
 html.dark header nav a,
 html.dark header button,
 html[data-theme='dark'] header nav a,
-html[data-theme='dark'] header button { color: rgba(255,255,255,.72) !important; }
+html[data-theme='dark'] header button {
+  color: rgba(248,246,241,.74) !important;
+}
+html.dark header nav a:hover,
+html.dark header button:hover,
+html[data-theme='dark'] header nav a:hover,
+html[data-theme='dark'] header button:hover {
+  background: #4a4741 !important;
+  color: #f8f6f1 !important;
+}
+html.dark header nav a[aria-current='page'],
+html.dark header .top-nav-active,
+html[data-theme='dark'] header nav a[aria-current='page'],
+html[data-theme='dark'] header .top-nav-active {
+  background: var(--hz-orange) !important;
+  color: #fffaf6 !important;
+}
 
+/* Sidebar uses identical contrast logic. Active items are never pale-on-pale. */
 aside.sidebar-root {
   background: var(--hz-shell) !important;
   border-color: var(--hz-border) !important;
+  color: var(--hz-text) !important;
   box-shadow: 10px 0 32px rgba(29,27,24,.10) !important;
 }
-aside.sidebar-root nav a { color: var(--hz-muted) !important; }
+aside.sidebar-root nav a {
+  color: var(--hz-muted) !important;
+}
 aside.sidebar-root nav a:hover {
   background: var(--hz-panel-soft) !important;
   color: var(--hz-text) !important;
 }
-aside.sidebar-root nav a[aria-current='page'] {
-  background: rgba(242,124,82,.14) !important;
-  color: #c9552f !important;
-  border-color: rgba(242,124,82,.18) !important;
+aside.sidebar-root nav a[aria-current='page'],
+aside.sidebar-root .sidebar-nav-active {
+  background: var(--hz-orange) !important;
+  color: #fffaf6 !important;
+  border-color: transparent !important;
+}
+aside.sidebar-root nav a[aria-current='page'] *,
+aside.sidebar-root .sidebar-nav-active * {
+  color: #fffaf6 !important;
 }
 html.dark aside.sidebar-root,
 html[data-theme='dark'] aside.sidebar-root {
-  background: rgba(70,68,63,.985) !important;
-  border-color: rgba(255,255,255,.09) !important;
+  background: #403e39 !important;
+  border-color: rgba(255,255,255,.10) !important;
+  color: #f8f6f1 !important;
 }
 html.dark aside.sidebar-root nav a,
-html[data-theme='dark'] aside.sidebar-root nav a { color: rgba(255,255,255,.62) !important; }
+html[data-theme='dark'] aside.sidebar-root nav a {
+  color: rgba(248,246,241,.70) !important;
+}
 html.dark aside.sidebar-root nav a:hover,
 html[data-theme='dark'] aside.sidebar-root nav a:hover {
-  background: rgba(255,255,255,.065) !important;
-  color: white !important;
+  background: #4a4741 !important;
+  color: #f8f6f1 !important;
 }
 html.dark aside.sidebar-root nav a[aria-current='page'],
-html[data-theme='dark'] aside.sidebar-root nav a[aria-current='page'] {
-  color: #ffad91 !important;
-}
-
-button[class*='bg-blue-600'],
-button[class*='bg-violet-600'],
-a[class*='bg-blue-600'],
-a[class*='bg-violet-600'] {
+html.dark aside.sidebar-root .sidebar-nav-active,
+html[data-theme='dark'] aside.sidebar-root nav a[aria-current='page'],
+html[data-theme='dark'] aside.sidebar-root .sidebar-nav-active {
   background: var(--hz-orange) !important;
-  color: white !important;
-  box-shadow: none !important;
-}
-button[class*='bg-blue-600']:hover,
-button[class*='bg-violet-600']:hover { background: var(--hz-orange-hover) !important; }
-
-input, textarea, select {
-  background: var(--hz-input-bg) !important;
-  border: 1px solid var(--hz-border) !important;
-  color: var(--hz-input-text) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.82) !important;
-}
-input::placeholder,
-textarea::placeholder { color: #958e84 !important; }
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: rgba(242,124,82,.68) !important;
-  box-shadow: 0 0 0 3px rgba(242,124,82,.14) !important;
-}
-textarea { border-radius: 16px !important; }
-.auth-input {
-  height: 48px;
-  width: 100%;
-  border-radius: 14px !important;
-  padding: 0 44px !important;
-  font-size: 13px;
-  font-weight: 600;
-  outline: none;
+  color: #fffaf6 !important;
 }
 
-.login-root,
-.register-root {
-  min-height: calc(100vh - 64px) !important;
-  background: transparent !important;
-}
-.login-root main section,
-.register-root main section,
-.login-root section,
-.register-root section {
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-}
-.login-root label,
-.register-root label { color: var(--hz-muted) !important; }
-
-/* Tables and empty states */
-table {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  color: var(--hz-text) !important;
-}
-thead { background: var(--hz-table-head) !important; }
-th {
-  color: var(--hz-muted) !important;
-  border-bottom: 1px solid var(--hz-border) !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
-}
-td {
-  color: var(--hz-text) !important;
-  border-bottom: 1px solid var(--hz-border-soft) !important;
-}
-tbody tr:hover { background: rgba(242,124,82,.055) !important; }
-
-.badge-low,
-.badge-success {
-  background: rgba(77,168,97,.14) !important;
-  color: #2f7f44 !important;
-}
-.badge-medium {
-  background: rgba(216,154,57,.14) !important;
-  color: #9e6c18 !important;
-}
-.badge-high {
-  background: rgba(207,95,87,.14) !important;
-  color: #a9433d !important;
-}
-html.dark .badge-low,
-html.dark .badge-success,
-html[data-theme='dark'] .badge-low,
-html[data-theme='dark'] .badge-success { color: #9be49e !important; }
-html.dark .badge-medium,
-html[data-theme='dark'] .badge-medium { color: #ffd27d !important; }
-html.dark .badge-high,
-html[data-theme='dark'] .badge-high { color: #ff9b94 !important; }
-
-.recharts-cartesian-grid line { stroke: var(--hz-border) !important; }
-.recharts-text,
-.recharts-legend-item-text {
-  fill: var(--hz-muted) !important;
-  color: var(--hz-muted) !important;
-  font-family: 'DM Sans', sans-serif !important;
-}
-.recharts-default-tooltip {
-  background: var(--hz-shell) !important;
-  color: var(--hz-text) !important;
-  border: 1px solid var(--hz-border) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 16px 38px rgba(31,28,24,.18) !important;
-}
-
-/* Chatbot contrast fixes */
-main [class*='bg-white/'],
-main [class*='bg-slate-50'],
-main [class*='bg-gray-50'] {
-  background: var(--hz-panel-soft) !important;
-  color: var(--hz-text) !important;
-}
-main button[class*='bg-white'],
-main a[class*='bg-white'] {
+/* Keep navbar/sidebar utility surfaces consistent with their surrounding shell. */
+header [style*='var(--surface-soft)'],
+aside.sidebar-root [style*='var(--surface-soft)'] {
   background: var(--hz-panel-soft) !important;
   color: var(--hz-text) !important;
   border-color: var(--hz-border) !important;
 }
-
-.security-grid,
-.ambient-glow-blue,
-.ambient-glow-cyan,
-.ambient-glow-indigo {
-  opacity: 0 !important;
-  background: none !important;
+html.dark header [style*='var(--surface-soft)'],
+html.dark aside.sidebar-root [style*='var(--surface-soft)'],
+html[data-theme='dark'] header [style*='var(--surface-soft)'],
+html[data-theme='dark'] aside.sidebar-root [style*='var(--surface-soft)'] {
+  background: #4a4741 !important;
+  color: #f8f6f1 !important;
+  border-color: rgba(255,255,255,.10) !important;
 }
