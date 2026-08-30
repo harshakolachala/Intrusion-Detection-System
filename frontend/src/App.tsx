@@ -18,6 +18,7 @@ import Incidents from "./pages/Incidents";
 import PredictionHistory from "./pages/PredictionHistory";
 import AuditLogs from "./pages/AuditLogs";
 import Chatbot from "./pages/Chatbot";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const SINGLE_NAV_STYLES = `
@@ -59,6 +60,7 @@ const AppRoutes: React.FC = () => (
       <Route path="/prediction-history" element={<ProtectedPage><PredictionHistory /></ProtectedPage>} />
       <Route path="/audit" element={<ProtectedPage><AuditLogs /></ProtectedPage>} />
       <Route path="/chatbot" element={<ProtectedPage><Chatbot /></ProtectedPage>} />
+      <Route path="/reports" element={<ProtectedPage><Reports /></ProtectedPage>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>
