@@ -1,189 +1,74 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeModeProvider } from "./context/ThemeModeContext";
-
 import ProtectedRoute from "./components/ProtectedRoute";
+import GlobalNavbar from "./components/GlobalNavbar";
 import Layout from "./components/Layout";
 
-// Public & Auth Pages
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-
-// SOC Console Core Pages
 import { Dashboard } from "./pages/Dashboard";
 import Predict from "./pages/Predict";
 import Analytics from "./pages/Analytics";
-
-// Management & Intelligence Pages
 import Alerts from "./pages/Alerts";
 import Incidents from "./pages/Incidents";
 import PredictionHistory from "./pages/PredictionHistory";
 import AuditLogs from "./pages/AuditLogs";
 import Chatbot from "./pages/Chatbot";
-
-// Fallback Page
 import NotFound from "./pages/NotFound";
+
+const SINGLE_NAV_STYLES = `
+  .sentinel-root > header,
+  .login-root > header,
+  .register-root > header {
+    display: none !important;
+  }
+`;
+
+const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
+const PublicOnlyPage = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+
+  return <>{children}</>;
+};
+
+const AppRoutes: React.FC = () => (
+  <>
+    <style>{SINGLE_NAV_STYLES}</style>
+    <GlobalNavbar />
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<PublicOnlyPage><Login /></PublicOnlyPage>} />
+      <Route path="/register" element={<PublicOnlyPage><Register /></PublicOnlyPage>} />
+      <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+      <Route path="/predict" element={<ProtectedPage><Predict /></ProtectedPage>} />
+      <Route path="/analytics" element={<ProtectedPage><Analytics /></ProtectedPage>} />
+      <Route path="/alerts" element={<ProtectedPage><Alerts /></ProtectedPage>} />
+      <Route path="/incidents" element={<ProtectedPage><Incidents /></ProtectedPage>} />
+      <Route path="/prediction-history" element={<ProtectedPage><PredictionHistory /></ProtectedPage>} />
+      <Route path="/audit" element={<ProtectedPage><AuditLogs /></ProtectedPage>} />
+      <Route path="/chatbot" element={<ProtectedPage><Chatbot /></ProtectedPage>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </>
+);
 
 export const App: React.FC = () => {
   return (
     <ThemeModeProvider>
       <AuthProvider>
-        <Routes>
-          {/* =================================================
-              PUBLIC ENTERPRISE LANDING PAGE
-          ================================================= */}
-
-          <Route
-            path="/"
-            element={<LandingPage />}
-          />
-
-          {/* =================================================
-              AUTHENTICATION PORTAL
-          ================================================= */}
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
-
-          {/* =================================================
-              DASHBOARD
-          ================================================= */}
-
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              LIVE PREDICTION
-          ================================================= */}
-
-          <Route
-            path="/predict"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Predict />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              ANALYTICS
-          ================================================= */}
-
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Analytics />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              ALERT MANAGEMENT
-          ================================================= */}
-
-          <Route
-            path="/alerts"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Alerts />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              INCIDENT MANAGEMENT
-          ================================================= */}
-
-          <Route
-            path="/incidents"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Incidents />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              PREDICTION HISTORY
-          ================================================= */}
-
-          <Route
-            path="/prediction-history"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <PredictionHistory />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              AUDIT LOGS
-          ================================================= */}
-
-          <Route
-            path="/audit"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <AuditLogs />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              AI SECURITY ASSISTANT
-          ================================================= */}
-
-          <Route
-            path="/chatbot"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Chatbot />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =================================================
-              FALLBACK
-          ================================================= */}
-
-          <Route
-            path="*"
-            element={<NotFound />}
-          />
-        </Routes>
+        <AppRoutes />
       </AuthProvider>
     </ThemeModeProvider>
   );
