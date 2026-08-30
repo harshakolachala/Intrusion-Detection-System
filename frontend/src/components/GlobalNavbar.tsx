@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Activity, LogIn, LogOut, Moon, ShieldCheck, Sun, UserPlus } from "lucide-react";
+import { Bell, LogIn, LogOut, Moon, Search, ShieldCheck, Sun, UserPlus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useThemeMode } from "../context/ThemeModeContext";
 
@@ -8,116 +8,24 @@ export const GlobalNavbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { isDarkMode, toggleThemeMode } = useThemeMode();
-
-  const authenticatedLinks = [
-    ["/dashboard", "Dashboard"],
-    ["/predict", "Predict"],
-    ["/analytics", "Analytics"],
-    ["/alerts", "Alerts"],
-    ["/incidents", "Incidents"],
-    ["/chatbot", "AI Assistant"],
-  ] as const;
+  const links = [["/dashboard","Overview"],["/predict","Live Predict"],["/analytics","Analytics"],["/alerts","Alerts"],["/incidents","Incidents"],["/chatbot","AI Assistant"]] as const;
 
   return (
-    <header className={`sticky top-0 z-[100] border-b backdrop-blur-xl ${
-      isDarkMode
-        ? "border-slate-800 bg-slate-950/90 text-slate-100"
-        : "border-slate-200 bg-white/90 text-slate-900"
-    }`}>
-      <div className="mx-auto flex h-[72px] w-full max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <button
-          type="button"
-          onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
-          className="flex shrink-0 items-center gap-3"
-          aria-label="FedSentry home"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 via-pink-500 to-orange-400 text-white shadow-sm">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-          <span
-            className="text-[1.65rem] font-extrabold leading-none tracking-[-0.035em] sm:text-[1.8rem]"
-            style={{ fontFamily: '"Arial Black", "Inter", "Segoe UI", sans-serif' }}
-          >
-            FedSentry
-          </span>
+    <header className="sticky top-0 z-[100] text-white">
+      <div className="mx-auto flex h-[64px] w-full max-w-[1640px] items-center gap-5 px-5 lg:px-7">
+        <button onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")} className="flex shrink-0 items-center gap-2.5" aria-label="FedSentry home">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f36f45] text-white"><ShieldCheck className="h-4 w-4"/></span>
+          <span className="text-[17px] font-semibold tracking-[-.03em]">FedSentry</span>
         </button>
-
-        {isAuthenticated && (
-          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
-            {authenticatedLinks.map(([to, label]) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                    isActive
-                      ? "bg-violet-600 text-white"
-                      : isDarkMode
-                        ? "text-slate-400 hover:bg-slate-900 hover:text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-        )}
-
-        <div className="flex shrink-0 items-center gap-2">
-          {isAuthenticated && (
-            <div className="hidden items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold sm:flex">
-              <Activity className="h-3.5 w-3.5 text-emerald-500" />
-              <span>{user?.username || "Operator"}</span>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={toggleThemeMode}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
-              isDarkMode ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-white"
-            }`}
-            title={isDarkMode ? "Light mode" : "Dark mode"}
-          >
-            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-
-          {isAuthenticated ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="flex h-9 items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-bold text-white dark:bg-white dark:text-slate-900"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-bold ${
-                  isDarkMode ? "border-slate-700" : "border-slate-300"
-                }`}
-              >
-                <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">Login</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/register")}
-                className="flex h-9 items-center gap-2 rounded-lg bg-violet-600 px-3 text-sm font-bold text-white"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Register</span>
-              </button>
-            </>
-          )}
+        {isAuthenticated && <nav className="hidden items-center gap-1 lg:flex">{links.map(([to,label])=><NavLink key={to} to={to} className="px-3 py-2 text-[12px] font-medium">{label}</NavLink>)}</nav>}
+        <div className="ml-auto flex items-center gap-2">
+          {isAuthenticated && <div className="hidden h-9 min-w-[230px] items-center gap-2 rounded-full border border-white/10 bg-white/[.07] px-3 text-white/55 xl:flex"><Search className="h-3.5 w-3.5"/><span className="text-[11px]">Search security workspace</span></div>}
+          <button onClick={toggleThemeMode} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[.07] text-white/70">{isDarkMode?<Sun className="h-3.5 w-3.5"/>:<Moon className="h-3.5 w-3.5"/>}</button>
+          {isAuthenticated && <button className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[.07] text-white/70"><Bell className="h-3.5 w-3.5"/><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#f36f45]"/></button>}
+          {isAuthenticated ? <><div className="hidden items-center gap-2 pl-1 sm:flex"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d9d0c4] text-[11px] font-bold text-[#4b4842]">{(user?.username||'O').slice(0,1).toUpperCase()}</span><div className="hidden leading-tight xl:block"><div className="max-w-[120px] truncate text-[11px] font-medium">{user?.username||'Operator'}</div><div className="text-[9px] text-white/45">Security operator</div></div></div><button onClick={logout} className="flex h-9 w-9 items-center justify-center rounded-full text-white/55 hover:bg-white/[.07] hover:text-white" title="Logout"><LogOut className="h-3.5 w-3.5"/></button></> : <><button onClick={()=>navigate('/login')} className="flex items-center gap-1.5 px-3 py-2 text-xs text-white/75"><LogIn className="h-3.5 w-3.5"/>Login</button><button onClick={()=>navigate('/register')} className="flex items-center gap-1.5 bg-[#f36f45] px-4 py-2 text-xs font-semibold text-white"><UserPlus className="h-3.5 w-3.5"/>Register</button></>}
         </div>
       </div>
     </header>
   );
 };
-
 export default GlobalNavbar;

@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --hz-bg: #4b4944;
+  --hz-bg-deep: #403e39;
+  --hz-shell: #56534d;
+  --hz-panel: #595650;
+  --hz-panel-soft: #625f58;
+  --hz-panel-dark: #45433e;
+  --hz-border: rgba(255,255,255,.12);
+  --hz-border-soft: rgba(255,255,255,.075);
+  --hz-text: #f8f6f1;
+  --hz-muted: rgba(248,246,241,.64);
+  --hz-subtle: rgba(248,246,241,.43);
+  --hz-orange: #f27c52;
+  --hz-orange-hover: #e96b42;
+  --hz-green: #63c567;
+  --hz-yellow: #f4b24f;
+  --hz-red: #e7655c;
+  --hz-blue: #78aeb6;
+  --hz-shadow: 0 16px 40px rgba(27,25,22,.16);
+}
+
+html, body, #root {
+  min-height: 100%;
+  font-family: 'DM Sans', Inter, 'Segoe UI', sans-serif !important;
+  background: var(--hz-bg) !important;
+  color: var(--hz-text) !important;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(145deg, #514f49 0%, #494741 52%, #44423d 100%) !important;
+  background-size: 52px 52px, 52px 52px, auto !important;
+  background-attachment: fixed !important;
+}
+
+html.dark body,
+html[data-theme='dark'] body {
+  background:
+    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px),
+    linear-gradient(145deg, #3e3c38 0%, #373530 55%, #302f2b 100%) !important;
+  background-size: 52px 52px, 52px 52px, auto !important;
+}
+
+/* One visual language across every FedSentry screen. */
+.dashboard-root,
+.sidebar-root,
+.sentinel-root,
+.login-root,
+.register-root {
+  --accent: var(--hz-orange) !important;
+  --accent-light: #ffad91 !important;
+  --accent-dim: rgba(242,124,82,.15) !important;
+  --rust: var(--hz-orange) !important;
+  --amber: var(--hz-yellow) !important;
+  --grad: linear-gradient(135deg, var(--hz-orange), #ee744b) !important;
+}
+
+.login-root,
+.register-root,
+.sentinel-root,
+.dashboard-root {
+  background: transparent !important;
+  color: var(--hz-text) !important;
+}
+
+.grad-bg { background: var(--hz-orange) !important; }
+.grad-text,
+.gradient-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  color: var(--hz-orange) !important;
+}
+.font-display,
+.slanted-accent,
+.italic {
+  font-family: 'DM Sans', Inter, sans-serif !important;
+  font-style: normal !important;
+}
+
+/* Keep page canvas and layout visually continuous. */
+main,
+main > div,
+.login-root > main,
+.register-root > main,
+.sentinel-root {
+  background-color: transparent !important;
+}
+
+main { color: var(--hz-text); }
+main h1, main h2, main h3, main h4,
+.login-root h1, .login-root h2, .login-root h3,
+.register-root h1, .register-root h2, .register-root h3,
+.sentinel-root h1, .sentinel-root h2, .sentinel-root h3 {
+  color: var(--hz-text) !important;
+}
+main p,
+.login-root p,
+.register-root p,
+.sentinel-root p { color: var(--hz-muted) !important; }
+
+/* Shared panels for Dashboard, Predict, Alerts, Incidents, History, Audit, Chatbot and Analytics. */
+main section,
+main .card,
+main .premium-card,
+main [class*='rounded-2xl'][class*='border'],
+main [class*='rounded-3xl'][class*='border'],
+main [class*='rounded-[28px]'][class*='border'] {
+  background: linear-gradient(145deg, rgba(91,88,81,.96), rgba(77,75,69,.96)) !important;
+  border-color: var(--hz-border) !important;
+  box-shadow: var(--hz-shadow) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+main [class*='text-[var(--text-primary)]'] { color: var(--hz-text) !important; }
+main [class*='text-[var(--text-secondary)]'],
+main [class*='text-[var(--text-muted)]'],
+main [class*='text-[var(--text-subtle)]'] { color: var(--hz-muted) !important; }
+
+/* Landing page: remove the old white/violet canvas and keep the same FedSentry charcoal world. */
+.sentinel-root,
+.sentinel-root [class*='bg-white'],
+.sentinel-root [class*='bg-[#'],
+.sentinel-root section {
+  background-color: transparent !important;
+}
+.sentinel-root section > div[class*='rounded'],
+.sentinel-root [class*='card'] {
+  border-color: var(--hz-border) !important;
+}
+.sentinel-bg-layer,
+.sentinel-bg-blob,
+.login-bg-blob,
+.register-bg-blob,
+.login-bg-grain,
+.register-bg-grain {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* Navigation */
+header {
+  background: rgba(68,66,61,.98) !important;
+  border-color: rgba(255,255,255,.09) !important;
+  box-shadow: 0 8px 24px rgba(28,26,23,.15) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+header nav a {
+  color: rgba(255,255,255,.68) !important;
+  border-radius: 999px !important;
+}
+header nav a:hover {
+  background: rgba(255,255,255,.07) !important;
+  color: #fff !important;
+}
+header nav a[aria-current='page'] {
+  background: var(--hz-orange) !important;
+  color: white !important;
+}
+header button { color: rgba(255,255,255,.86); }
+
+aside.sidebar-root {
+  background: rgba(70,68,63,.985) !important;
+  border-color: rgba(255,255,255,.09) !important;
+  box-shadow: 10px 0 32px rgba(29,27,24,.14) !important;
+}
+aside.sidebar-root nav a { color: rgba(255,255,255,.60) !important; }
+aside.sidebar-root nav a:hover {
+  background: rgba(255,255,255,.065) !important;
+  color: white !important;
+}
+aside.sidebar-root nav a[aria-current='page'] {
+  background: rgba(242,124,82,.16) !important;
+  color: #ffad91 !important;
+  border-color: rgba(242,124,82,.18) !important;
+}
+
+/* Controls */
+button[class*='bg-blue-600'],
+button[class*='bg-violet-600'],
+a[class*='bg-blue-600'],
+a[class*='bg-violet-600'] {
+  background: var(--hz-orange) !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+button[class*='bg-blue-600']:hover,
+button[class*='bg-violet-600']:hover { background: var(--hz-orange-hover) !important; }
+
+input, textarea, select {
+  background: #f2eee7 !important;
+  border: 1px solid rgba(66,61,54,.14) !important;
+  color: #302d28 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88) !important;
+}
+input::placeholder,
+textarea::placeholder { color: #958e84 !important; }
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(242,124,82,.68) !important;
+  box-shadow: 0 0 0 3px rgba(242,124,82,.14) !important;
+}
+textarea { border-radius: 16px !important; }
+.auth-input {
+  height: 48px;
+  width: 100%;
+  border-radius: 14px !important;
+  padding: 0 44px !important;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+
+/* Auth pages: same full-page charcoal background, lighter cards for hierarchy. */
+.login-root,
+.register-root {
+  min-height: calc(100vh - 64px) !important;
+  background: transparent !important;
+}
+.login-root main section,
+.register-root main section,
+.login-root section,
+.register-root section {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.login-root main > div,
+.register-root main > div {
+  border-color: var(--hz-border) !important;
+}
+.login-root label,
+.register-root label { color: rgba(255,255,255,.50) !important; }
+
+/* Tables */
+table {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--hz-text) !important;
+}
+thead { background: transparent !important; }
+th {
+  color: rgba(255,255,255,.50) !important;
+  border-bottom: 1px solid rgba(255,255,255,.10) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+td {
+  color: rgba(255,255,255,.78) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+tbody tr:hover { background: rgba(255,255,255,.035) !important; }
+
+/* Status colours */
+.badge-low,
+.badge-success {
+  background: rgba(99,197,103,.16) !important;
+  color: #9be49e !important;
+}
+.badge-medium {
+  background: rgba(244,178,79,.16) !important;
+  color: #ffd27d !important;
+}
+.badge-high {
+  background: rgba(231,101,92,.16) !important;
+  color: #ff9b94 !important;
+}
+
+/* Charts */
+.recharts-cartesian-grid line { stroke: rgba(255,255,255,.10) !important; }
+.recharts-text,
+.recharts-legend-item-text {
+  fill: rgba(255,255,255,.62) !important;
+  color: rgba(255,255,255,.62) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+.recharts-default-tooltip {
+  background: rgba(69,67,62,.98) !important;
+  border: 1px solid rgba(255,255,255,.11) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 38px rgba(31,28,24,.22) !important;
+}
+
+.security-grid,
+.ambient-glow-blue,
+.ambient-glow-cyan,
+.ambient-glow-indigo {
+  opacity: 0 !important;
+  background: none !important;
+}
