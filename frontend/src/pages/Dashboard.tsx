@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Activity, AlertTriangle, Bot, CheckCircle2, RefreshCw, ShieldCheck } from 'lucide-react';
 import {
   Bar,
@@ -56,6 +57,7 @@ const fallbackBars = [
 ];
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,11 +138,37 @@ export const Dashboard: React.FC = () => {
             <div className="text-[11px] font-medium text-white/45">FedSentry / Security workspace</div>
             <h1 className="mt-2">Security cabinet</h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="bg-[#f36f45] px-4 py-2 text-[11px] font-semibold text-white">Overview</button>
-            <button className="border border-white/12 bg-white/[.04] px-4 py-2 text-[11px] text-white/65">Traffic</button>
-            <button className="border border-white/12 bg-white/[.04] px-4 py-2 text-[11px] text-white/65">Statistics</button>
-            <button onClick={() => void load()} disabled={refreshing} className="ml-1 flex h-9 w-9 items-center justify-center border border-white/12 bg-white/[.05] text-white/60">
+          <div className="flex flex-wrap items-center gap-2" role="navigation" aria-label="Security cabinet views">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              aria-current="page"
+              className="bg-[#f36f45] px-4 py-2 text-[11px] font-semibold text-white"
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/predict')}
+              className="border border-white/12 bg-white/[.04] px-4 py-2 text-[11px] text-white/65 hover:bg-white/[.09] hover:text-white"
+            >
+              Traffic
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/analytics')}
+              className="border border-white/12 bg-white/[.04] px-4 py-2 text-[11px] text-white/65 hover:bg-white/[.09] hover:text-white"
+            >
+              Statistics
+            </button>
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={refreshing}
+              className="ml-1 flex h-9 w-9 items-center justify-center border border-white/12 bg-white/[.05] text-white/60 hover:bg-white/[.10] hover:text-white disabled:cursor-not-allowed"
+              title="Refresh dashboard telemetry"
+              aria-label="Refresh dashboard telemetry"
+            >
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
           </div>
