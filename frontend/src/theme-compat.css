@@ -1,0 +1,169 @@
+/* FedSentry final theme compatibility layer.
+   Loaded last so older page-local palettes cannot override the shared theme. */
+
+html,
+body,
+#root {
+  background: var(--app-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Legacy landing-page design tokens now follow the application theme. */
+.sentinel-root {
+  --bg: var(--app-bg) !important;
+  --card: var(--surface) !important;
+  --surface: var(--surface-elevated) !important;
+  --ink: var(--text-primary) !important;
+  --line: var(--border) !important;
+  --muted: var(--text-muted) !important;
+  --accent: var(--brand) !important;
+  --accent-dim: var(--brand-soft) !important;
+  --accent-deep: var(--brand-hover) !important;
+  --rust: var(--danger) !important;
+  --rust-dim: var(--danger-soft) !important;
+  --amber: var(--warning) !important;
+  --grad: linear-gradient(90deg, var(--brand), #ef875f) !important;
+}
+
+html.dark .sentinel-root,
+html[data-theme='dark'] .sentinel-root {
+  --bg: var(--app-bg) !important;
+  --card: #4b4842 !important;
+  --surface: #59564f !important;
+  --ink: #f8f6f1 !important;
+  --line: rgba(255,255,255,.12) !important;
+  --muted: rgba(248,246,241,.68) !important;
+  --accent: #f27c52 !important;
+  --accent-dim: rgba(242,124,82,.16) !important;
+  --accent-deep: #ff9a76 !important;
+  --rust: #e7655c !important;
+  --rust-dim: rgba(231,101,92,.16) !important;
+  --amber: #f4b24f !important;
+  --grad: linear-gradient(90deg, #f27c52, #ef875f) !important;
+}
+
+/* Authentication surfaces: never allow pale cards inside dark mode. */
+.auth-shell {
+  background: var(--app-bg) !important;
+  color: var(--text-primary) !important;
+}
+.auth-hero-panel,
+.auth-form-panel,
+.auth-feature-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+html.dark .auth-hero-panel,
+html.dark .auth-form-panel,
+html.dark .auth-feature-card,
+html[data-theme='dark'] .auth-hero-panel,
+html[data-theme='dark'] .auth-form-panel,
+html[data-theme='dark'] .auth-feature-card {
+  background: #4b4842 !important;
+  border-color: rgba(255,255,255,.11) !important;
+  color: #f8f6f1 !important;
+}
+
+/* Old bright/lavender utility colors used by early frontend screens. */
+html.dark main [class*='bg-[#F7F4FC]'],
+html.dark main [class*='bg-[#F1E4FF]'],
+html.dark main [class*='bg-[#FFF3E4]'],
+html.dark main [class*='bg-[#FFE1EA]'],
+html.dark main [class*='bg-[#F8FAFC]'],
+html.dark main [class*='bg-[#F1F5F9]'],
+html.dark main [class*='bg-[#F9FAFB]'],
+html[data-theme='dark'] main [class*='bg-[#F7F4FC]'],
+html[data-theme='dark'] main [class*='bg-[#F1E4FF]'],
+html[data-theme='dark'] main [class*='bg-[#FFF3E4]'],
+html[data-theme='dark'] main [class*='bg-[#FFE1EA]'],
+html[data-theme='dark'] main [class*='bg-[#F8FAFC]'],
+html[data-theme='dark'] main [class*='bg-[#F1F5F9]'],
+html[data-theme='dark'] main [class*='bg-[#F9FAFB]'] {
+  background: #4b4842 !important;
+  border-color: rgba(255,255,255,.11) !important;
+  color: #f8f6f1 !important;
+}
+
+html.dark main [class~='bg-white'],
+html.dark main [class*='bg-white/'],
+html[data-theme='dark'] main [class~='bg-white'],
+html[data-theme='dark'] main [class*='bg-white/'] {
+  background-color: #4b4842 !important;
+  color: #f8f6f1 !important;
+  border-color: rgba(255,255,255,.11) !important;
+}
+
+/* Keep deliberate light form controls readable in dark mode. */
+html.dark input,
+html.dark textarea,
+html.dark select,
+html[data-theme='dark'] input,
+html[data-theme='dark'] textarea,
+html[data-theme='dark'] select {
+  background: #f2eee7 !important;
+  color: #302d28 !important;
+  border-color: rgba(255,255,255,.16) !important;
+}
+
+/* Shared cards and panels should always inherit the selected mode. */
+.theme-panel,
+.dashboard-panel,
+.card,
+.premium-card {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .theme-panel,
+html.dark .dashboard-panel,
+html.dark .card,
+html.dark .premium-card,
+html[data-theme='dark'] .theme-panel,
+html[data-theme='dark'] .dashboard-panel,
+html[data-theme='dark'] .card,
+html[data-theme='dark'] .premium-card {
+  background: #4b4842 !important;
+  color: #f8f6f1 !important;
+}
+
+/* Text helpers used by the redesigned dashboard. */
+.theme-text { color: var(--text-primary) !important; }
+.theme-muted { color: var(--text-muted) !important; }
+.theme-subtle { color: var(--text-subtle) !important; }
+.theme-border { border-color: var(--border) !important; }
+.theme-soft { background: var(--surface-soft) !important; }
+.theme-elevated { background: var(--surface-elevated) !important; }
+
+/* Recharts inherits readable labels in both modes. */
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text,
+.recharts-text {
+  fill: var(--text-muted) !important;
+  color: var(--text-muted) !important;
+}
+.recharts-cartesian-grid line {
+  stroke: var(--border) !important;
+}
+.recharts-default-tooltip {
+  background: var(--surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Smooth mode changes without flashing old colors. */
+body,
+header,
+aside,
+main,
+section,
+.card,
+.premium-card,
+.theme-panel,
+.dashboard-panel,
+.auth-hero-panel,
+.auth-form-panel,
+.auth-feature-card {
+  transition: background-color .22s ease, color .22s ease, border-color .22s ease !important;
+}
