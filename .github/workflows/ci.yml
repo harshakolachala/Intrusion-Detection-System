@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Check backend imports
-        run: python -c "import main"
+        run: python -c "import main; import engine; from capture.packet_capture import capture_engine; print(capture_engine.statistics())"
 
   frontend:
     runs-on: ubuntu-latest
