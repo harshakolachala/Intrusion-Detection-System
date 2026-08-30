@@ -42,6 +42,27 @@ html[data-theme='dark'] .sentinel-root {
   --grad: linear-gradient(90deg, #f27c52, #ef875f) !important;
 }
 
+/* Architecture selection used --ink as a background. In dark mode --ink is
+   intentionally light text, which made the selected card almost white.
+   The selected pipeline stage now uses the FedSentry coral interaction color. */
+#architecture button[class*='bg-[var(--ink)]'] {
+  background: var(--brand) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+#architecture button[class*='bg-[var(--ink)]'] [class*='text-white'] {
+  color: #fff !important;
+}
+html.dark .sentinel-root [style*='background-color: var(--ink)'],
+html[data-theme='dark'] .sentinel-root [style*='background-color: var(--ink)'] {
+  background-color: var(--brand) !important;
+  color: #fff !important;
+}
+html.dark .sentinel-root [fill='var(--ink)'],
+html[data-theme='dark'] .sentinel-root [fill='var(--ink)'] {
+  fill: var(--brand) !important;
+}
+
 /* Authentication surfaces: never allow pale cards inside dark mode. */
 .auth-shell {
   background: var(--app-bg) !important;
@@ -94,6 +115,13 @@ html[data-theme='dark'] main [class*='bg-white/'] {
   border-color: rgba(255,255,255,.11) !important;
 }
 
+/* Landing-page hover utilities should never flash a white card in dark mode. */
+html.dark .sentinel-root [class*='hover:bg-white']:hover,
+html[data-theme='dark'] .sentinel-root [class*='hover:bg-white']:hover {
+  background-color: #59564f !important;
+  color: #f8f6f1 !important;
+}
+
 /* Keep deliberate light form controls readable in dark mode. */
 html.dark input,
 html.dark textarea,
@@ -128,7 +156,7 @@ html[data-theme='dark'] .premium-card {
   color: #f8f6f1 !important;
 }
 
-/* Text helpers used by the redesigned dashboard. */
+/* Text helpers used by redesigned application screens. */
 .theme-text { color: var(--text-primary) !important; }
 .theme-muted { color: var(--text-muted) !important; }
 .theme-subtle { color: var(--text-subtle) !important; }
