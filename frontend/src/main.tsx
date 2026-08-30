@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import "./professional-ui.css";
+import "./theme-compat.css";
 import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
