@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -7,18 +7,18 @@ import {
   CheckCircle2,
   Clock3,
   Database,
-  Filter,
   History,
+  Network,
   RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
   X,
   Zap,
 } from 'lucide-react';
 import {
+  getEngineStatus,
   getPredictionHistory,
   predictTraffic,
   type TrafficPredictionRequest,
@@ -41,9 +41,13 @@ const createRequest = (): TrafficPredictionRequest => ({
 });
 
 type WorkspaceTab = 'live' | 'history';
-
-type Props = {
-  initialTab?: WorkspaceTab;
+type Props = { initialTab?: WorkspaceTab };
+type EngineTelemetry = {
+  running: boolean;
+  model_status?: string;
+  capture_status?: string;
+  packets?: number;
+  queue_size?: number;
 };
 
 const isMaliciousRow = (row: any) => {
@@ -72,23 +76,52 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
   const [filter, setFilter] = useState<'ALL' | 'BENIGN' | 'MALICIOUS'>('ALL');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<any | null>(null);
+  const [engineTelemetry, setEngineTelemetry] = useState<EngineTelemetry>({ running: false, packets: 0, queue_size: 0 });
+  const [packetRate, setPacketRate] = useState(0);
+  const lastPacketRef = useRef({ count: 0, at: Date.now() });
   const pageSize = 8;
 
-  const loadHistory = async () => {
-    setHistoryLoading(true);
+  const loadHistory = async (silent = false) => {
+    if (!silent) setHistoryLoading(true);
     try {
       const rows = await getPredictionHistory(0, 100);
       setHistoryRows(Array.isArray(rows) ? rows : []);
     } catch (err) {
       console.error(err);
-      setHistoryRows([]);
+      if (!silent) setHistoryRows([]);
     } finally {
-      setHistoryLoading(false);
+      if (!silent) setHistoryLoading(false);
+    }
+  };
+
+  const loadEngineTelemetry = async () => {
+    try {
+      const status = await getEngineStatus() as EngineTelemetry;
+      const now = Date.now();
+      const packets = Number(status.packets ?? 0);
+      const elapsed = Math.max(0.2, (now - lastPacketRef.current.at) / 1000);
+      const delta = Math.max(0, packets - lastPacketRef.current.count);
+      setPacketRate(Math.round(delta / elapsed));
+      lastPacketRef.current = { count: packets, at: now };
+      setEngineTelemetry({ ...status, packets, queue_size: Number(status.queue_size ?? 0) });
+    } catch (err) {
+      console.error('Unable to refresh engine telemetry', err);
+      setEngineTelemetry((prev) => ({ ...prev, running: false }));
+      setPacketRate(0);
     }
   };
 
   useEffect(() => {
     void loadHistory();
+    void loadEngineTelemetry();
+
+    const telemetryTimer = window.setInterval(() => void loadEngineTelemetry(), 1000);
+    const historyTimer = window.setInterval(() => void loadHistory(true), 2500);
+
+    return () => {
+      window.clearInterval(telemetryTimer);
+      window.clearInterval(historyTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -161,7 +194,7 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
     try {
       const response = await predictTraffic(request);
       setResult(response);
-      await loadHistory();
+      await loadHistory(true);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || 'Prediction failed. Confirm that the backend is running.');
     } finally {
@@ -192,13 +225,34 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
           <div>
             <div className="theme-muted text-[10px] font-semibold uppercase tracking-[.14em]">FedSentry / Inference workspace</div>
             <h1 className="mt-2">Traffic intelligence</h1>
-            <p className="theme-muted mt-2 max-w-2xl text-sm">Run a 78-feature CICIDS prediction and inspect the complete prediction trail without leaving the workspace.</p>
+            <p className="theme-muted mt-2 max-w-2xl text-sm">Live capture telemetry updates automatically while the detection engine is running. Manual 78-feature analysis and the complete prediction history remain available here.</p>
           </div>
           <div className="theme-soft flex w-full max-w-md rounded-2xl border theme-border p-1.5">
             <button type="button" onClick={() => setTab('live')} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold ${tab === 'live' ? 'bg-[var(--brand)] text-white' : 'theme-text'}`}><Activity className="h-4 w-4" />Live Predict</button>
             <button type="button" onClick={() => setTab('history')} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold ${tab === 'history' ? 'bg-[var(--brand)] text-white' : 'theme-text'}`}><History className="h-4 w-4" />History</button>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Packets captured" value={Number(engineTelemetry.packets ?? 0).toLocaleString()} icon={<Network className="h-4 w-4" />} live={engineTelemetry.running} />
+        <Stat label="Packet rate" value={`${packetRate}/s`} icon={<Activity className="h-4 w-4" />} live={engineTelemetry.running} />
+        <Stat label="Capture queue" value={String(engineTelemetry.queue_size ?? 0)} icon={<Database className="h-4 w-4" />} />
+        <Stat label="Detection engine" value={engineTelemetry.running ? 'Analyzing' : 'Stopped'} icon={<ShieldCheck className="h-4 w-4" />} success={engineTelemetry.running} danger={!engineTelemetry.running} />
+      </section>
+
+      <section className="dashboard-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className={`relative flex h-3 w-3 ${engineTelemetry.running ? '' : 'opacity-60'}`}>
+            {engineTelemetry.running && <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-40" />}
+            <span className={`relative h-3 w-3 rounded-full ${engineTelemetry.running ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+          </span>
+          <div>
+            <div className="theme-text text-xs font-semibold">{engineTelemetry.running ? 'Automatic packet analysis is live' : 'Packet analysis is currently stopped'}</div>
+            <div className="theme-muted mt-0.5 text-[10px]">Status, packet totals and prediction records refresh automatically — no keyboard or mouse action is required.</div>
+          </div>
+        </div>
+        <div className="theme-muted text-[10px]">Capture: <span className="theme-text font-semibold">{engineTelemetry.capture_status || (engineTelemetry.running ? 'Live Capturing' : 'Stopped')}</span></div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -213,8 +267,8 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
           <form onSubmit={runPrediction} className="dashboard-panel p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Live flow prediction</h2>
-                <p className="theme-muted mt-1 text-xs">Edit connection metadata, choose a preset, or open the advanced 78-feature editor.</p>
+                <h2 className="text-lg font-semibold">Manual flow prediction</h2>
+                <p className="theme-muted mt-1 text-xs">Use this editor when you want to test a specific 78-feature flow while live packet capture continues independently.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => applyPreset('baseline')} className="theme-soft theme-text rounded-xl border theme-border px-3 py-2 text-[10px] font-semibold">Baseline</button>
@@ -250,11 +304,11 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
           <div className="space-y-5">
             <section className="dashboard-panel p-5">
               <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Prediction result</h3><Activity className="h-4 w-4 text-[var(--brand)]" /></div>
-              {result ? <div className="mt-5"><div className={`rounded-2xl border p-4 ${result.prediction.toUpperCase() === 'BENIGN' ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-rose-500/20 bg-rose-500/10'}`}><div className="text-[10px] font-semibold uppercase tracking-[.12em] opacity-70">Verdict</div><div className="mt-2 text-xl font-semibold">{result.prediction}</div><div className="mt-4 grid grid-cols-2 gap-3"><ResultDatum label="Confidence" value={`${confidencePct(result.confidence).toFixed(1)}%`} /><ResultDatum label="Latency" value={`${Number(result.latency_ms || 0).toFixed(1)} ms`} /></div></div>{result.alert_created && <button type="button" onClick={() => navigate('/alerts')} className="mt-3 flex w-full items-center justify-between rounded-xl bg-[var(--brand)] px-4 py-3 text-xs font-semibold text-white">Open generated alert<ArrowRight className="h-4 w-4" /></button>}</div> : <div className="theme-muted mt-5 rounded-2xl border border-dashed theme-border p-6 text-center text-xs">Run a prediction to see the model verdict, confidence, latency and alert state.</div>}
+              {result ? <div className="mt-5"><div className={`rounded-2xl border p-4 ${result.prediction.toUpperCase() === 'BENIGN' ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-rose-500/20 bg-rose-500/10'}`}><div className="text-[10px] font-semibold uppercase tracking-[.12em] opacity-70">Verdict</div><div className="mt-2 text-xl font-semibold">{result.prediction}</div><div className="mt-4 grid grid-cols-2 gap-3"><ResultDatum label="Confidence" value={`${confidencePct(result.confidence).toFixed(1)}%`} /><ResultDatum label="Latency" value={`${Number(result.latency_ms || 0).toFixed(1)} ms`} /></div></div>{result.alert_created && <button type="button" onClick={() => navigate('/alerts')} className="mt-3 flex w-full items-center justify-between rounded-xl bg-[var(--brand)] px-4 py-3 text-xs font-semibold text-white">Open generated alert<ArrowRight className="h-4 w-4" /></button>}</div> : <div className="theme-muted mt-5 rounded-2xl border border-dashed theme-border p-6 text-center text-xs">Live packet capture runs automatically above. Use the manual form when you want a direct model test.</div>}
             </section>
 
             <section className="dashboard-panel overflow-hidden p-0">
-              <div className="flex items-center justify-between border-b theme-border px-5 py-4"><div><h3 className="text-sm font-semibold">Latest predictions</h3><p className="theme-muted mt-1 text-[10px]">History is available inside Live Predict</p></div><button type="button" onClick={() => setTab('history')} className="text-[10px] font-semibold text-[var(--brand)]">View all</button></div>
+              <div className="flex items-center justify-between border-b theme-border px-5 py-4"><div><h3 className="text-sm font-semibold">Latest predictions</h3><p className="theme-muted mt-1 text-[10px]">Automatically refreshes every 2.5 seconds</p></div><button type="button" onClick={() => setTab('history')} className="text-[10px] font-semibold text-[var(--brand)]">View all</button></div>
               <div className="divide-y divide-[var(--border-soft)]">{historyRows.slice(0, 5).map((row) => <HistoryRow key={String(row.id)} row={row} onOpen={() => setSelected(row)} />)}{!historyRows.length && <div className="theme-muted px-5 py-7 text-center text-xs">No prediction records yet.</div>}</div>
             </section>
           </div>
@@ -262,11 +316,11 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
       ) : (
         <section className="dashboard-panel overflow-hidden p-0">
           <div className="flex flex-col gap-3 border-b theme-border p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div><h2 className="text-lg font-semibold">Prediction history</h2><p className="theme-muted mt-1 text-xs">Search, filter, inspect, and reuse prior traffic metadata.</p></div>
+            <div><h2 className="text-lg font-semibold">Prediction history</h2><p className="theme-muted mt-1 text-xs">Search, filter, inspect, reuse prior traffic metadata, and watch new predictions arrive automatically.</p></div>
             <div className="flex flex-wrap items-center gap-2"><div className="theme-soft flex h-10 min-w-[220px] items-center gap-2 rounded-xl border theme-border px-3"><Search className="theme-muted h-4 w-4" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search IP, verdict, attack…" className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none" /></div><select value={filter} onChange={(e) => { setFilter(e.target.value as typeof filter); setPage(1); }} className="h-10 rounded-xl border theme-border px-3 text-xs font-semibold"><option value="ALL">All</option><option value="BENIGN">Benign</option><option value="MALICIOUS">Malicious</option></select><button type="button" onClick={() => void loadHistory()} className="theme-soft theme-text flex h-10 w-10 items-center justify-center rounded-xl border theme-border"><RefreshCw className={`h-4 w-4 ${historyLoading ? 'animate-spin' : ''}`} /></button></div>
           </div>
           <div className="overflow-x-auto"><table className="w-full min-w-[860px] text-left text-xs"><thead><tr className="border-b theme-border"><th className="px-5 py-3">Time</th><th className="px-5 py-3">Source → Destination</th><th className="px-5 py-3">Verdict</th><th className="px-5 py-3">Attack / class</th><th className="px-5 py-3">Confidence</th><th className="px-5 py-3 text-right">Actions</th></tr></thead><tbody>{pageRows.map((row) => <tr key={String(row.id)} className="border-b theme-border last:border-b-0"><td className="theme-muted px-5 py-4">{row.timestamp ? new Date(row.timestamp).toLocaleString() : '—'}</td><td className="px-5 py-4 font-medium">{row.src_ip || '—'} <span className="theme-muted">→</span> {row.dst_ip || '—'}</td><td className="px-5 py-4"><Verdict malicious={isMaliciousRow(row)} /></td><td className="px-5 py-4">{row.attack_type || row.prediction || 'Unknown'}</td><td className="px-5 py-4 font-semibold">{confidencePct(row.confidence).toFixed(1)}%</td><td className="px-5 py-4"><div className="flex justify-end gap-2"><button type="button" onClick={() => setSelected(row)} className="theme-soft theme-text rounded-lg border theme-border px-3 py-2 text-[10px] font-semibold">Inspect</button><button type="button" onClick={() => loadHistoryRow(row)} className="rounded-lg bg-[var(--brand)] px-3 py-2 text-[10px] font-semibold text-white">Use in Live</button></div></td></tr>)}{!pageRows.length && <tr><td colSpan={6} className="theme-muted px-5 py-10 text-center">No predictions match the current filters.</td></tr>}</tbody></table></div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t theme-border px-5 py-4"><div className="theme-muted text-[10px]">{filteredRows.length} matching records · Page {page} of {totalPages}</div><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="theme-soft theme-text rounded-lg border theme-border px-3 py-2 text-[10px] font-semibold disabled:opacity-40">Previous</button><button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))} className="theme-soft theme-text rounded-lg border theme-border px-3 py-2 text-[10px] font-semibold disabled:opacity-40">Next</button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t theme-border px-5 py-4"><div className="theme-muted text-[10px]">{filteredRows.length} matching records · Page {page} of {totalPages} · Auto-refresh on</div><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="theme-soft theme-text rounded-lg border theme-border px-3 py-2 text-[10px] font-semibold disabled:opacity-40">Previous</button><button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))} className="theme-soft theme-text rounded-lg border theme-border px-3 py-2 text-[10px] font-semibold disabled:opacity-40">Next</button></div></div>
         </section>
       )}
 
@@ -277,7 +331,7 @@ export const PredictionWorkspace: React.FC<Props> = ({ initialTab = 'live' }) =>
 
 const Field = ({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) => <label className="block"><span className="theme-muted mb-2 block text-[10px] font-semibold uppercase tracking-[.1em]">{label}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-11 w-full rounded-xl border theme-border px-3 text-sm" /></label>;
 
-const Stat = ({ label, value, icon, danger = false, success = false }: { label: string; value: string; icon: React.ReactNode; danger?: boolean; success?: boolean }) => <div className="dashboard-panel rounded-2xl p-4"><div className={`flex h-9 w-9 items-center justify-center rounded-xl ${danger ? 'bg-rose-500/10 text-rose-500' : success ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>{icon}</div><div className="theme-muted mt-3 text-[9px] font-semibold uppercase tracking-[.1em]">{label}</div><div className="theme-text mt-1 text-xl font-semibold">{value}</div></div>;
+const Stat = ({ label, value, icon, danger = false, success = false, live = false }: { label: string; value: string; icon: React.ReactNode; danger?: boolean; success?: boolean; live?: boolean }) => <div className="dashboard-panel rounded-2xl p-4"><div className="flex items-start justify-between gap-3"><div className={`flex h-9 w-9 items-center justify-center rounded-xl ${danger ? 'bg-rose-500/10 text-rose-500' : success ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>{icon}</div>{live && <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1 text-[8px] font-semibold text-emerald-500"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />LIVE</span>}</div><div className="theme-muted mt-3 text-[9px] font-semibold uppercase tracking-[.1em]">{label}</div><div className="theme-text mt-1 text-xl font-semibold">{value}</div></div>;
 
 const Verdict = ({ malicious }: { malicious: boolean }) => <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-semibold ${malicious ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{malicious ? <AlertTriangle className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}{malicious ? 'Malicious' : 'Benign'}</span>;
 
