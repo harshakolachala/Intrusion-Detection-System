@@ -1,8 +1,8 @@
 """LLM generation for the FedSentry RAG assistant.
 
-Groq is the default provider. Gemini is supported as a fallback using Google's
-current GenAI SDK. The module always returns a usable response and never leaks
-API keys or provider exceptions to the frontend.
+Groq is the default provider. Gemini is supported as a fallback. Provider and
+model failures never crash the chatbot; FedSentry tries compatible fallbacks
+and finally returns a deterministic RAG-backed response.
 """
 
 from __future__ import annotations
@@ -21,10 +21,18 @@ logger = logging.getLogger("llm.explainer")
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").strip().lower()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash").strip()
 LLM_MAX_TOKENS = max(128, min(int(os.getenv("LLM_MAX_TOKENS", "600")), 2000))
+
+# Keep multiple production-capable Groq model IDs so a project/account that
+# cannot access one model can transparently continue with another.
+GROQ_FALLBACK_MODELS = (
+    "openai/gpt-oss-20b",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+)
 
 EXPLAIN_SYSTEM_PROMPT = (
     "You are FedSentry Copilot, a network security analyst assistant embedded "
@@ -86,28 +94,46 @@ def build_chat_prompt(question: str, context_snippets: List[str]) -> str:
     )
 
 
-def _generate_with_groq(system_prompt: str, user_prompt: str) -> str:
+def _groq_model_candidates() -> List[str]:
+    models: List[str] = []
+    for model in (GROQ_MODEL, *GROQ_FALLBACK_MODELS):
+        model = model.strip()
+        if model and model not in models:
+            models.append(model)
+    return models
+
+
+def _generate_with_groq(system_prompt: str, user_prompt: str) -> tuple[str, str]:
     if not GROQ_API_KEY:
         raise RuntimeError("GROQ_API_KEY is not configured")
 
     from groq import Groq
 
     client = Groq(api_key=GROQ_API_KEY, timeout=30.0)
-    response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.25,
-        max_tokens=LLM_MAX_TOKENS,
-    )
+    last_error: Optional[Exception] = None
 
-    text = response.choices[0].message.content or ""
-    text = text.strip()
-    if not text:
-        raise RuntimeError("Groq returned an empty response")
-    return text
+    for model in _groq_model_candidates():
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.25,
+                max_tokens=LLM_MAX_TOKENS,
+            )
+            text = (response.choices[0].message.content or "").strip()
+            if not text:
+                raise RuntimeError(f"Groq model {model} returned an empty response")
+            if model != GROQ_MODEL:
+                logger.info("Groq fallback model selected: %s", model)
+            return text, model
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            logger.warning("Groq model '%s' unavailable: %s", model, exc)
+
+    raise RuntimeError(f"No configured Groq model is available: {last_error}")
 
 
 def _generate_with_gemini(system_prompt: str, user_prompt: str) -> str:
@@ -144,10 +170,11 @@ def _call_llm(system_prompt: str, user_prompt: str) -> Optional[dict]:
     for provider in _provider_order():
         try:
             if provider == "groq":
-                text = _generate_with_groq(system_prompt, user_prompt)
-            else:
-                text = _generate_with_gemini(system_prompt, user_prompt)
-            return {"text": text, "provider": provider}
+                text, model = _generate_with_groq(system_prompt, user_prompt)
+                return {"text": text, "provider": "groq", "model": model}
+
+            text = _generate_with_gemini(system_prompt, user_prompt)
+            return {"text": text, "provider": "gemini", "model": GEMINI_MODEL}
         except Exception as exc:  # noqa: BLE001
             logger.warning("LLM provider '%s' unavailable: %s", provider, exc)
 
@@ -164,6 +191,7 @@ def get_llm_status() -> dict:
         "preferred_provider": LLM_PROVIDER,
         "configured_providers": configured,
         "groq_model": GROQ_MODEL,
+        "groq_fallback_models": _groq_model_candidates(),
         "gemini_model": GEMINI_MODEL,
         "ready": bool(configured),
     }
