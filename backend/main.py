@@ -1,5 +1,5 @@
 """
-SentinelAI Backend
+FedSentry Backend
 Main Application
 """
 
@@ -37,7 +37,7 @@ from websocket.manager import manager
 
 
 app = FastAPI(
-    title="SentinelAI",
+    title="FedSentry",
     version="2.0.0",
     description=(
         "Enterprise Real-Time Federated Intrusion "
@@ -60,7 +60,7 @@ register_exception_handlers(app)
 init_database()
 
 logger.info(
-    "SentinelAI Backend Started Successfully"
+    "FedSentry Backend Started Successfully"
 )
 
 
@@ -195,7 +195,7 @@ async def websocket_events(
                 "data": {
                     "status": "connected",
                     "message": (
-                        "SentinelAI real-time "
+                        "FedSentry real-time "
                         "event stream connected."
                     ),
                 },
@@ -232,7 +232,7 @@ async def websocket_events(
 async def startup():
 
     logger.info(
-        "SentinelAI API Started"
+        "FedSentry API Started"
     )
 
 
@@ -240,7 +240,7 @@ async def startup():
 async def shutdown():
 
     logger.info(
-        "SentinelAI API Stopped"
+        "FedSentry API Stopped"
     )
 
 
@@ -252,7 +252,7 @@ async def shutdown():
 def root():
 
     return {
-        "project": "SentinelAI",
+        "project": "FedSentry",
         "status": "Running",
         "version": "2.0.0",
         "database": "Connected",
