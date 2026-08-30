@@ -13,6 +13,7 @@ import {
   LogOut,
   ShieldAlert,
   ShieldCheck,
+  UserRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,6 +32,7 @@ const navItems = [
   { name: 'Audit Logs', path: '/audit', icon: FileText },
   { name: 'AI Assistant', path: '/chatbot', icon: Bot },
   { name: 'Reports & Exports', path: '/reports', icon: FileDown },
+  { name: 'Profile', path: '/profile', icon: UserRound },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCollapse }) => {
@@ -88,17 +90,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCol
 
         <div className="mt-auto pt-4">
           <div className={`rounded-2xl border ${collapsed ? 'p-2' : 'p-3'}`} style={{ borderColor: 'var(--border)', background: 'var(--surface-soft)' }}>
-            <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+            <button type="button" onClick={() => navigate('/profile')} className={`flex w-full items-center text-left ${collapsed ? 'justify-center' : 'gap-3'}`} title="Open profile">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
                 {(user?.username || 'O').slice(0, 1).toUpperCase()}
               </div>
               {!collapsed && (
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.username || 'Operator'}</div>
-                  <div className="mt-0.5 text-[9px]" style={{ color: 'var(--text-subtle)' }}>FedSentry operator</div>
+                  <div className="mt-0.5 text-[9px]" style={{ color: 'var(--text-subtle)' }}>View & edit operator profile</div>
                 </div>
               )}
-            </div>
+            </button>
             {!collapsed && (
               <button
                 type="button"
