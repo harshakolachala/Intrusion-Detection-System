@@ -83,9 +83,16 @@ const fallbackSeverity: DistributionPoint[] = [
   { name: 'CRITICAL', value: 1820 },
 ];
 
+const toFiniteNumber = (value: unknown) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 const compactNumber = (value: number) =>
   new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 
+const formatTooltipNumber = (value: unknown) => toFiniteNumber(value).toLocaleString();
+const formatTooltipPercent = (value: unknown) => `${toFiniteNumber(value).toFixed(2)}%`;
 const percent = (value: number) => `${value.toFixed(2)}%`;
 
 export const Analytics: React.FC = () => {
@@ -113,7 +120,12 @@ export const Analytics: React.FC = () => {
       }
 
       if (chartsRes.status === 'fulfilled' && chartsRes.value) {
-        const data = chartsRes.value as any;
+        const data = chartsRes.value as {
+          trends?: TrendPoint[];
+          attack_distribution?: DistributionPoint[];
+          severity_distribution?: DistributionPoint[];
+        };
+
         if (Array.isArray(data.trends) && data.trends.length) setTrendData(data.trends);
         if (Array.isArray(data.attack_distribution) && data.attack_distribution.length) {
           setAttackDistData(data.attack_distribution);
@@ -140,12 +152,13 @@ export const Analytics: React.FC = () => {
   }, [timeframe]);
 
   const totals = useMemo(() => {
-    const trendBenign = trendData.reduce((sum, item) => sum + Number(item.benign || 0), 0);
-    const trendMalicious = trendData.reduce((sum, item) => sum + Number(item.malicious || 0), 0);
-    const totalPackets = Number(summary?.total_packets ?? trendBenign + trendMalicious ?? 0);
-    const benignCount = Number(summary?.benign_count ?? trendBenign);
-    const maliciousCount = Number(summary?.malicious_count ?? trendMalicious);
-    const confidence = Number(summary?.avg_confidence ?? 0.988);
+    const trendBenign = trendData.reduce((sum, item) => sum + toFiniteNumber(item.benign), 0);
+    const trendMalicious = trendData.reduce((sum, item) => sum + toFiniteNumber(item.malicious), 0);
+    const fallbackTotal = trendBenign + trendMalicious;
+    const totalPackets = toFiniteNumber(summary?.total_packets ?? fallbackTotal);
+    const benignCount = toFiniteNumber(summary?.benign_count ?? trendBenign);
+    const maliciousCount = toFiniteNumber(summary?.malicious_count ?? trendMalicious);
+    const confidence = toFiniteNumber(summary?.avg_confidence ?? 0.988);
     const maliciousRate = totalPackets > 0 ? (maliciousCount / totalPackets) * 100 : 0;
     const benignRate = totalPackets > 0 ? (benignCount / totalPackets) * 100 : 0;
 
@@ -155,8 +168,8 @@ export const Analytics: React.FC = () => {
   const rateTrend = useMemo(
     () =>
       trendData.map((item) => {
-        const benign = Number(item.benign || 0);
-        const malicious = Number(item.malicious || 0);
+        const benign = toFiniteNumber(item.benign);
+        const malicious = toFiniteNumber(item.malicious);
         const total = benign + malicious;
         return {
           time: item.time,
@@ -167,7 +180,7 @@ export const Analytics: React.FC = () => {
   );
 
   const topAttack = useMemo(
-    () => [...attackDistData].sort((a, b) => Number(b.value) - Number(a.value))[0],
+    () => [...attackDistData].sort((a, b) => toFiniteNumber(b.value) - toFiniteNumber(a.value))[0],
     [attackDistData],
   );
 
@@ -269,7 +282,7 @@ export const Analytics: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="time" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis tickFormatter={compactNumber} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} width={54} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => value.toLocaleString()} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
               <Legend wrapperStyle={{ fontSize: '13px' }} />
               <Area type="monotone" dataKey="benign" name="Benign" stroke="#10b981" strokeWidth={2.5} fill="url(#benignFill)" />
               <Area type="monotone" dataKey="malicious" name="Malicious" stroke="#ef4444" strokeWidth={2.5} fill="url(#maliciousFill)" />
@@ -285,7 +298,7 @@ export const Analytics: React.FC = () => {
                   <Cell key={`${entry.name}-${index}`} fill={entry.color || SEVERITY_COLORS[entry.name.toUpperCase()] || CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => value.toLocaleString()} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
               <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: '12px' }} />
             </PieChart>
           </ResponsiveContainer>
@@ -299,7 +312,7 @@ export const Analytics: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis type="number" tickFormatter={compactNumber} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={105} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => value.toLocaleString()} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTooltipNumber(value)} />
               <Bar dataKey="value" name="Detections" radius={[0, 7, 7, 0]}>
                 {attackDistData.map((_, index) => (
                   <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -315,7 +328,7 @@ export const Analytics: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="time" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis unit="%" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} width={46} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`${value.toFixed(2)}%`, 'Malicious rate']} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatTooltipPercent(value), 'Malicious rate']} />
               <Line type="monotone" dataKey="rate" name="Malicious rate" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6' }} activeDot={{ r: 6 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -323,7 +336,7 @@ export const Analytics: React.FC = () => {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        <InsightCard icon={<Target className="h-5 w-5" />} title="Top attack vector" value={topAttack?.name || 'No detections'} description={topAttack ? `${Number(topAttack.value).toLocaleString()} detections in the selected dataset.` : 'No attack distribution data is available.'} />
+        <InsightCard icon={<Target className="h-5 w-5" />} title="Top attack vector" value={topAttack?.name || 'No detections'} description={topAttack ? `${toFiniteNumber(topAttack.value).toLocaleString()} detections in the selected dataset.` : 'No attack distribution data is available.'} />
         <InsightCard icon={<TrendingUp className="h-5 w-5" />} title="Malicious rate" value={percent(totals.maliciousRate)} description={`${totals.maliciousCount.toLocaleString()} malicious flows out of ${totals.totalPackets.toLocaleString()} analyzed.`} />
         <InsightCard icon={<AlertTriangle className="h-5 w-5" />} title="Highest active severity" value={highestSeverity} description="Highest severity class currently represented in analytics telemetry." />
       </section>
@@ -345,15 +358,15 @@ export const Analytics: React.FC = () => {
             </thead>
             <tbody>
               {[...attackDistData]
-                .sort((a, b) => Number(b.value) - Number(a.value))
+                .sort((a, b) => toFiniteNumber(b.value) - toFiniteNumber(a.value))
                 .map((item, index) => {
-                  const total = attackDistData.reduce((sum, row) => sum + Number(row.value || 0), 0);
-                  const share = total > 0 ? (Number(item.value) / total) * 100 : 0;
+                  const total = attackDistData.reduce((sum, row) => sum + toFiniteNumber(row.value), 0);
+                  const share = total > 0 ? (toFiniteNumber(item.value) / total) * 100 : 0;
                   return (
                     <tr key={item.name}>
                       <td>#{index + 1}</td>
                       <td className="font-semibold text-[var(--text-primary)]">{item.name}</td>
-                      <td>{Number(item.value).toLocaleString()}</td>
+                      <td>{toFiniteNumber(item.value).toLocaleString()}</td>
                       <td>{percent(share)}</td>
                     </tr>
                   );
