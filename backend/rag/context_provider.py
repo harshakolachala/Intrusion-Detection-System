@@ -56,6 +56,37 @@ class ContextProvider:
 
             return []
 
+    def get_sources(
+        self,
+        query: str,
+        top_k: int = 3
+    ) -> List[str]:
+        """Return the knowledge-base filenames backing a query's context.
+
+        Used to show citation chips (e.g. "ddos.md") in the chat UI.
+        """
+
+        try:
+
+            pipeline = self._get_pipeline()
+
+            if pipeline is None:
+                return []
+
+            return pipeline.get_sources(
+                query=query,
+                top_k=top_k
+            )
+
+        except Exception as e:
+
+            logger.error(
+                "RAG source lookup failed: %s",
+                e
+            )
+
+            return []
+
 
 def get_context(
     attack_type: str,
@@ -65,6 +96,18 @@ def get_context(
     try:
         provider = ContextProvider()
         return provider.get_context(attack_type, top_k)
+    except Exception:
+        return []
+
+
+def get_sources(
+    query: str,
+    top_k: int = 3
+) -> List[str]:
+
+    try:
+        provider = ContextProvider()
+        return provider.get_sources(query, top_k)
     except Exception:
         return []
 
