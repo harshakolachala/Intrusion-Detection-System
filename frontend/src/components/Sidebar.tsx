@@ -6,6 +6,7 @@ import {
   BarChart3,
   Bot,
   ChevronLeft,
+  FileDown,
   FileText,
   History,
   LayoutDashboard,
@@ -29,6 +30,7 @@ const navItems = [
   { name: 'Prediction History', path: '/prediction-history', icon: History },
   { name: 'Audit Logs', path: '/audit', icon: FileText },
   { name: 'AI Assistant', path: '/chatbot', icon: Bot },
+  { name: 'Reports & Exports', path: '/reports', icon: FileDown },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggleCollapse }) => {
