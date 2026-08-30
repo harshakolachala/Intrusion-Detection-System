@@ -91,6 +91,8 @@ const pct = (value: number) => `${value.toFixed(2)}%`;
 const tooltipNumber = (value: unknown) => n(value).toLocaleString();
 const tooltipPercent = (value: unknown) => `${n(value).toFixed(2)}%`;
 const clamp = (value: number) => Math.max(0, Math.min(100, value));
+const axisTick = { fontSize: 11, fill: 'var(--text-muted)' };
+const smallAxisTick = { fontSize: 9, fill: 'var(--text-muted)' };
 
 export const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -198,34 +200,35 @@ export const Analytics: React.FC = () => {
   if (loading) return <div className="space-y-5"><Loading type="card" count={4} /><Loading type="chart" /></div>;
 
   const tooltipStyle = {
-    backgroundColor: '#494741',
-    border: '1px solid rgba(255,255,255,.12)',
+    backgroundColor: 'var(--surface-elevated)',
+    border: '1px solid var(--border)',
     borderRadius: '14px',
-    color: '#f8f6f1',
-    boxShadow: '0 16px 38px rgba(31,28,24,.22)',
+    color: 'var(--text-primary)',
+    boxShadow: 'var(--shadow-md)',
   };
+  const legendStyle = { fontSize: '11px', color: 'var(--text-muted)' };
 
   return (
-    <div className="space-y-5 pb-10">
-      <section className="rounded-[22px] border p-5 sm:p-6">
+    <div className="space-y-5 pb-10 text-[var(--text-primary)]">
+      <section className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-[#ff9a76]">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-[var(--brand)]">
               <BarChart3 className="h-4 w-4" /> Security intelligence
             </div>
-            <h1 className="text-3xl font-semibold tracking-[-.04em]">Analytics cabinet</h1>
-            <p className="mt-2 max-w-3xl text-sm">A richer visual view of FedSentry traffic, risk, severity, attack classes and model behavior.</p>
+            <h1 className="text-3xl font-semibold tracking-[-.04em] text-[var(--text-primary)]">Analytics cabinet</h1>
+            <p className="mt-2 max-w-3xl text-sm text-[var(--text-muted)]">A richer visual view of FedSentry traffic, risk, severity, attack classes and model behavior.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center rounded-full border border-white/10 bg-white/[.05] p-1">
-              <CalendarDays className="ml-2 h-4 w-4 text-white/45" />
+            <div className="flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-soft)] p-1">
+              <CalendarDays className="ml-2 h-4 w-4 text-[var(--text-muted)]" />
               {['1h', '24h', '7d', '30d'].map((value) => (
-                <button key={value} onClick={() => setTimeframe(value)} className={`rounded-full px-3 py-2 text-xs font-semibold ${timeframe === value ? 'bg-[#f27c52] text-white' : 'text-white/55 hover:text-white'}`}>
+                <button key={value} onClick={() => setTimeframe(value)} className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${timeframe === value ? 'bg-[var(--brand)] text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]'}`}>
                   {value.toUpperCase()}
                 </button>
               ))}
             </div>
-            <button onClick={() => void fetchData()} disabled={refreshing} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-4 py-2.5 text-xs font-semibold text-white/70 hover:text-white">
+            <button onClick={() => void fetchData()} disabled={refreshing} className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-xs font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]">
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
             </button>
           </div>
@@ -249,11 +252,11 @@ export const Analytics: React.FC = () => {
                 <linearGradient id="benign" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#63c567" stopOpacity={0.38}/><stop offset="95%" stopColor="#63c567" stopOpacity={0.02}/></linearGradient>
                 <linearGradient id="malicious" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e7655c" stopOpacity={0.38}/><stop offset="95%" stopColor="#e7655c" stopOpacity={0.02}/></linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 5" vertical={false} />
-              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={52} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={compact} tick={axisTick} axisLine={false} tickLine={false} width={52} />
+              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: 'var(--text-primary)' }} itemStyle={{ color: 'var(--text-primary)' }} formatter={(value) => tooltipNumber(value)} />
+              <Legend wrapperStyle={legendStyle} />
               <Area type="monotone" dataKey="benign" name="Benign" stroke="#63c567" strokeWidth={2.5} fill="url(#benign)" />
               <Area type="monotone" dataKey="malicious" name="Malicious" stroke="#e7655c" strokeWidth={2.5} fill="url(#malicious)" />
             </AreaChart>
@@ -266,8 +269,8 @@ export const Analytics: React.FC = () => {
               <Pie data={severityDistData} dataKey="value" nameKey="name" cx="50%" cy="46%" innerRadius={72} outerRadius={105} paddingAngle={4} cornerRadius={7}>
                 {severityDistData.map((entry, index) => <Cell key={`${entry.name}-${index}`} fill={entry.color || SEVERITY_COLORS[entry.name.toUpperCase()] || COLORS[index % COLORS.length]} />)}
               </Pie>
-              <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
-              <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: '11px' }} />
+              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: 'var(--text-primary)' }} itemStyle={{ color: 'var(--text-primary)' }} formatter={(value) => tooltipNumber(value)} />
+              <Legend verticalAlign="bottom" wrapperStyle={legendStyle} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -277,9 +280,9 @@ export const Analytics: React.FC = () => {
         <ChartCard title="Attack families" subtitle="Horizontal bar chart · ranked detections">
           <ResponsiveContainer width="100%" height={330}>
             <BarChart data={attackDistData} layout="vertical" margin={{ top: 8, right: 18, left: 28, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 5" horizontal={false} />
-              <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" width={106} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" horizontal={false} />
+              <XAxis type="number" tickFormatter={compact} tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" width={106} tick={axisTick} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} formatter={(value) => tooltipNumber(value)} />
               <Bar dataKey="value" name="Detections" radius={[0, 8, 8, 0]}>{attackDistData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}</Bar>
             </BarChart>
@@ -289,9 +292,9 @@ export const Analytics: React.FC = () => {
         <ChartCard title="Malicious rate" subtitle="Line chart · threat percentage through time">
           <ResponsiveContainer width="100%" height={330}>
             <LineChart data={enrichedTrend} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 5" vertical={false} />
-              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis unit="%" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={42} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis unit="%" tick={axisTick} axisLine={false} tickLine={false} width={42} />
               <Tooltip contentStyle={tooltipStyle} formatter={(value) => [tooltipPercent(value), 'Malicious rate']} />
               <Line type="monotone" dataKey="rate" stroke="#f27c52" strokeWidth={3} dot={{ r: 4, fill: '#f27c52' }} activeDot={{ r: 6 }} />
             </LineChart>
@@ -303,9 +306,9 @@ export const Analytics: React.FC = () => {
         <ChartCard title="Security posture" subtitle="Radar chart · normalized system posture">
           <ResponsiveContainer width="100%" height={350}>
             <RadarChart data={posture} outerRadius="72%">
-              <PolarGrid />
-              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11 }} />
-              <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9 }} axisLine={false} />
+              <PolarGrid stroke="var(--border)" />
+              <PolarAngleAxis dataKey="metric" tick={axisTick} />
+              <PolarRadiusAxis domain={[0, 100]} tick={smallAxisTick} axisLine={false} />
               <Radar dataKey="score" name="Score" stroke="#f27c52" fill="#f27c52" fillOpacity={0.24} strokeWidth={2.5} />
               <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${n(value).toFixed(1)}/100`, 'Score']} />
             </RadarChart>
@@ -316,8 +319,8 @@ export const Analytics: React.FC = () => {
           <ResponsiveContainer width="100%" height={350}>
             <RadialBarChart data={concentration} innerRadius="26%" outerRadius="92%" startAngle={90} endAngle={-270} barSize={15}>
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
-              <RadialBar dataKey="value" background={{ fill: 'rgba(255,255,255,.06)' }} cornerRadius={10} />
-              <Legend iconSize={8} layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '10px', lineHeight: '22px' }} />
+              <RadialBar dataKey="value" background={{ fill: 'var(--surface-soft)' }} cornerRadius={10} />
+              <Legend iconSize={8} layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ ...legendStyle, lineHeight: '22px' }} />
               <Tooltip contentStyle={tooltipStyle} formatter={(value) => [tooltipPercent(value), 'Share']} />
             </RadialBarChart>
           </ResponsiveContainer>
@@ -328,11 +331,11 @@ export const Analytics: React.FC = () => {
         <ChartCard title="Traffic volume vs risk" subtitle="Scatter chart · relationship between flow volume and threat rate">
           <ResponsiveContainer width="100%" height={350}>
             <ScatterChart margin={{ top: 15, right: 20, left: 0, bottom: 12 }}>
-              <CartesianGrid strokeDasharray="3 5" />
-              <XAxis type="number" dataKey="volume" name="Traffic volume" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="number" dataKey="maliciousRate" name="Malicious rate" unit="%" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" />
+              <XAxis type="number" dataKey="volume" name="Traffic volume" tickFormatter={compact} tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis type="number" dataKey="maliciousRate" name="Malicious rate" unit="%" tick={axisTick} axisLine={false} tickLine={false} width={46} />
               <ZAxis type="number" dataKey="riskScore" range={[80, 320]} name="Risk score" />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} formatter={(value, name) => name === 'Malicious rate' ? tooltipPercent(value) : tooltipNumber(value)} />
+              <Tooltip cursor={{ stroke: 'var(--text-subtle)', strokeDasharray: '3 3' }} contentStyle={tooltipStyle} formatter={(value, name) => name === 'Malicious rate' ? tooltipPercent(value) : tooltipNumber(value)} />
               <Scatter name="Observation" data={scatterData} fill="#f27c52" />
             </ScatterChart>
           </ResponsiveContainer>
@@ -341,12 +344,12 @@ export const Analytics: React.FC = () => {
         <ChartCard title="Volume, threats and confidence" subtitle="Composed chart · bars and line in one analytical view">
           <ResponsiveContainer width="100%" height={350}>
             <ComposedChart data={enrichedTrend} margin={{ top: 15, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 5" vertical={false} />
-              <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="left" tickFormatter={compact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} unit="%" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
+              <XAxis dataKey="time" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tickFormatter={compact} tick={axisTick} axisLine={false} tickLine={false} width={50} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} unit="%" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} width={40} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              <Legend wrapperStyle={legendStyle} />
               <Bar yAxisId="left" dataKey="benign" name="Benign" stackId="traffic" fill="#63c567" radius={[5,5,0,0]} />
               <Bar yAxisId="left" dataKey="malicious" name="Malicious" stackId="traffic" fill="#e7655c" radius={[5,5,0,0]} />
               <Line yAxisId="right" type="monotone" dataKey="confidence" name="Confidence" stroke="#f4b24f" strokeWidth={2.5} dot={false} />
@@ -365,20 +368,20 @@ export const Analytics: React.FC = () => {
 };
 
 function Metric({ icon, label, value, helper, tone = 'orange' }: { icon: React.ReactNode; label: string; value: string; helper: string; tone?: 'orange'|'green'|'red'|'yellow' }) {
-  const tones = { orange: 'bg-[#f27c52]/15 text-[#ff9a76]', green: 'bg-[#63c567]/15 text-[#8fe293]', red: 'bg-[#e7655c]/15 text-[#ff938b]', yellow: 'bg-[#f4b24f]/15 text-[#ffd077]' };
-  return <div className="rounded-[18px] border border-white/10 bg-[#514f49] p-5 shadow-[0_14px_34px_rgba(37,34,29,.12)]">
-    <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium text-white/52">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-.035em] text-white">{value}</p><p className="mt-2 text-[11px] text-white/38">{helper}</p></div><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tones[tone]}`}>{icon}</div></div>
+  const tones = { orange: 'bg-[var(--brand-soft)] text-[var(--brand)]', green: 'bg-emerald-500/12 text-emerald-500', red: 'bg-rose-500/12 text-rose-500', yellow: 'bg-amber-500/12 text-amber-500' };
+  return <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
+    <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium text-[var(--text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-.035em] text-[var(--text-primary)]">{value}</p><p className="mt-2 text-[11px] text-[var(--text-subtle)]">{helper}</p></div><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tones[tone]}`}>{icon}</div></div>
   </div>;
 }
 
 function ChartCard({ title, subtitle, children, className = '' }: { title: string; subtitle: string; children: React.ReactNode; className?: string }) {
-  return <div className={`min-w-0 rounded-[20px] border border-white/10 bg-[#514f49] p-5 shadow-[0_16px_38px_rgba(37,34,29,.13)] ${className}`}>
-    <div className="mb-4"><h2 className="text-base font-semibold text-white">{title}</h2><p className="mt-1 text-xs text-white/45">{subtitle}</p></div>{children}
+  return <div className={`min-w-0 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text-primary)] shadow-[var(--shadow-sm)] ${className}`}>
+    <div className="mb-4"><h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2><p className="mt-1 text-xs text-[var(--text-muted)]">{subtitle}</p></div>{children}
   </div>;
 }
 
 function Insight({ icon, title, value, text }: { icon: React.ReactNode; title: string; value: string; text: string }) {
-  return <div className="rounded-[18px] border border-white/10 bg-[#514f49] p-5"><div className="flex items-center gap-3 text-[#ff9a76]"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f27c52]/14">{icon}</div><span className="text-xs font-semibold text-white/58">{title}</span></div><div className="mt-4 text-xl font-semibold text-white">{value}</div><p className="mt-2 text-xs leading-5 text-white/45">{text}</p></div>;
+  return <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text-primary)] shadow-[var(--shadow-sm)]"><div className="flex items-center gap-3 text-[var(--brand)]"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--brand-soft)]">{icon}</div><span className="text-xs font-semibold text-[var(--text-muted)]">{title}</span></div><div className="mt-4 text-xl font-semibold text-[var(--text-primary)]">{value}</div><p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">{text}</p></div>;
 }
 
 export default Analytics;
