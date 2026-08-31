@@ -31,6 +31,7 @@ from exceptions import register_exception_handlers
 from middleware import LoggingMiddleware
 
 from core.logger import logger
+from core.security_headers import SecurityHeadersMiddleware
 
 from database.init_db import init_database
 
@@ -39,7 +40,7 @@ from websocket.manager import manager
 
 app = FastAPI(
     title="FedSentry",
-    version="2.0.0",
+    version="2.1.0",
     description=(
         "Enterprise Real-Time Federated Intrusion "
         "Detection System with Explainable AI"
@@ -86,6 +87,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# =========================================================
+# Security / Request Correlation
+# =========================================================
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 # =========================================================
@@ -262,7 +270,7 @@ def root():
     return {
         "project": "FedSentry",
         "status": "Running",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "database": "Connected",
         "api": "Online",
         "websocket": "/ws/events",
