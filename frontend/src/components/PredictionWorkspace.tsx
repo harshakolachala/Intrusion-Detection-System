@@ -29,7 +29,11 @@ const FEATURE_NAMES = [
   'Destination Port','Flow Duration','Total Fwd Packets','Total Backward Packets','Total Length of Fwd Packets','Total Length of Bwd Packets','Fwd Packet Length Max','Fwd Packet Length Min','Fwd Packet Length Mean','Fwd Packet Length Std','Bwd Packet Length Max','Bwd Packet Length Min','Bwd Packet Length Mean','Bwd Packet Length Std','Flow Bytes/s','Flow Packets/s','Flow IAT Mean','Flow IAT Std','Flow IAT Max','Flow IAT Min','Fwd IAT Total','Fwd IAT Mean','Fwd IAT Std','Fwd IAT Max','Fwd IAT Min','Bwd IAT Total','Bwd IAT Mean','Bwd IAT Std','Bwd IAT Max','Bwd IAT Min','Fwd PSH Flags','Bwd PSH Flags','Fwd URG Flags','Bwd URG Flags','Fwd Header Length','Bwd Header Length','Fwd Packets/s','Bwd Packets/s','Min Packet Length','Max Packet Length','Packet Length Mean','Packet Length Std','Packet Length Variance','FIN Flag Count','SYN Flag Count','RST Flag Count','PSH Flag Count','ACK Flag Count','URG Flag Count','CWE Flag Count','ECE Flag Count','Down/Up Ratio','Average Packet Size','Avg Fwd Segment Size','Avg Bwd Segment Size','Fwd Header Length.1','Fwd Avg Bytes/Bulk','Fwd Avg Packets/Bulk','Fwd Avg Bulk Rate','Bwd Avg Bytes/Bulk','Bwd Avg Packets/Bulk','Bwd Avg Bulk Rate','Subflow Fwd Packets','Subflow Fwd Bytes','Subflow Bwd Packets','Subflow Bwd Bytes','Init_Win_bytes_forward','Init_Win_bytes_backward','act_data_pkt_fwd','min_seg_size_forward','Active Mean','Active Std','Active Max','Active Min','Idle Mean','Idle Std','Idle Max','Idle Min',
 ] as const;
 
-const DEFAULT_FEATURES = [80,1000,8,8,232,4920,64,20,29,12,1500,20,615,200,5152,16,62,25,120,2,800,100,30,150,5,700,90,25,140,4,0,0,0,0,64,64,8,8,20,1500,320,400,160000,0,0,0,0,8,0,0,0,0,1,320,29,615,64,0,0,0,0,0,0,8,232,8,4920,64240,65535,4,20,10,2,20,5,100,1,100,5];
+const DEFAULT_FEATURES = [80,1000,8,8,232,4920,64,20,29,12,1500,20,615,200,5152,16,62,25,120,2,800,100,30,150,5,700,90,25,140,4,0,0,0,0,64,64,8,8,20,1500,320,400,160000,0,0,0,0,8,0,0,0,1,320,29,615,64,0,0,0,0,0,0,8,232,8,4920,64240,65535,4,20,10,2,20,5,100,1,100,5];
+
+if (DEFAULT_FEATURES.length !== FEATURE_NAMES.length) {
+  throw new Error(`Prediction defaults must contain exactly ${FEATURE_NAMES.length} features; received ${DEFAULT_FEATURES.length}.`);
+}
 
 const createRequest = (): TrafficPredictionRequest => ({
   features: [...DEFAULT_FEATURES],
