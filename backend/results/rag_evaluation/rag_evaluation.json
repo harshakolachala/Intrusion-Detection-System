@@ -1,0 +1,115 @@
+{
+  "rag_status": {
+    "mode": "hybrid",
+    "documents": 8,
+    "semantic_ready": true,
+    "embedding_model": "all-MiniLM-L6-v2"
+  },
+  "test_cases": 5,
+  "top_k": 3,
+  "retrieval_success_rate": 1.0,
+  "mean_retrieval_latency_ms": 9738.737379969098,
+  "results": [
+    {
+      "id": "syn-flood",
+      "query": "What are the indicators and mitigations for a SYN flood attack?",
+      "retrieved_chunks": 3,
+      "retrieved_sources": 3,
+      "keyword_hit": true,
+      "source_hit": true,
+      "retrieval_success": true,
+      "latency_ms": 48569.12769994233,
+      "sources": [
+        "ddos.md",
+        "dos.md",
+        "portscan.md"
+      ],
+      "context_preview": [
+        "# Distributed Denial of Service (DDoS)\n\nA Distributed Denial of Service attack attempts to make a target unavailable by flooding it with traffic from multiple compromised devices.\n\n## Characteristics\n\n- High traffic volume\n- Multiple attack",
+        "rewall filtering\n- Request rate limiting\n- Blacklisting attackers\n- Traffic monitoring\n\n## Prevention\n\n- Continuous monitoring\n- IDS deployment\n- Network hardening\n- Software updates",
+        "\n- Service discovery\n- Network reconnaissance\n\n## Detection Indicators\n\n- Connections to many ports\n- Short-duration connection attempts\n- SYN scan activity\n- Multiple failed connection requests\n\n## Impact\n\n- Exposure of vulnerable services"
+      ]
+    },
+    {
+      "id": "port-scan",
+      "query": "Explain PortScan reconnaissance indicators and defensive actions.",
+      "retrieved_chunks": 3,
+      "retrieved_sources": 3,
+      "keyword_hit": true,
+      "source_hit": true,
+      "retrieval_success": true,
+      "latency_ms": 31.32720000576228,
+      "sources": [
+        "portscan.md",
+        "portscan.md",
+        "botnet.md"
+      ],
+      "context_preview": [
+        "# Port Scanning Attack\n\n## Overview\n\nPort scanning is a reconnaissance technique used to identify open ports, running services, and operating systems on a target machine. Attackers perform port scans before exploiting vulnerabilities.\n\n## C",
+        "\n- Service discovery\n- Network reconnaissance\n\n## Detection Indicators\n\n- Connections to many ports\n- Short-duration connection attempts\n- SYN scan activity\n- Multiple failed connection requests\n\n## Impact\n\n- Exposure of vulnerable services",
+        "nnels\n- Automated attack execution\n\n## Detection Indicators\n\n- Unusual outbound network traffic\n- Frequent communication with unknown IP addresses\n- Repeated DNS requests\n- High CPU or memory usage\n- Unexpected background processes\n\n## Impa"
+      ]
+    },
+    {
+      "id": "botnet",
+      "query": "How can a SOC analyst identify and contain botnet traffic?",
+      "retrieved_chunks": 3,
+      "retrieved_sources": 3,
+      "keyword_hit": true,
+      "source_hit": true,
+      "retrieval_success": true,
+      "latency_ms": 30.795500031672418,
+      "sources": [
+        "botnet.md",
+        "portscan.md",
+        "botnet.md"
+      ],
+      "context_preview": [
+        "# Botnet Attack\n\n## Overview\n\nA botnet is a network of compromised computers or IoT devices infected with malware and remotely controlled by an attacker. These compromised devices, called bots or zombies, execute commands without the owners",
+        "\n- Service discovery\n- Network reconnaissance\n\n## Detection Indicators\n\n- Connections to many ports\n- Short-duration connection attempts\n- SYN scan activity\n- Multiple failed connection requests\n\n## Impact\n\n- Exposure of vulnerable services",
+        "nnels\n- Automated attack execution\n\n## Detection Indicators\n\n- Unusual outbound network traffic\n- Frequent communication with unknown IP addresses\n- Repeated DNS requests\n- High CPU or memory usage\n- Unexpected background processes\n\n## Impa"
+      ]
+    },
+    {
+      "id": "brute-force",
+      "query": "What evidence suggests a brute-force authentication attack?",
+      "retrieved_chunks": 3,
+      "retrieved_sources": 3,
+      "keyword_hit": true,
+      "source_hit": true,
+      "retrieval_success": true,
+      "latency_ms": 34.38079997431487,
+      "sources": [
+        "brute_force.md",
+        "brute_force.md",
+        "brute_force.md"
+      ],
+      "context_preview": [
+        "# Brute Force Attack\n\n## Overview\n\nA brute force attack attempts to gain unauthorized access by repeatedly trying different username and password combinations until valid credentials are found. Automated tools allow attackers to perform tho",
+        "ristics\n\n- Multiple failed login attempts\n- High authentication request rate\n- Repeated password guessing\n- Automated attack scripts\n\n## Detection Indicators\n\n- Numerous failed logins from one IP\n- Login attempts against many accounts\n- Hig",
+        "act\n\n- Account compromise\n- Unauthorized access\n- Data theft\n- Privilege escalation\n\n## Mitigation\n\n- Account lockout policies\n- Multi-factor authentication\n- CAPTCHA\n- Rate limiting\n- Password complexity rules\n\n## Prevention\n\n- Strong pass"
+      ]
+    },
+    {
+      "id": "sql-injection",
+      "query": "Explain SQL injection indicators and mitigation guidance.",
+      "retrieved_chunks": 3,
+      "retrieved_sources": 3,
+      "keyword_hit": true,
+      "source_hit": true,
+      "retrieval_success": true,
+      "latency_ms": 28.055699891410768,
+      "sources": [
+        "sql_injection.md",
+        "sql_injection.md",
+        "sql_injection.md"
+      ],
+      "context_preview": [
+        "# SQL Injection Attack\n\n## Overview\n\nSQL Injection is a web application attack where malicious SQL statements are inserted into application inputs to manipulate backend databases. Successful SQL injection can expose, modify, or delete sensi",
+        " application takeover\n\n## Mitigation\n\n- Prepared statements\n- Parameterized queries\n- Input validation\n- Web Application Firewall\n- Least privilege database accounts\n\n## Prevention\n\n- Secure coding practices\n- Regular security testing\n- Dat",
+        "es\n- Input validation bypass\n- Database manipulation\n- Unauthorized data access\n\n## Detection Indicators\n\n- Suspicious SQL keywords\n- Unexpected database errors\n- Abnormal query execution\n- Authentication bypass attempts\n\n## Impact\n\n- Data "
+      ]
+    }
+  ],
+  "method_note": "Retrieval success requires non-empty context and the expected keyword/source evidence defined by the evaluation set. LLM answer quality requires separate human scoring and is intentionally not inferred from retrieval success."
+}
