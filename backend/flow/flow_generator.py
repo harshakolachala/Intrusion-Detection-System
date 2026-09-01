@@ -1,6 +1,4 @@
-"""
-Flow Generator for SentinelAI.
-"""
+"""Flow generation for FedSentry live traffic analysis."""
 
 import threading
 from datetime import datetime
@@ -10,7 +8,11 @@ from capture.logger import logger
 
 
 class Flow:
-    """Represents a single network flow."""
+    """Represents one bidirectional network flow.
+
+    The first packet defines the forward direction. Reverse packets are stored
+    in ``_backward_packets`` so directional CICIDS features are meaningful.
+    """
 
     def __init__(self, src_ip, dst_ip, src_port, dst_port, protocol):
         self.src_ip = src_ip
@@ -28,8 +30,9 @@ class Flow:
 
     @property
     def duration(self) -> float:
+        """Flow duration in seconds for timeout/rate calculations."""
         if self.first_seen and self.last_seen:
-            return (self.last_seen - self.first_seen).total_seconds()
+            return max(0.0, (self.last_seen - self.first_seen).total_seconds())
         return 0.0
 
     def add_packet(self, packet: Dict[str, Any]):
@@ -54,14 +57,14 @@ class Flow:
     def _is_forward(self, packet: Dict) -> bool:
         return (
             packet.get("src_ip") == self.src_ip
-            and packet.get("src_port") == self.src_port
+            and (packet.get("src_port") or 0) == self.src_port
             and packet.get("dst_ip") == self.dst_ip
-            and packet.get("dst_port") == self.dst_port
+            and (packet.get("dst_port") or 0) == self.dst_port
         )
 
 
 class FlowGenerator:
-    """Accumulates packets into flows."""
+    """Accumulates packets into bidirectional flows."""
 
     def __init__(
         self,
@@ -73,19 +76,27 @@ class FlowGenerator:
         self.max_packets_per_flow = max_packets_per_flow
         self.on_flow_complete = on_flow_complete
 
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.flows: Dict[tuple, Flow] = {}
         self.total_flows_created = 0
         self.total_flows_completed = 0
 
+    @staticmethod
+    def _endpoint(ip: str, port: int) -> tuple:
+        return (str(ip or "0.0.0.0"), int(port or 0))
+
     def get_flow_key(self, packet: Dict) -> tuple:
-        return (
-            packet.get("src_ip", "0.0.0.0"),
-            packet.get("dst_ip", "0.0.0.0"),
-            packet.get("src_port") or 0,
-            packet.get("dst_port") or 0,
-            packet.get("protocol", "OTHER"),
-        )
+        """Return a direction-independent five-tuple key.
+
+        Earlier code keyed A->B and B->A separately. That made every live flow
+        effectively one-way, forcing backward-packet CICIDS features to zero.
+        Canonicalizing the endpoint pair keeps both directions in one flow while
+        Flow itself preserves which direction arrived first.
+        """
+        src = self._endpoint(packet.get("src_ip"), packet.get("src_port"))
+        dst = self._endpoint(packet.get("dst_ip"), packet.get("dst_port"))
+        first, second = sorted((src, dst))
+        return (first, second, str(packet.get("protocol", "OTHER")))
 
     def add_packet(self, packet: Dict[str, Any]):
         key = self.get_flow_key(packet)
@@ -93,16 +104,20 @@ class FlowGenerator:
         with self.lock:
             if key not in self.flows:
                 self.flows[key] = Flow(
-                    src_ip=key[0],
-                    dst_ip=key[1],
-                    src_port=key[2],
-                    dst_port=key[3],
-                    protocol=key[4],
+                    src_ip=packet.get("src_ip", "0.0.0.0"),
+                    dst_ip=packet.get("dst_ip", "0.0.0.0"),
+                    src_port=packet.get("src_port") or 0,
+                    dst_port=packet.get("dst_port") or 0,
+                    protocol=packet.get("protocol", "OTHER"),
                 )
                 self.total_flows_created += 1
                 logger.info(
-                    f"Flow Created: {key[0]}:{key[2]} -> "
-                    f"{key[1]}:{key[3]} [{key[4]}]"
+                    "Flow Created: %s:%s -> %s:%s [%s]",
+                    self.flows[key].src_ip,
+                    self.flows[key].src_port,
+                    self.flows[key].dst_ip,
+                    self.flows[key].dst_port,
+                    self.flows[key].protocol,
                 )
 
             flow = self.flows[key]
@@ -119,10 +134,13 @@ class FlowGenerator:
             flow = self.flows.pop(key)
             self.total_flows_completed += 1
             logger.info(
-                f"Flow Completed: {flow.src_ip}:{flow.src_port} -> "
-                f"{flow.dst_ip}:{flow.dst_port} "
-                f"[{len(flow.packets)} packets, "
-                f"{flow.duration:.2f}s]"
+                "Flow Completed: %s:%s -> %s:%s [%s packets, %.2fs]",
+                flow.src_ip,
+                flow.src_port,
+                flow.dst_ip,
+                flow.dst_port,
+                len(flow.packets),
+                flow.duration,
             )
             if self.on_flow_complete:
                 self.on_flow_complete(flow)
