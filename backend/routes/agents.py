@@ -4,6 +4,10 @@ A lightweight sensor can run on a monitored endpoint/network, extract the
 same 78 CICIDS-style flow features locally, and forward only flow metadata and
 features to the central FedSentry backend. Raw packets never need to leave the
 sensor host.
+
+Remote sensors default to shadow mode while live-feature parity is validated:
+predictions are persisted and streamed, but alerts are not automatically
+created unless REMOTE_SENSOR_ALERTS_ENABLED=true.
 """
 
 import hmac
@@ -40,6 +44,7 @@ class AgentFlowResponse(BaseModel):
     latency_ms: float
     alert_created: bool
     alert_id: str | None
+    sensor_mode: str
 
 
 def _require_agent_key(x_agent_key: str | None = Header(default=None)) -> None:
@@ -58,12 +63,24 @@ def _require_agent_key(x_agent_key: str | None = Header(default=None)) -> None:
         )
 
 
+def _sensor_alerts_enabled() -> bool:
+    return os.getenv("REMOTE_SENSOR_ALERTS_ENABLED", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 @router.get("/health")
 def agent_health(_: None = Depends(_require_agent_key)):
+    alerts_enabled = _sensor_alerts_enabled()
     return {
         "service": "FedSentry Remote Sensor Gateway",
         "status": "ready",
         "expected_features": INPUT_SIZE,
+        "sensor_mode": "active" if alerts_enabled else "shadow",
+        "automatic_alerts": alerts_enabled,
     }
 
 
@@ -84,6 +101,7 @@ def ingest_agent_flow(
             ),
         )
 
+    alerts_enabled = _sensor_alerts_enabled()
     predictor = get_predictor()
     result = PredictionService.predict(
         db=db,
@@ -95,9 +113,11 @@ def ingest_agent_flow(
         destination_port=request.destination_port,
         protocol=request.protocol,
         model_version=f"remote-agent:{request.agent_id}",
+        create_alerts=alerts_enabled,
     )
 
     return {
         "agent_id": request.agent_id,
+        "sensor_mode": "active" if alerts_enabled else "shadow",
         **result,
     }
