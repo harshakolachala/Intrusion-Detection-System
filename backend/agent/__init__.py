@@ -1,0 +1,1 @@
+"""FedSentry distributed sensor package."""
