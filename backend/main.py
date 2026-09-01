@@ -3,6 +3,7 @@ FedSentry Backend
 Main Application
 """
 
+import os
 from datetime import datetime, timezone
 
 from fastapi import (
@@ -26,6 +27,7 @@ from routes.engine import router as engine_router
 from routes.incidents import router as incidents_router
 from routes.predictions import router as predictions_router
 from routes.reports import router as reports_router
+from routes.agents import router as agents_router
 
 from exceptions import register_exception_handlers
 from middleware import LoggingMiddleware
@@ -40,7 +42,7 @@ from websocket.manager import manager
 
 app = FastAPI(
     title="FedSentry",
-    version="2.1.0",
+    version="2.2.0",
     description=(
         "Enterprise Real-Time Federated Intrusion "
         "Detection System with Explainable AI"
@@ -70,7 +72,7 @@ logger.info(
 # CORS
 # =========================================================
 
-origins = [
+_default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
@@ -78,6 +80,14 @@ origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
+
+_deployed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+origins = list(dict.fromkeys(_default_origins + _deployed_origins))
 
 
 app.add_middleware(
@@ -122,10 +132,9 @@ app.include_router(
 # =========================================================
 
 app.include_router(health_router)
-
 app.include_router(predict_router)
-
 app.include_router(chatbot_router)
+app.include_router(agents_router)
 
 
 # =========================================================
@@ -185,13 +194,7 @@ app.include_router(reports_router)
 async def websocket_events(
     websocket: WebSocket,
 ):
-    """
-    Real-time WebSocket endpoint.
-
-    Frontend connects to:
-
-        ws://127.0.0.1:8000/ws/events
-    """
+    """Real-time SOC event stream."""
 
     await manager.connect(websocket)
 
@@ -201,7 +204,6 @@ async def websocket_events(
     )
 
     try:
-
         await websocket.send_json(
             {
                 "event": "connection",
@@ -219,22 +221,17 @@ async def websocket_events(
         )
 
         while True:
-
             await websocket.receive_text()
 
     except WebSocketDisconnect:
-
         manager.disconnect(websocket)
-
         logger.info(
             "SOC WebSocket client disconnected | "
             f"Clients={manager.connection_count()}"
         )
 
     except Exception as exc:
-
         manager.disconnect(websocket)
-
         logger.exception(
             f"WebSocket error: {exc}"
         )
@@ -246,18 +243,12 @@ async def websocket_events(
 
 @app.on_event("startup")
 async def startup():
-
-    logger.info(
-        "FedSentry API Started"
-    )
+    logger.info("FedSentry API Started")
 
 
 @app.on_event("shutdown")
 async def shutdown():
-
-    logger.info(
-        "FedSentry API Stopped"
-    )
+    logger.info("FedSentry API Stopped")
 
 
 # =========================================================
@@ -266,12 +257,12 @@ async def shutdown():
 
 @app.get("/")
 def root():
-
     return {
         "project": "FedSentry",
         "status": "Running",
-        "version": "2.1.0",
+        "version": "2.2.0",
         "database": "Connected",
         "api": "Online",
         "websocket": "/ws/events",
+        "remote_sensor_gateway": "/agents/health",
     }
