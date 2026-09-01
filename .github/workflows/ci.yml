@@ -22,9 +22,9 @@ jobs:
       - name: Compile backend
         run: python -m compileall -q .
       - name: Check backend imports
-        run: python -c "import main; import engine; from capture.packet_capture import capture_engine; from federated.ieee_experiments import ExperimentConfig; from federated.research_summary import METRICS; from rag.evaluate_rag import DEFAULT_CASES; print(capture_engine.statistics()); print(ExperimentConfig()); print(len(METRICS), len(DEFAULT_CASES))"
-      - name: Validate health routes
-        run: python -c "from main import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/health/live' in paths; assert '/health/ready' in paths"
+        run: python -c "import main; import engine; import agent.sensor; from capture.packet_capture import capture_engine; from federated.ieee_experiments import ExperimentConfig; from federated.research_summary import METRICS; from rag.evaluate_rag import DEFAULT_CASES; print(capture_engine.statistics()); print(ExperimentConfig()); print(len(METRICS), len(DEFAULT_CASES))"
+      - name: Validate health and sensor routes
+        run: python -c "from main import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/health/live' in paths; assert '/health/ready' in paths; assert '/agents/health' in paths; assert '/agents/ingest' in paths"
 
   frontend:
     runs-on: ubuntu-latest
