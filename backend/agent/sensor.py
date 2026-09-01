@@ -1,25 +1,16 @@
 """FedSentry distributed network sensor.
 
-Run this module on a monitored machine or network sensor host. It captures
-packets locally, constructs flows, extracts the same 78 CICIDS-style features,
-and sends only the resulting flow vector and metadata to the central FedSentry
-API. Raw packets are not uploaded.
-
-Example:
-    python -m agent.sensor --api-url https://api.example.com \
-        --agent-id lab-pc-01 --interface "Wi-Fi"
-
-Environment variables can also be used:
-    FEDSENTRY_API_URL
-    FEDSENTRY_AGENT_ID
-    FEDSENTRY_AGENT_KEY
-    FEDSENTRY_INTERFACE
+Captures packets locally, builds bidirectional flows, extracts the same 78
+CICIDS-style features used by the backend model, and forwards only flow
+metadata/features to the central FedSentry API. Raw packets are never uploaded.
 """
 
 from __future__ import annotations
 
 import argparse
+import math
 import os
+import queue
 import signal
 import threading
 import time
@@ -41,24 +32,37 @@ class RemoteSensor:
         agent_id: str,
         agent_key: str,
         interface: str | None = None,
-        timeout: float = 15.0,
+        timeout: float = 60.0,
+        retries: int = 2,
+        diagnostic: bool = False,
     ):
         self.api_url = api_url.rstrip("/")
         self.agent_id = agent_id
         self.agent_key = agent_key
         self.interface = interface
         self.timeout = timeout
+        self.retries = max(0, retries)
+        self.diagnostic = diagnostic
         self.running = False
         self.worker_thread: threading.Thread | None = None
+        self.sender_thread: threading.Thread | None = None
         self.flow_generator: FlowGenerator | None = None
-        self.client = httpx.Client(timeout=timeout)
+        self.delivery_queue: queue.Queue[dict] = queue.Queue(maxsize=1000)
+        self.client = httpx.Client(
+            timeout=httpx.Timeout(timeout, connect=min(10.0, timeout))
+        )
         self.sent_flows = 0
         self.failed_flows = 0
+        self.dropped_flows = 0
+
+    @property
+    def headers(self) -> dict[str, str]:
+        return {"X-Agent-Key": self.agent_key}
 
     def verify_gateway(self) -> None:
         response = self.client.get(
             f"{self.api_url}/agents/health",
-            headers={"X-Agent-Key": self.agent_key},
+            headers=self.headers,
         )
         response.raise_for_status()
         payload = response.json()
@@ -89,28 +93,33 @@ class RemoteSensor:
         self.worker_thread = threading.Thread(
             target=self._processing_loop,
             daemon=True,
-            name="fedsentry-remote-sensor",
+            name="fedsentry-remote-sensor-capture",
+        )
+        self.sender_thread = threading.Thread(
+            target=self._delivery_loop,
+            daemon=True,
+            name="fedsentry-remote-sensor-delivery",
         )
         self.worker_thread.start()
+        self.sender_thread.start()
 
         logger.info("=" * 60)
         logger.info("FedSentry Remote Sensor Started")
         logger.info("Agent ID  : %s", self.agent_id)
         logger.info("Cloud API : %s", self.api_url)
         logger.info("Interface : %s", self.interface or "default")
+        logger.info("HTTP timeout: %.0fs | retries=%s", self.timeout, self.retries)
         logger.info("Raw packet upload: disabled")
+        logger.info("Diagnostic mode: %s", "enabled" if self.diagnostic else "disabled")
         logger.info("=" * 60)
 
     def stop(self) -> None:
         self.running = False
         capture_engine.stop_capture()
 
-        if (
-            self.worker_thread
-            and self.worker_thread.is_alive()
-            and self.worker_thread is not threading.current_thread()
-        ):
-            self.worker_thread.join()
+        if self.worker_thread and self.worker_thread.is_alive():
+            if self.worker_thread is not threading.current_thread():
+                self.worker_thread.join(timeout=5.0)
 
         if self.flow_generator is not None:
             try:
@@ -118,13 +127,19 @@ class RemoteSensor:
             except Exception:
                 logger.exception("Unable to flush final sensor flows")
 
+        if self.sender_thread and self.sender_thread.is_alive():
+            if self.sender_thread is not threading.current_thread():
+                self.sender_thread.join(timeout=min(self.timeout, 10.0))
+
         packet_queue.clear()
         self.client.close()
 
         logger.info(
-            "FedSentry Remote Sensor Stopped | sent=%s failed=%s",
+            "FedSentry Remote Sensor Stopped | sent=%s failed=%s dropped=%s pending=%s",
             self.sent_flows,
             self.failed_flows,
+            self.dropped_flows,
+            self.delivery_queue.qsize(),
         )
 
     def _processing_loop(self) -> None:
@@ -143,17 +158,24 @@ class RemoteSensor:
                 self.flow_generator.flush_expired_flows()
                 last_flush = now
 
+    @staticmethod
+    def _validate_features(features) -> list[float]:
+        values = Preprocessor.validate(features)
+        clean = [float(value) for value in values]
+        if not all(math.isfinite(value) for value in clean):
+            raise ValueError("Feature vector contains non-finite values after preprocessing")
+        return clean
+
     def _on_flow_complete(self, flow) -> None:
+        """Extract and enqueue quickly; never block packet processing on HTTP."""
         if not self.running:
             return
 
         try:
-            features = FeatureExtractor.extract(flow)
-            features = Preprocessor.handle_missing_values(features)
-
+            features = self._validate_features(FeatureExtractor.extract(flow))
             payload = {
                 "agent_id": self.agent_id,
-                "features": [float(value) for value in features],
+                "features": features,
                 "source_ip": flow.src_ip,
                 "destination_ip": flow.dst_ip,
                 "source_port": int(flow.src_port or 0),
@@ -161,33 +183,95 @@ class RemoteSensor:
                 "protocol": str(flow.protocol),
             }
 
-            response = self.client.post(
-                f"{self.api_url}/agents/ingest",
-                json=payload,
-                headers={"X-Agent-Key": self.agent_key},
-            )
-            response.raise_for_status()
-            result = response.json()
-            self.sent_flows += 1
+            if self.diagnostic:
+                nonzero = sum(1 for value in features if value != 0.0)
+                logger.info(
+                    "Feature diagnostic | count=%s nonzero=%s min=%.4f max=%.4f "
+                    "fwd_packets=%s bwd_packets=%s duration_us=%.0f",
+                    len(features),
+                    nonzero,
+                    min(features),
+                    max(features),
+                    len(flow._forward_packets),
+                    len(flow._backward_packets),
+                    features[1],
+                )
 
-            logger.info(
-                "Remote prediction | agent=%s class=%s confidence=%.4f latency=%sms",
-                self.agent_id,
-                result.get("prediction"),
-                float(result.get("confidence", 0.0)),
-                result.get("latency_ms"),
-            )
-
-            if result.get("alert_created"):
+            try:
+                self.delivery_queue.put_nowait(payload)
+            except queue.Full:
+                self.dropped_flows += 1
                 logger.warning(
-                    "Remote intrusion detected | class=%s alert_id=%s",
-                    result.get("prediction"),
-                    result.get("alert_id"),
+                    "Remote sensor delivery queue full; dropping completed flow | dropped=%s",
+                    self.dropped_flows,
                 )
 
         except Exception as exc:
             self.failed_flows += 1
-            logger.error("Remote sensor flow delivery failed: %s", exc)
+            logger.error("Remote sensor feature extraction failed: %s", exc)
+
+    def _delivery_loop(self) -> None:
+        while self.running or not self.delivery_queue.empty():
+            try:
+                payload = self.delivery_queue.get(timeout=0.25)
+            except queue.Empty:
+                continue
+
+            try:
+                self._deliver(payload)
+            finally:
+                self.delivery_queue.task_done()
+
+    def _deliver(self, payload: dict) -> None:
+        last_error: Exception | None = None
+
+        for attempt in range(self.retries + 1):
+            try:
+                response = self.client.post(
+                    f"{self.api_url}/agents/ingest",
+                    json=payload,
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+                result = response.json()
+                self.sent_flows += 1
+
+                logger.info(
+                    "Remote prediction | agent=%s class=%s confidence=%.4f latency=%sms",
+                    self.agent_id,
+                    result.get("prediction"),
+                    float(result.get("confidence", 0.0)),
+                    result.get("latency_ms"),
+                )
+
+                if result.get("alert_created"):
+                    logger.warning(
+                        "Remote intrusion detected | class=%s alert_id=%s",
+                        result.get("prediction"),
+                        result.get("alert_id"),
+                    )
+                return
+
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                last_error = exc
+                if attempt < self.retries:
+                    delay = 0.5 * (2 ** attempt)
+                    logger.warning(
+                        "Remote delivery retry %s/%s in %.1fs: %s",
+                        attempt + 1,
+                        self.retries,
+                        delay,
+                        exc,
+                    )
+                    time.sleep(delay)
+                    continue
+                break
+            except Exception as exc:
+                last_error = exc
+                break
+
+        self.failed_flows += 1
+        logger.error("Remote sensor flow delivery failed: %s", last_error)
 
 
 def parse_args() -> argparse.Namespace:
@@ -208,6 +292,21 @@ def parse_args() -> argparse.Namespace:
         "--interface",
         default=os.getenv("FEDSENTRY_INTERFACE") or None,
     )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=float(os.getenv("FEDSENTRY_SENSOR_TIMEOUT", "60")),
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=int(os.getenv("FEDSENTRY_SENSOR_RETRIES", "2")),
+    )
+    parser.add_argument(
+        "--diagnostic",
+        action="store_true",
+        default=os.getenv("FEDSENTRY_SENSOR_DIAGNOSTIC", "").lower() in {"1", "true", "yes"},
+    )
     return parser.parse_args()
 
 
@@ -225,6 +324,9 @@ def main() -> None:
         agent_id=args.agent_id,
         agent_key=args.agent_key,
         interface=args.interface,
+        timeout=args.timeout,
+        retries=args.retries,
+        diagnostic=args.diagnostic,
     )
 
     stopping = threading.Event()
